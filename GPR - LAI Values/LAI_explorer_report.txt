@@ -1,0 +1,100 @@
+=================================================================
+GPRTool — LAI Database Explorer Report
+Generated: 2026-03-17
+=================================================================
+
+── RAW DATA SOURCES ──────────────────────────────────────────
+  ORNL summary CSV                2,652 valid rows  (1 skipped)
+  TRY summary CSV                 4,046 valid rows  (31 skipped)
+  TRY raw (37339.txt)                 0 valid rows  (1439 skipped)
+  TOTAL                           6,698
+
+── AFTER DEDUPLICATION ───────────────────────────────────────
+  Unique single species:       760
+  Multi-species entries:       194  (set aside)
+  In multiple source DBs:      646
+  Well-measured (≥5 obs):      228
+
+── TROPICAL / SUBTROPICAL FILTER ─────────────────────────────
+  Latitude band used:          -35.0° to 35.0°
+  Flagged by latitude:         0
+  Flagged by keyword only:     122
+  Total tropical relevant:     122
+
+  Top 25 tropical species by mean LAI:
+    [KW ] Tropical moist forest (395 spp.)           mean=22.40  n=2
+    [KW ] Dipterocarpus alatus, Mangifera caloneura, Gymnosporia spp. mean=12.10  n=2
+    [KW ] Eucalyptus sieberii                        mean=11.00  n=2
+    [KW ] Shorea robusta                             mean=10.83  n=12
+    [KW ] Swietenia macrophylla                      mean=10.40  n=2
+    [KW ] Dipterocarp                                mean=10.20  n=2
+    [KW ] Acacia mollissima                          mean=9.90  n=2
+    [KW ] Tectona grandis                            mean=9.33  n=18
+    [KW ] Dipterocarp species                        mean=7.27  n=2
+    [KW ] Acacia dealbata                            mean=6.50  n=2
+    [KW ] Tropical rain forest species               mean=6.49  n=2
+    [KW ] Tropical tree species                      mean=6.26  n=10
+    [KW ] Tropical forest tree species               mean=6.21  n=6
+    [KW ] Shorea macroptera, Shorea beccariana, Shorea acuta, Dipterocarpus glabosus, Dryobalanops aromatica mean=6.20  n=2
+    [KW ] Tropical rainforest (1053 species)         mean=6.12  n=4
+    [KW ] Moist tropical tree species                mean=6.07  n=2
+    [KW ] Pentaclethra macroloba, Palms, other trees, Lianas mean=6.00  n=2
+    [KW ] Pometia tomentosa,Terminalia myriocarpa, Barringtonia macrostachya mean=6.00  n=2
+    [KW ] Dipterocarpus obtusifolius, Lagerstroemia calyculata et al. mean=5.70  n=2
+    [KW ] Moist tropical evergreen forest            mean=5.60  n=2
+    [KW ] Elateriospermum tapos, Anisoptera laevis, Parashorea lucida, Shorea retinoides mean=5.50  n=2
+    [KW ] Tropical moist forest                      mean=5.41  n=2
+    [KW ] Shorea conica, Shorea gibbosa              mean=5.40  n=2
+    [KW ] Picea mariana, Pinus banksiana             mean=5.40  n=4
+    [KW ] Shorea macroptera, Shorea lumutensis, Shorea acuminata mean=5.20  n=2
+
+── LAI DISTRIBUTION (all species) ───────────────────────────
+  Low  0–2:    170  ████████
+  Mid  2–4:    241  ████████████
+  High 4–7:    262  █████████████
+  Very high 7+:     87  ████
+
+── TOP 30 SPECIES OVERALL ────────────────────────────────────
+  Tsuga heterophylla                            mean=31.05  n=12
+  Tropical moist forest (395 spp.)              mean=22.40  n=2
+  Pseudotsuga menziesii, Tsuga heterophylla, Abies amabilis mean=22.00  n=2
+  Abies magnifica                               mean=21.34  n=4
+  Pseudotsuga menziesii, Abies grandis          mean=18.00  n=2
+  Abies magnifica, Abies concolor               mean=16.02  n=4
+  Abies concolor, Pseudotsuga menziesii         mean=15.50  n=2
+  Abies concolor                                mean=14.48  n=6
+  Thujopsis dolabrata                           mean=14.27  n=6
+  Cecropia spp.                                 mean=14.05  n=4
+  Sequoia sempervirens                          mean=12.80  n=10
+  Pseudotsuga menziesii                         mean=12.64  n=122
+  Abies fraseri                                 mean=12.30  n=2
+  Padburggea pubescens, Eugenia clarkeana       mean=12.30  n=4
+  Dipterocarpus alatus, Mangifera caloneura, Gymnosporia spp. mean=12.10  n=2
+  Evergreen broadleaf species                   mean=11.82  n=2
+  Abies grandis, Thuja plicata, Pseudotsuga menziesii mean=11.68  n=2
+  Abies amabilis                                mean=11.63  n=2
+  Phyllostachys bambusoides                     mean=11.60  n=2
+  Tsuga heterophylla, Pseudotusga menziesii     mean=11.58  n=2
+  Pinus nigra                                   mean=11.46  n=4
+  Abies lasiocarpa                              mean=11.38  n=4
+  Quercus phillyraeoides, Rapanaea neriifolia   mean=11.30  n=6
+  Eucalyptus sieberii                           mean=11.00  n=2
+  Shorea robusta                                mean=10.83  n=12
+  Abies georget                                 mean=10.48  n=6
+  Swietenia macrophylla                         mean=10.40  n=2
+  Abies balsamea                                mean=10.32  n=74
+  Abies fabri, Picea brachytyla, Tsuga chinesis, Acer sp., Betula sp. mean=10.31  n=2
+  Dipterocarp                                   mean=10.20  n=2
+
+── OUTPUTS ───────────────────────────────────────────────────
+  Full list:     LAI_combined_clean.csv  (760 species)
+  Tropical only: LAI_tropical_subset.csv (122 species)
+
+── NEXT STEPS ────────────────────────────────────────────────
+  1. Open LAI_tropical_subset.csv
+     → Boon to mark which species suit Perth/Singapore context
+     → Add column: category (Tree/Shrub/Grass/Groundcover/GreenRoof)
+  2. Cross-reference with Tan & Sia 2009 GPR guidebook
+  3. Finalised subset becomes backend/lai_data.py lookup table
+  4. That feeds gpr.py calculation engine
+=================================================================

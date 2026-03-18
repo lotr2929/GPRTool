@@ -4,21 +4,19 @@
     "type": "split",
     "children": [
       {
-        "id": "88c4361934691abb",
+        "id": "654a5b7c6bc38e6c",
         "type": "tabs",
         "children": [
           {
-            "id": "4954510f0c6483f7",
+            "id": "bdcf167817924261",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "release-notes",
               "state": {
-                "file": "CLAUDE_MEMORY.md",
-                "mode": "source",
-                "source": false
+                "currentVersion": "1.11.7"
               },
-              "icon": "lucide-file",
-              "title": "CLAUDE_MEMORY"
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.11.7"
             }
           }
         ]
@@ -183,6 +181,17 @@
       "bases:Create new base": false
     }
   },
-  "active": "4954510f0c6483f7",
-  "lastOpenFiles": []
+  "active": "bdcf167817924261",
+  "lastOpenFiles": [
+    "Untitled.base",
+    "Untitled 1.base",
+    "Untitled 2.canvas",
+    "Untitled 1.canvas",
+    "Untitled.canvas",
+    "Next Steps.md",
+    "_devguide.md",
+    "_devstartup.md",
+    "_devguide-summary.md",
+    "GPRTool Startup.md"
+  ]
 }

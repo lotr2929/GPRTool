@@ -1,0 +1,761 @@
+species,mean_lai,median_lai,min_lai,max_lai,measurement_count,sources,datasets,lat_range,tropical_by_lat,tropical_by_keyword,tropical,category
+Tsuga heterophylla,31.053,34.0,11.07,47.0,12,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Abies magnifica,21.335,21.335,17.33,25.34,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Abies concolor,14.483,14.53,8.17,20.75,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Thujopsis dolabrata,14.267,12.7,12.6,17.5,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Sequoia sempervirens,12.804,13.92,9.5,14.48,10,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pseudotsuga menziesii,12.642,8.54,3.37,34.96,122,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Abies fraseri,12.3,12.3,12.3,12.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Abies amabilis,11.63,11.63,11.63,11.63,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus nigra,11.465,11.465,8.2,14.73,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Abies lasiocarpa,11.385,11.385,8.07,14.7,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus sieberii,11.0,11.0,11.0,11.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Shorea robusta,10.832,11.53,6.0,14.02,12,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Abies georget,10.483,10.18,8.86,12.41,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Swietenia macrophylla,10.4,10.4,10.4,10.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Abies balsamea,10.318,10.15,5.2,15.6,74,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus crispula,10.1,10.1,8.1,12.1,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Metasequoia glyptostroboides,9.53,9.53,9.53,9.53,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Tectona grandis,9.326,10.6,0.96,17.4,18,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Cryptomeria japonica,9.258,10.0,2.71,17.2,38,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Picea sitchensis,9.1,9.1,9.1,9.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Abies homolepis,9.0,9.0,7.4,10.6,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Turreanthus africana,9.0,9.0,9.0,9.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Dacryodes klaineana,9.0,9.0,9.0,9.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Abies fabri,8.995,8.995,7.78,10.21,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Castanopsis cuspidata,8.785,8.53,5.2,12.8,20,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Carpinus betulus,8.73,8.73,8.73,8.73,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus myrsinifolia,8.367,8.1,8.0,9.0,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Tsuga canadensis,8.095,8.095,3.09,13.1,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus echinata,7.8,7.8,7.8,7.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Nothofagus truncata,7.4,7.4,7.4,7.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Dacryodes excelsa,7.34,7.34,7.34,7.34,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Graffenrieda emarginata,7.19,6.98,6.59,8.08,10,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Nothofagus fusca,7.0,7.0,7.0,7.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus semicarpiforlia,6.81,6.81,6.81,6.81,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus elliottii var. elliottii x Pinus caribaea var. hondurensis,6.732,5.795,4.46,9.77,20,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus radiata,6.717,4.59,1.56,14.0,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Abies firma,6.7,6.7,6.7,6.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Larix leptolepis,6.68,6.68,6.68,6.68,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Liriodendron tulipifera,6.65,7.05,5.1,7.4,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Picea rubens,6.583,8.15,1.73,14.8,18,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Acer saccharum,6.579,6.87,3.25,8.1,18,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Picea stichensis,6.55,6.48,4.79,8.5,12,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Abies alba,6.5,6.4,5.4,7.8,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus prinus,6.325,6.4,4.3,8.2,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Hopea ferrea,6.3,6.3,6.3,6.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Populus deltoides,6.25,6.25,5.7,6.8,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Aesculus octandra,6.2,6.2,6.2,6.2,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Cinnamomum camphora,6.11,6.11,6.11,6.11,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Picea abies,6.09,5.74,0.48,21.6,254,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Fagus grandifolia,6.058,3.265,2.9,14.8,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Fraxinus oruns,6.05,6.05,6.05,6.05,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Populus balsamifera,6.0,6.0,6.0,6.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus elliotti,5.99,5.99,5.99,5.99,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Acer,5.99,5.99,5.99,5.99,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Acer rubrum,5.97,5.97,5.14,6.8,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Tsuga mertensiana,5.9,5.4,2.8,10.0,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Fagus sylvatica,5.85,6.2,2.28,10.2,298,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus phillyraeoides,5.82,5.82,5.74,5.9,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Elaeagnus umbellata,5.8,5.8,5.8,5.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Nothofagus solandri,5.781,5.71,3.0,8.9,20,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Prunus pensylvanica,5.733,5.5,5.4,6.3,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Chamaecyparis obtusa,5.705,5.735,3.8,7.1,56,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Castanea sativa and others,5.536,5.81,2.88,7.45,10,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Liquidambar styraciflua,5.5,5.5,5.5,5.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus mongolica,5.5,5.5,5.5,5.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus serrata,5.476,5.1,3.1,8.5,34,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus resinosa,5.469,5.75,2.5,10.7,24,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Betula ermanii,5.403,5.46,5.2,5.55,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus,5.367,5.76,4.31,6.03,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Theobroma cacao,5.367,5.7,4.1,6.3,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Alnus glutinosa,5.342,5.365,2.07,8.26,12,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus strobus,5.307,3.2,1.5,17.8,30,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Magnolia obovata,5.3,5.3,5.3,5.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Abies grandis,5.3,5.3,5.3,5.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Tsuga sieboldii,5.3,5.3,5.3,5.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus petraea and others,5.265,5.265,4.67,5.86,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus acutissima,5.254,5.1,2.9,7.1,26,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Alnus rubra,5.2,5.2,3.9,6.5,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus patraea,5.2,5.2,5.2,5.2,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Fagus crenata,5.059,4.7,3.19,7.84,96,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Abies veitchii,5.0,5.0,5.0,5.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus petraea,4.992,5.575,1.71,6.5,24,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Cyrilla racemiflora,4.96,4.96,4.96,4.96,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Abies religiosa,4.96,4.96,4.96,4.96,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Castanea sativa,4.874,5.3,3.29,6.5,10,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Tamarix chinensis,4.85,4.85,4.85,4.85,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus cerris,4.837,4.5,3.8,7.4,14,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Fagus orientalis,4.767,4.8,4.3,5.2,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Micarandra sprucei,4.72,4.72,4.72,4.72,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Fraxinus excelsior,4.69,4.55,3.6,5.4,10,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus densiflora,4.653,4.73,4.08,5.15,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus,4.65,4.65,2.01,7.29,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Metrosideros polymorpha,4.614,5.465,0.61,8.0,24,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Picea glauca,4.58,4.58,2.76,6.4,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus regnans,4.566,4.345,3.11,9.0,28,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Eucalyptus grandis*Eucalyptus urophylla hybrids,4.487,4.29,3.54,5.83,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Podocarpus nubigena,4.45,4.45,4.2,4.7,2,TRY,TRY Database (summary),,False,False,False,Tree
+Larix sibirica,4.4,4.4,4.4,4.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Betula verrucosa,4.35,4.1,1.7,6.5,16,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Betula maximowixziana,4.307,4.06,3.67,5.19,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Nothofagus pumila,4.3,4.3,4.3,4.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus meullerana,4.3,4.3,3.8,4.8,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Hevea brasiliensis,4.27,4.27,3.2,5.34,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus robur,4.24,4.55,2.0,6.33,24,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus contorta,4.196,2.8,0.01,35.7,178,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus nitens,4.151,4.25,2.24,7.43,22,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Quercus coccifera,4.15,4.15,4.15,4.15,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Cecropia,4.13,4.13,4.13,4.13,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Picea mariana,4.106,3.795,1.13,8.97,112,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus rubra,4.105,4.41,2.7,4.9,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Abies sibirica,4.1,4.1,4.1,4.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Picea engelmannii,4.1,4.1,4.1,4.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus alba,4.0,4.0,4.0,4.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Zelkovab serrata,3.95,3.95,3.95,3.95,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus ponderosa,3.902,3.1,1.02,9.0,86,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus pinaster,3.895,2.93,1.76,14.6,24,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Cupressus lusitanica,3.85,3.85,3.84,3.86,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus ilex,3.844,3.7,1.7,6.56,16,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus maculata,3.84,3.84,2.78,4.9,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Pinus sylvestris,3.825,3.25,0.15,14.21,212,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Betula aetnensis,3.8,3.8,3.8,3.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Dacrydium cupressinum,3.7,3.7,3.7,3.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Larix cajanderi,3.7,3.7,3.7,3.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Nothofagus dombeyi,3.7,3.7,3.7,3.7,1,TRY,TRY Database (summary),,False,False,False,Tree
+Alnus sp.,3.625,3.625,3.45,3.8,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus globulus,3.571,3.3,1.39,6.1,58,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Eucalyptus microcorys,3.557,3.9,2.0,5.2,14,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Marquesia macroura,3.47,3.47,3.47,3.47,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus pedunculiflora,3.43,3.43,3.43,3.43,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Larix decidua,3.42,3.42,1.74,5.1,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus grandis,3.405,3.7,2.07,4.15,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Eucalyptus clone (E. grandis *E. urophylla),3.4,3.4,3.4,3.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Betula erumani,3.353,3.36,3.11,3.59,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Prestoea montana,3.3,3.3,3.3,3.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus canariensis,3.263,3.215,3.09,3.53,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus banksiana,3.257,2.325,1.22,11.0,76,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Eucalyptus sieberi,3.24,3.5,1.96,4.0,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Populus trichocarpa,3.23,3.23,3.23,3.23,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus cembra,3.2,3.2,2.5,3.9,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Salix dasyclados,3.2,3.2,3.2,3.2,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Nothofagus nitida,3.2,3.2,3.2,3.2,1,TRY,TRY Database (summary),,False,False,False,Tree
+Combretodendron africanum,3.16,3.16,3.16,3.16,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Nothofagus betuloides,3.155,3.155,2.58,3.73,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Betula pendula,3.111,3.08,0.66,5.34,68,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus taeda,3.084,2.7,0.94,5.34,34,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eperua molenillo,3.04,3.04,3.04,3.04,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Fraxinus pennsylvanica,3.0,3.0,3.0,3.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Picea,2.97,2.97,2.97,2.97,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus fastigata,2.93,2.93,2.93,2.93,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Populus tremula,2.91,2.64,2.43,4.22,24,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus liaotungensis,2.9,2.9,2.9,2.9,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Carapa guianensis,2.9,2.9,2.9,2.9,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucryphia cordifolia,2.9,2.9,2.1,3.7,2,TRY,TRY Database (summary),,False,False,False,Tree
+Robinia pseudoacacia,2.89,2.89,2.89,2.89,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Betula pubescens,2.83,2.67,0.76,5.12,40,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus grandis * urophylla (mono clonal),2.8,3.0,2.4,3.0,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Picea obovata,2.8,2.8,2.8,2.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Populus tremuloides,2.775,2.59,0.37,6.6,114,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Alnus incana,2.773,2.35,0.62,5.43,24,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus pubescens,2.757,2.73,2.54,3.0,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus saligna,2.697,2.385,1.46,5.18,20,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Eucalyptus obliqua,2.657,1.34,1.23,5.4,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Tabebuia rigida,2.62,2.62,1.99,3.25,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Populus fremontii,2.6,2.6,2.6,2.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus frainetto,2.562,2.7,2.1,2.8,16,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus diversicolor,2.55,1.95,1.3,5.0,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Larix principis-rupprechtii,2.54,2.54,2.54,2.54,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Toona ciliata,2.5,2.45,2.1,2.9,12,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus caribaea,2.5,2.5,2.5,2.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus elliottii,2.47,2.47,2.47,2.47,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Populus grandidentata,2.43,2.43,2.43,2.43,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Populus davidiana,2.37,2.37,2.37,2.37,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Quercus pyrenaica,2.352,2.205,1.8,3.4,12,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus grandis hybrids,2.3,2.3,2.3,2.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Betula platyphylla,2.3,2.3,1.1,3.5,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus patula,2.295,2.295,2.13,2.46,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus grandis * camaldulensis hybrid,2.291,2.235,1.18,3.95,24,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Pinus tabulaeformis,2.28,2.28,2.28,2.28,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Nothofagus glauca,2.27,2.12,2.06,2.63,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Betula,2.27,2.27,2.27,2.27,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Salix viminalis,2.2,2.2,1.9,2.5,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus calophylla,2.1,2.1,1.9,2.3,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Weinmannia trichosperma,2.1,2.1,2.1,2.1,1,TRY,TRY Database (summary),,False,False,False,Tree
+Nothofagus pumilio,2.073,2.02,1.19,2.9,18,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus marginata,2.036,1.845,0.85,4.0,48,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Populus canadensis Moench (clone I-214),2.02,2.02,2.02,2.02,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Nothofagus antarctica,2.005,1.91,0.75,4.7,20,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Larix gmelinii,2.004,1.68,1.03,5.7,26,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus camaldulensis,2.001,2.17,0.28,3.58,24,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Populus spp,1.96,1.96,1.96,1.96,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus cypellocarpa,1.95,1.95,1.95,1.95,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Pinus mugo,1.9,1.9,1.9,1.9,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Abies faxoniana,1.9,1.9,1.9,1.9,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Pinus sibirica,1.89,1.89,1.89,1.89,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus delegatensis,1.805,1.805,1.5,2.11,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Eucalyptus dives,1.8,1.8,1.8,1.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Podocarpus falcatus,1.78,1.78,1.78,1.78,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Qualea grandiflora,1.757,1.63,0.73,3.04,22,TRY,TRY Database (summary),,False,False,False,Tree
+Pinus yunnanensis,1.75,1.75,1.7,1.8,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Taxodium distichum,1.7,1.7,0.5,2.9,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Scaphium macropodum,1.68,1.68,1.68,1.68,1,TRY,TRY Database (summary),,False,False,False,Tree
+Diospyros fusiformis,1.65,1.65,1.65,1.65,1,TRY,TRY Database (summary),,False,False,False,Tree
+Eucalyptus,1.577,1.77,0.01,4.4,52,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Betula nana,1.543,1.02,0.97,2.64,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Litsea lancifolia,1.51,1.51,1.51,1.51,1,TRY,TRY Database (summary),,False,False,False,Tree
+Picea purpurea,1.5,1.5,1.5,1.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Urophyllum griffithianum,1.43,1.43,1.43,1.43,1,TRY,TRY Database (summary),,False,False,False,Tree
+Pinus halepensis,1.427,1.33,1.15,1.8,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Scaphium longipetiolatum,1.38,1.38,1.38,1.38,1,TRY,TRY Database (summary),,False,False,False,Tree
+Acer spicatum,1.335,1.04,0.41,6.9,99,TRY,TRY Database (summary),,False,False,False,Tree
+Aporusa grandistipula,1.32,1.32,1.32,1.32,1,TRY,TRY Database (summary),,False,False,False,Tree
+Urophyllum glabrum,1.28,1.28,1.28,1.28,1,TRY,TRY Database (summary),,False,False,False,Tree
+Litsea accedens,1.23,1.23,1.23,1.23,1,TRY,TRY Database (summary),,False,False,False,Tree
+Qualea parviflora,1.161,1.06,0.68,2.07,20,TRY,TRY Database (summary),,False,False,False,Tree
+Eucalyptus radiata,1.13,1.13,1.13,1.13,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Shorea multiflora,1.13,1.13,1.13,1.13,1,TRY,TRY Database (summary),,False,True,True,Tree
+Annona crassiflora,1.123,1.145,0.72,1.56,20,TRY,TRY Database (summary),,False,False,False,Tree
+Eucalyptus ovata,1.08,1.08,1.08,1.08,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Dacryodes rostrata,1.06,1.06,1.06,1.06,1,TRY,TRY Database (summary),,False,False,False,Tree
+Canarium denticulatum,1.04,1.04,1.04,1.04,1,TRY,TRY Database (summary),,False,False,False,Tree
+Eucalyptus sp.,0.993,0.83,0.36,2.31,46,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Eucalyptus viminalis,0.99,0.99,0.99,0.99,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Shorea falciferoides,0.99,0.99,0.99,0.99,1,TRY,TRY Database (summary),,False,True,True,Tree
+Cleistanthus paxii,0.97,0.97,0.97,0.97,1,TRY,TRY Database (summary),,False,False,False,Tree
+Dipterocarpus applanatus,0.97,0.97,0.97,0.97,1,TRY,TRY Database (summary),,False,True,True,Tree
+Dacryodes laxa,0.96,0.96,0.96,0.96,1,TRY,TRY Database (summary),,False,False,False,Tree
+Eucalyptus luecoxylon,0.95,0.95,0.95,0.95,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Dalbergia miscolobium,0.897,0.59,0.17,2.51,20,TRY,TRY Database (summary),,False,False,False,Tree
+Cleistanthus baramicus,0.89,0.89,0.89,0.89,1,TRY,TRY Database (summary),,False,False,False,Tree
+Shorea xanthophylla,0.87,0.87,0.87,0.87,1,TRY,TRY Database (summary),,False,True,True,Tree
+Aporusa lucida,0.86,0.86,0.86,0.86,1,TRY,TRY Database (summary),,False,False,False,Tree
+Eucalyptus dumosa,0.853,0.75,0.6,1.21,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Eucalyptus pauciflora,0.85,0.85,0.85,0.85,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Quercus douglasii,0.83,0.83,0.83,0.83,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Shorea leprosula,0.82,0.82,0.82,0.82,1,TRY,TRY Database (summary),,False,True,True,Tree
+Dipterocarpus grandiflorus,0.8,0.8,0.8,0.8,1,TRY,TRY Database (summary),,False,True,True,Tree
+Larix laricina,0.747,0.86,0.38,1.0,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Eucalyptus bridgesiana,0.72,0.72,0.72,0.72,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Canarium pilosum,0.71,0.71,0.71,0.71,1,TRY,TRY Database (summary),,False,False,False,Tree
+Diospyros curranii,0.7,0.7,0.7,0.7,1,TRY,TRY Database (summary),,False,False,False,Tree
+Eucalyptus porosa,0.69,0.69,0.69,0.69,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Eucalyptus stellulata,0.66,0.66,0.66,0.66,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Eucalyptus fasciculosa,0.595,0.595,0.44,0.75,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Dipterocarpus acutangulus,0.57,0.57,0.57,0.57,1,TRY,TRY Database (summary),,False,True,True,Tree
+Eucalyptus socialis,0.56,0.56,0.45,0.67,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Tree
+Betula glandulosa,0.52,0.52,0.52,0.52,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Tree
+Dipterocarpus caudiferus,0.26,0.26,0.26,0.26,1,TRY,TRY Database (summary),,False,True,True,Tree
+Cornus stolonifera,0.047,0.03,0.01,0.23,73,TRY,TRY Database (summary),,False,False,False,Tree
+Morella cerifera,9.75,9.9,6.7,12.5,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Rhododendron maximum,8.36,8.36,8.36,8.36,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Ilex aquifolium,6.1,6.1,5.6,6.6,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Leiophyllum lyoni,3.1,3.1,3.1,3.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Arbutus unedo,3.05,3.05,3.05,3.05,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Atriplex canescens,2.99,2.99,2.99,2.99,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Atriplex lentiformis (Torr.),2.82,2.82,2.82,2.82,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Rhododendron catawbiense,2.8,2.8,2.8,2.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Sarcobatus vermiculatus,2.22,2.22,2.22,2.22,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Cistus albidus,2.2,2.2,2.2,2.2,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Vaccinium myrtilloides,2.18,2.18,2.18,2.18,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Atriplex confertifolia,2.12,2.12,2.12,2.12,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Chrysothamnus consimilis,2.02,2.02,2.02,2.02,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Rhododendron carolinianum,2.0,2.0,2.0,2.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Chamaedaphne calyculata,1.92,1.92,1.92,1.92,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Rhododendron nivale,1.85,1.85,1.85,1.85,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Loiseleuria procumbens,1.66,1.66,0.02,3.3,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Rhus copallina,1.52,1.52,1.52,1.52,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Cistus monospeliensis,1.36,1.36,1.36,1.36,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Adenostoma fasciculatum,1.1,1.1,1.1,1.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Artemisia tridentata,1.0,1.0,1.0,1.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Cassiope tetragona,0.612,0.5,0.36,1.1,18,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Empetrum hermaphroditum,0.61,0.61,0.5,0.72,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Larrea divaricata,0.6,0.6,0.6,0.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Vaccinium uliginosum,0.38,0.38,0.38,0.38,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Melaleuca leucadendron,0.37,0.37,0.37,0.37,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Shrub
+Artemisia ordosica,0.3,0.3,0.3,0.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Andromeda polifolia,0.23,0.23,0.23,0.23,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Rhus typhina,0.099,0.06,0.01,1.5,180,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Shrub
+Agrostis capillaris,6.198,6.655,3.24,8.39,18,TRY,TRY Database (summary),,False,False,False,Grass
+Phalaris arundinacea,6.1,6.1,6.1,6.1,1,TRY,TRY Database (summary),,False,False,False,Grass
+Trisetum flavescens,6.005,6.305,3.74,8.14,16,TRY,TRY Database (summary),,False,False,False,Grass
+Arrhenatherum elatius,5.677,6.29,2.61,7.66,18,TRY,TRY Database (summary),,False,False,False,Grass
+Apera spica-venti,5.643,5.77,3.51,7.04,8,TRY,TRY Database (summary),,False,False,False,Grass
+Alopecurus pratensis,5.603,6.01,2.9,7.65,21,TRY,TRY Database (summary),,False,False,False,Grass
+Alopecurus geniculatus,5.553,5.61,4.3,7.21,10,TRY,TRY Database (summary),,False,False,False,Grass
+Anthoxanthum odoratum,5.332,5.5,3.71,7.34,21,TRY,TRY Database (summary),,False,False,False,Grass
+Brachypodium sylvaticum,4.869,4.89,3.5,6.82,15,TRY,TRY Database (summary),,False,False,False,Grass
+Calamagrostis epigejos,4.654,4.76,3.21,6.42,21,TRY,TRY Database (summary),,False,False,False,Grass
+Phalaris arundinaceae,4.172,4.6,1.81,4.86,15,TRY,TRY Database (summary),,False,False,False,Grass
+Holcus lanatus,3.628,3.73,1.14,5.63,17,TRY,TRY Database (summary),,False,False,False,Grass
+Festuca ovina,3.449,2.855,0.46,6.34,38,TRY,TRY Database (summary),,False,False,False,Grass
+Scirpus sylvaticus,3.383,3.32,2.25,4.75,9,TRY,TRY Database (summary),,False,False,False,Grass
+Luzula multiflora,3.27,3.25,2.57,4.66,15,TRY,TRY Database (summary),,False,False,False,Grass
+Deschampsia cespitosa,3.078,3.15,2.0,4.52,15,TRY,TRY Database (summary),,False,False,False,Grass
+Bromus hordeaceus,2.604,3.01,0.62,3.78,11,TRY,TRY Database (summary),,False,False,False,Grass
+Digitaria sanguinalis,2.472,2.62,0.78,3.37,9,TRY,TRY Database (summary),,False,False,False,Grass
+Poa annua,2.421,1.115,0.18,5.99,18,TRY,TRY Database (summary),,False,False,False,Grass
+Nardus stricta,2.286,2.58,0.59,3.08,21,TRY,TRY Database (summary),,False,False,False,Grass
+Molinia caerulea,1.683,1.06,0.88,5.65,7,TRY,TRY Database (summary),,False,False,False,Grass
+Festuca ortophylla,0.32,0.32,0.32,0.32,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Grass
+Lapsana communis,5.521,5.72,4.02,6.83,10,TRY,TRY Database (summary),,False,False,False,Groundcover
+Succisa pratensis,5.087,4.9,4.15,6.93,7,TRY,TRY Database (summary),,False,False,False,Groundcover
+Plantago major,5.067,5.04,4.16,6.57,7,TRY,TRY Database (summary),,False,False,False,Groundcover
+Clinopodium vulgare,4.974,4.87,4.7,6.92,16,TRY,TRY Database (summary),,False,False,False,Groundcover
+Cirsium arvense,4.763,4.78,3.98,6.62,21,TRY,TRY Database (summary),,False,False,False,Groundcover
+Origanum vulgare,4.488,4.8,2.95,5.76,11,TRY,TRY Database (summary),,False,False,False,Groundcover
+Trifolium pratense,4.339,4.44,1.95,6.37,24,TRY,TRY Database (summary),,False,False,False,Groundcover
+Taraxacum officinale,4.33,4.33,4.33,4.33,1,TRY,TRY Database (summary),,False,False,False,Groundcover
+Anthyllis vulneraria,4.045,4.19,2.31,5.52,10,TRY,TRY Database (summary),,False,False,False,Groundcover
+Geranium pratense,3.925,3.74,3.22,5.42,17,TRY,TRY Database (summary),,False,False,False,Groundcover
+Digitalis purpurea,3.801,3.935,2.01,5.41,18,TRY,TRY Database (summary),,False,False,False,Groundcover
+Cirsium acaule,3.715,3.88,2.33,5.31,15,TRY,TRY Database (summary),,False,False,False,Groundcover
+Geranium robertianum,3.713,3.42,2.68,5.25,15,TRY,TRY Database (summary),,False,False,False,Groundcover
+Urtica dioica,3.57,3.78,1.85,4.86,21,TRY,TRY Database (summary),,False,False,False,Groundcover
+Aegopodium podagraria,3.547,3.37,3.08,5.03,21,TRY,TRY Database (summary),,False,False,False,Groundcover
+Arctium lappa,3.533,3.7,2.27,4.72,13,TRY,TRY Database (summary),,False,False,False,Groundcover
+Taraxacum spec.,3.031,3.23,0.5,4.15,11,TRY,TRY Database (summary),,False,False,False,Groundcover
+Filipendula ulmaria,2.878,3.32,0.93,4.34,14,TRY,TRY Database (summary),,False,False,False,Groundcover
+Centaurium erythraea,2.782,2.855,1.74,3.83,10,TRY,TRY Database (summary),,False,False,False,Groundcover
+Medicago lupulina,2.763,2.72,1.89,3.78,10,TRY,TRY Database (summary),,False,False,False,Groundcover
+Stellaria media,2.464,2.095,0.25,4.64,10,TRY,TRY Database (summary),,False,False,False,Groundcover
+Pulicaria dysenterica,2.315,2.215,1.34,4.31,26,TRY,TRY Database (summary),,False,False,False,Groundcover
+Lamium purpureum,2.214,2.23,1.09,3.39,14,TRY,TRY Database (summary),,False,False,False,Groundcover
+Campanula rotundifolia,1.385,1.09,0.28,2.97,21,TRY,TRY Database (summary),,False,False,False,Groundcover
+Thlaspi arvense,1.384,1.3,1.21,1.82,5,TRY,TRY Database (summary),,False,False,False,Groundcover
+Phyllostachys bambusoides,11.6,11.6,11.6,11.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Bamboo
+Phyllostachys pubescens,5.45,5.45,2.88,8.02,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Bamboo
+Sasa tokugawana,5.3,5.3,5.3,5.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Bamboo
+Sasa nikkoensis,5.2,5.2,5.2,5.2,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Bamboo
+Dendrocalamus strictus,5.08,5.08,5.08,5.08,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Bamboo
+Sasa nipponica,4.7,4.7,4.7,4.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Bamboo
+Sasa oseana,4.7,4.7,4.7,4.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Bamboo
+Sasa kurilensis,3.725,3.725,2.15,5.3,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Bamboo
+Sasa senanensis,3.25,3.25,3.25,3.25,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Bamboo
+Bruguiera conjugata,7.6,7.6,6.5,8.7,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Mangrove
+Rhizophora mucronata,5.4,5.4,5.4,5.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Mangrove
+Sonneratia apetala,5.14,5.14,5.14,5.14,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Mangrove
+Laguncularia racemosa,4.69,4.535,4.4,5.29,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Mangrove
+Rhizophora mangle,4.41,4.4,2.91,5.86,30,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Mangrove
+Rhizophora apiculata,4.147,4.16,3.36,4.93,16,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Mangrove
+Kandelia obovata,3.17,3.17,3.17,3.17,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Mangrove
+Kandelia candel,2.57,2.57,0.64,4.5,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Mangrove
+Avicennia germinans,2.18,2.18,1.61,2.75,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Mangrove
+Avicennia marina,1.834,1.1,0.56,3.45,10,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Mangrove
+Elaeis guineensis,4.65,4.605,3.81,5.58,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Palm
+Tropical moist forest (395 spp.),22.4,22.4,22.4,22.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Generic-Benchmark
+Cecropia spp.,14.05,14.05,11.6,16.5,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Evergreen broadleaf species,11.82,11.82,11.82,11.82,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Deciduous and evergreen species belonging to the Guineo-Conglian phytochorion,9.105,9.105,8.97,9.24,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Dipterocarp species,7.27,7.27,7.27,7.27,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Generic-Benchmark
+Deciduous,6.98,6.98,6.98,6.98,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Dense coniferous,6.74,6.74,6.74,6.74,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Tropical rain forest species,6.49,6.49,6.49,6.49,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Generic-Benchmark
+Tropical tree species,6.26,6.2,6.0,6.7,10,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Generic-Benchmark
+Tropical forest tree species,6.21,6.6,4.92,7.11,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Generic-Benchmark
+Tropical rainforest (1053 species),6.125,6.125,5.85,6.4,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Generic-Benchmark
+Moist tropical tree species,6.07,6.07,6.07,6.07,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Generic-Benchmark
+Moist tropical evergreen forest,5.6,5.6,5.6,5.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Generic-Benchmark
+Tropical moist forest,5.41,5.41,5.41,5.41,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Generic-Benchmark
+Calamus spp.,5.4,5.4,5.4,5.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Aspidosperma spp. (198 species in 4 ha),5.2,5.2,5.2,5.2,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Natural tropical cloud forest,5.19,4.96,4.52,6.09,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Generic-Benchmark
+Micranda sprucei (total 59 species),5.1,5.1,4.4,5.8,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Pinus spp.,4.87,4.87,4.87,4.87,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+1176 tree species,4.7,4.7,4.7,4.7,1,ORNL,ORNL Global LAI Woody Plants,,False,False,False,Generic-Benchmark
+Pinus (heath),4.7,4.7,4.7,4.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Riparian forests,4.51,4.51,4.51,4.51,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Cupressus spp.,4.49,4.49,4.49,4.49,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Alder,4.35,4.35,4.26,4.44,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Maple,3.935,3.935,3.5,4.37,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Deciduous northern temperate tree species,3.82,3.82,3.82,3.82,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+57 species mix,3.6,3.6,3.6,3.6,1,ORNL,ORNL Global LAI Woody Plants,,False,False,False,Generic-Benchmark
+Shurb,3.58,3.58,3.58,3.58,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Eucalyptus spp.,3.005,3.005,2.0,4.01,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Generic-Benchmark
+Betula spp.,2.817,1.6,1.16,5.69,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Savanna trees species,2.805,2.805,2.76,2.85,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Savanna trees and shrubs species,2.32,2.32,2.32,2.32,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Evergreen forest,2.1,2.1,2.1,2.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Dry sclerophyll forest species,1.48,1.48,1.48,1.48,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Salix spp.,1.063,0.99,0.81,1.39,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Larix spp.,0.868,0.47,0.23,2.68,10,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Not described,0.685,0.64,0.13,1.67,22,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+Ericaceous vegetation,0.11,0.11,0.11,0.11,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Generic-Benchmark
+"Pseudotsuga menziesii, Tsuga heterophylla, Abies amabilis",22.0,22.0,22.0,22.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pseudotsuga menziesii, Abies grandis",18.0,18.0,18.0,18.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Abies magnifica, Abies concolor",16.015,16.015,15.58,16.45,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Abies concolor, Pseudotsuga menziesii",15.5,15.5,15.5,15.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Padburggea pubescens, Eugenia clarkeana",12.3,12.3,12.3,12.3,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Dipterocarpus alatus, Mangifera caloneura, Gymnosporia spp.",12.1,12.1,12.1,12.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Abies grandis, Thuja plicata, Pseudotsuga menziesii",11.68,11.68,11.68,11.68,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Tsuga heterophylla, Pseudotusga menziesii",11.58,11.58,11.58,11.58,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus phillyraeoides, Rapanaea neriifolia",11.3,10.5,9.6,13.8,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Abies fabri, Picea brachytyla, Tsuga chinesis, Acer sp., Betula sp.",10.31,10.31,10.31,10.31,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Abies fabri, Populus purdomii",10.17,10.17,10.17,10.17,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pseudotsuga menziesii, Pinus ponderosa",9.93,9.93,9.93,9.93,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Micarandra sprucei, Eperua zapatero?",9.78,9.78,9.78,9.78,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Abies veitchii, Abies mariesii",9.033,8.2,5.5,12.8,18,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pseudotsuga menziesii, Tsuga heterophylla, Thuja plicata",8.917,9.1,7.2,10.7,12,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Larix occidentalis, Pinus monticola",8.86,8.86,8.86,8.86,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus acuta,  Shiia sieboldii, Quercus stenophylla, Distylium racemosum",8.75,8.75,8.75,8.75,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Tsuga mertensiana, Pseudotsuga menziesii",8.7,8.7,8.7,8.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eperua falcata, Vouacapoua americana, Dicorynia guianensis, Carapa procera",8.6,8.6,8.6,8.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Taxodium distichum, Fraxinus caroliniana",8.5,8.5,8.5,8.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus serrata, Carpinus tschonoskii",8.34,8.34,8.34,8.34,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Tsuga heterophylla, Pseudotsuga menziesii",8.3,8.3,8.3,8.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus glauca, Quercus salicina, Quercus acuta, Camellia japonica",8.2,8.2,7.5,8.9,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Liriodendron tulipifera, Quercus prinus, Quercus rubra, Quercus alba, Quercus velutina etc.",8.062,7.7,5.4,10.7,16,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer saccharum, Tilia americana, Populus tremuloides",8.0,8.0,8.0,8.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus monticola, Larix occidentalis",7.99,7.99,7.99,7.99,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pseudotsuga menziesii, Pinus monticola",7.97,7.97,7.97,7.97,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus serrata, Ilex pedunculosa",7.8,7.8,7.8,7.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Carpinus betulus, Fagus sylvatica, Quercus petraea, Tilia cordata",7.8,7.8,7.8,7.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus crispula, Betula ermanii, Betula platyphylla, Abies sachalinensis, Picea jezoensis",7.8,7.8,7.8,7.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus gilva, Castanopsis cuspidata",7.773,8.11,6.93,8.28,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Clethra barbinervis, Prunus Verecunda, Cinnamomum camphora, Eurya japonica",7.6,7.6,7.6,7.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus ponderosa, Pinus strobiformis",7.6,7.6,7.6,7.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Dacyodes excelsa, Sloanea beteriana, Manilkara bidentata et al.",7.34,7.34,7.34,7.34,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Abies amabilis, Thuja plicata, Puseudotsuga menziesii",7.32,7.45,4.1,10.14,13,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Trichilia tuberculata, Ceiba pentandra, Pseudobombax septenatum, Spondias mombin, Virola surinamensis, Anacardium excelsum",7.25,7.25,7.25,7.25,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Betula ermanii, Quercus crispula",7.21,7.21,7.21,7.21,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus petraea, Quercus robur, Fagus sylvatica",7.11,7.11,7.11,7.11,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Tilia cordata, Tilia platyphyllos, Fagus sylvatica",7.1,7.1,7.1,7.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Dacrydium sp., Tristania sp., et al.",7.1,7.1,7.1,7.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Liriodendron tulipifera, Fagus grandifolia, Carya tomentosa",7.0,7.0,7.0,7.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Dialium species, Aucoumea klaineana",7.0,7.0,7.0,7.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Micarandra sprucei, Manilkara sp.",6.965,6.965,4.47,9.46,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus rubra, Carya spp.",6.9,6.9,6.9,6.9,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus glauca, Cinnamomum sp., Buddleja sp. et al,",6.88,6.88,6.88,6.88,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Fagus sylvatica, Quercus",6.86,6.86,6.86,6.86,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer saccharum, Acer rubrum, Tsuga canadensis",6.8,6.8,6.8,6.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus robur, Carpinus betulus, Fagus sylvatica",6.8,6.8,6.8,6.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus densata, Quercus semicarpiforlia",6.71,6.71,6.71,6.71,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus Prinus, Quercus velutina",6.467,6.0,6.0,7.4,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer rubrum, Cornus florida, Ilex opaca, Liquidambar styraciflua, Liriodendron tulipifera etc.",6.35,6.35,5.6,7.1,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Camellia japonica, Machilus thunbergii",6.3,6.3,6.3,6.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer saccharum, Tilia americana",6.3,6.3,5.5,7.1,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus, Fagus sylvatica",6.27,6.27,6.27,6.27,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Phoebe chinesis, Lithocarpus cleistocarpus, Acer sp., Populus purdomii",6.23,6.23,6.23,6.23,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Shorea macroptera, Shorea beccariana, Shorea acuta, Dipterocarpus glabosus, Dryobalanops aromatica",6.2,6.2,6.2,6.2,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Quercus alba, Quercus rubra, Quercus marilandica",6.136,6.1,4.5,7.4,22,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus petraea, Quercus robur",6.113,6.61,3.81,7.05,22,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Picea abies, Fagus sylvatica",6.1,6.0,5.7,6.6,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Rhododendron catawbiense, Gaylyssacia baccata",6.08,6.08,6.08,6.08,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus glauca, Quercus salicina, Camellia japonica",6.073,6.07,5.52,6.63,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pentaclethra macroloba, Palms, other trees, Lianas",6.0,6.0,6.0,6.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Quercus sp., Carya sp., Acer sp.",6.0,6.0,6.0,6.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pometia tomentosa,Terminalia myriocarpa, Barringtonia macrostachya",6.0,6.0,6.0,6.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Thuja plicata, Pseudotsuga menziesii, Tsuga heterophylla",5.957,5.5,1.5,11.4,56,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Fagus grandifolia, Acer saccharum, Betula alleghaniensis",5.95,5.95,5.95,5.95,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer saccharum, Quercus rubra, Betula papyrifera",5.9,5.9,5.9,5.9,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Betula papyrifera, Acer saccharum, Populus tremuloides",5.9,5.9,5.9,5.9,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer rubrum, Quercus Prinus",5.85,5.85,4.5,7.2,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Fagus grandifolia, Acer saccharum, Betula lutea",5.85,5.85,5.5,6.2,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Meliaceae, Lauraceae, Sapotaceae, Fagaceae (63 species)",5.733,6.0,4.3,6.5,12,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Fagus crenata, Carpinus laxiflora, Acer sieboldianum etc.",5.723,5.78,4.82,6.51,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Dipterocarpus obtusifolius, Lagerstroemia calyculata et al.",5.7,5.7,5.7,5.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Carpinus orientalis, Quercus pubescentis",5.7,5.7,5.7,5.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer saccharum, Betula lutea, Fagus grandifolia",5.7,5.7,5.7,5.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Cyrilla racemiflora, Clethra occidentalis, Podocarpus urbanii Pilger, Hedyosmum arborescen",5.7,5.7,5.7,5.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Fagus sylvatica, Quercus robur, Ilex aquifolium",5.7,5.7,5.7,5.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Picea engelmannii, Abies lasiocarpa",5.683,5.145,4.34,8.75,12,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Combretocarpus rotundatus, Cratoxylum arborescens, Buchanania sessifolia, Tetramerista glabra",5.6,5.6,5.6,5.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus sp., Carya sp.",5.6,5.6,5.6,5.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus rubra, Acer saccharum, Acer rubrum",5.6,5.6,5.6,5.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus sp., Machilus edulis, Cinnamomum sp. et al.",5.6,5.6,5.6,5.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Micarandra sprucei, Manilkara sp., Eperua leucantha",5.58,5.58,5.58,5.58,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Elateriospermum tapos, Anisoptera laevis, Parashorea lucida, Shorea retinoides",5.5,5.5,5.5,5.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Quercus robur, Fagus sylvatica",5.5,5.5,5.5,5.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus rubra, Acer rubrum",5.5,5.5,5.5,5.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Populus tremuloides, Betula papyrifera, Acer rubrum. Acer saccharum",5.5,5.5,5.5,5.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Cyrilla racemiflora, Lyonia octandra, Chaetocarpus globosus",5.5,5.5,5.5,5.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Sapotaceae, Fabaceae, Violaceae, Chrysobalanacae spp. (over 100 species)",5.45,5.45,5.39,5.51,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Shorea conica, Shorea gibbosa",5.4,5.4,5.4,5.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Picea mariana, Pinus banksiana",5.4,5.4,5.3,5.5,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Larix occidentalis, Pinus ponderosa",5.4,5.4,5.4,5.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Thouinidium decandrum, Guapira macrocarpa, Astronium graveolens, Trichilia trifolia, Casearia corymbosa",5.4,5.4,5.4,5.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus robur, Acer pseudoplatanus",5.3,5.3,5.3,5.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Picea sitchensis, Tsuga heterophylla",5.3,5.3,5.3,5.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Vaccinium myrtillus, Vaccinium uliginosum",5.3,5.3,5.3,5.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus robur, Ilex aquifolium",5.3,5.3,5.3,5.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus ponderosa, Pseudotsuga menziesii",5.25,5.25,5.25,5.25,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Fagus sylvatica, Fraxinus",5.21,5.21,5.0,5.42,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer rubrum, Carya spp.",5.2,5.2,5.2,5.2,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus Prinus, Liriodendron tulipifera",5.2,5.2,5.2,5.2,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Shorea macroptera, Shorea lumutensis, Shorea acuminata",5.2,5.2,5.2,5.2,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Quercus Prinus, Acer rubrum",5.167,5.4,4.7,5.4,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus petraea, Fagus sylvatica",5.13,4.8,4.49,6.1,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Fraxinus excelsior, Acer pseudoplatanus, Tilia platyphyllos, Tilia cordata, Fagus sylvatica, Quercus robur (total 11 species)",5.1,5.1,5.1,5.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer saccharum, Betula papyrifera, Pinus strobus",5.1,5.1,5.1,5.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer saccharum, Tilia americana, Fraxinus spp.",5.1,5.1,5.1,5.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus crispula, Betula platyphyla, Acer mono",5.1,5.1,5.1,5.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Couratari guianensis, Eschweilera sp., Manilkara huberi, Carapa guianensis, Sclerolobium paniculatum, Pouteria sp., Protium decandro, Licaria guianensis",5.07,5.07,5.07,5.07,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Alnus glutinosa, Fraxinus exelsior",5.03,5.03,5.03,5.03,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Protium sagotianum Marchland, Dialium guianense, Hevea brasiliensis, Brosimum lactescens, Cordia alliodora, Tovomita schomburgkii, Qualea paraensis",5.0,5.0,5.0,5.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Meliaceae, Lauraceae, Sapotaceae, Fagaceae (53 species)",5.0,4.9,4.9,5.2,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Palaquium oxleyanum, Koompassia malaccensis, Parashorea lucida",5.0,5.0,5.0,5.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Quercus ilex, Arbutus unedo, Phyllirea media",5.0,5.1,4.6,5.3,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus alba, Carya tomentosa",5.0,5.0,5.0,5.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Fagus sylvatica, Fraximum excelsior",5.0,5.0,5.0,5.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus koriaensis,Tilia amurensis, Quercus mongolica, Fraxinus mandshurica, Acer mino",5.0,5.0,5.0,5.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus rubra, Quercus alba, Quercus velutina",5.0,5.0,5.0,5.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Amaioua guianensis, Ocotea acutangula, Aspidosperma excelsum etc.",5.0,5.0,5.0,5.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus rubra, Pinus resinosa, Acer rubrum",5.0,5.0,5.0,5.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eucalyptus maculata, Ecucalyptus paniculata, Eucalyptus globoidea, Eucalyptus pilularis, Eucalyptus sieberi",4.95,4.95,4.95,4.95,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Acer saccharum, Liriodendron tulipifera, Quercus spp.",4.9,4.9,4.9,4.9,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus spps, Acer rubrum, Liriodendron tulifpifera",4.9,4.9,4.9,4.9,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Populus tremuloides, Betula papyrifera, Acer rubrum",4.9,4.9,4.9,4.9,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus robur, Fagus sylvatica, Ilex aquifolium",4.9,4.9,4.9,4.9,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Dacrycarpus cinctus, Podocarpus archboldii et al. (119 tree species)",4.88,4.88,4.88,4.88,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Cinnamomum camphora, Machilus thunbergii, Quercus serrata, Castanopsis cuspidate, Ulmus parvifolia, Quercus glauca",4.8,4.8,4.8,4.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus stellata, Quercus marilandica",4.8,4.8,4.8,4.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Micarandra sprucei, Eperua leucantha",4.797,5.45,3.07,5.87,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Miconia, Tapiria",4.79,4.79,4.79,4.79,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Carya tomentosa, Liriodendron tulipifera",4.7,4.7,4.7,4.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Micarandra sprucei, Eperua palo amarillo?",4.64,4.64,4.64,4.64,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus ruber, Fraxinus excelsior, Tilia sp., Acer sp., et al.",4.6,4.6,4.6,4.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Fagus sylvatica, Fraxinus excelsior",4.6,4.6,4.6,4.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus robur, Quercus petraea",4.6,4.6,4.6,4.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Sabina saltuaria, Rhododendron",4.54,4.54,4.54,4.54,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Cinnamomum randaiense, Cryptocarya chinesis, Persea zuihoenisis, Castanopsis hystrix, Gordonia axillaris",4.5,4.5,4.5,4.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Lithocarpus, Quercus, Castanopsis sp.",4.5,4.5,4.5,4.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Bruguiera gymnorrhiza, Bruguiera sexangula, Kandelia obovata, R. stylosa",4.48,4.48,4.48,4.48,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Picea abies, Abies",4.447,4.485,4.13,4.71,12,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Family of Melastomataceae (all), Sapotaceae, Moraceae, Mimosaceae (lower), Lauraceae, Euphorbiaceae, Clethraceae (middle), Cunoniaceae, Podocarpaceae, Cyrillaceae, Rubiaceae and Aquifoliaceae (Upper)",4.42,5.4,2.2,6.0,10,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Vismia, Cecropia, Miconia",4.41,4.41,4.41,4.41,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus robur, Carpinus betulus",4.4,4.4,4.4,4.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Mallotus japonicus, Ilex chinensis",4.4,4.4,4.4,4.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Populus grandidentata, Populus tremuloides",4.4,4.4,4.4,4.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Populus tremuloides, Acer rubrum, Quercus rubra, Populus grandidentata",4.4,4.4,4.4,4.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus resinosa, Pinus strobus, Acer rubrum",4.4,4.4,4.4,4.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus cerris, Quercus petraea",4.4,4.4,4.4,4.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Aegiceras corniculatum, Bruguiera gymnorrhiza, Kandelia obovata, R. stylosa",4.36,4.36,4.36,4.36,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus serrata, Prunus Verecunda",4.3,4.3,4.3,4.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus serrata, Clethra barbinervis",4.3,4.3,4.3,4.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Gymnantbes lucida, Exostema caribaeum, Pisonia albida (169 species)",4.3,4.3,4.3,4.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Bucida buceras, Gymnanthes lucida, Bursera simaruba",4.2,4.2,4.2,4.2,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus contorta, Larix occidentalis, Pseudotsuga menziesii, Abies grandis",4.2,4.2,4.2,4.2,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus nigra, Fagus sylvatica",4.1,4.1,4.1,4.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Laguncularia racemosa, Avicennia germinans",4.09,4.09,4.09,4.09,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer saccharum, Betula alleghaniensis",4.09,3.16,2.81,6.3,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer saccharum, Tsuga canadensis",4.06,4.06,4.06,4.06,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus prinus, Quercus velutina, Quercus coccinia",4.05,4.05,4.05,4.05,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Cecropia, Laetia",4.023,4.07,3.54,4.46,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Castanea, Pinus",4.01,4.01,4.01,4.01,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eucalyptus regnans, Acacia dealbata",4.0,4.0,4.0,4.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Schima superba, Castanopsis chinensi, Pinus massoniana",4.0,4.0,4.0,4.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Betula platyphylla, Quercus mongolica, Acer mono, Kalopanax pictus, Tilia japonica, Ulmus davidiana",4.0,4.0,4.0,4.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Fagus grandifolia, Acer saccharum, Quercus velutina, Cornus florida",4.0,4.0,4.0,4.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Betula papyrifera, Populus tremuloides",4.0,4.0,4.0,4.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Rhododendron catawbiense, Kalmia latifolia",3.967,4.52,2.63,4.75,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Fagus grandifolia, Acer saccharum",3.95,4.15,3.0,4.5,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Miconia, Croton",3.94,3.94,3.94,3.94,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Picea abies, Betula pendula",3.91,3.91,3.91,3.91,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus resinosa, Populus tremuloides",3.9,3.9,3.9,3.9,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Micarandra sprucei, Glycoxylon inophyllum",3.9,3.9,3.9,3.9,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Betula pendula, Alnus sp.",3.9,3.9,3.11,4.69,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer rubrum, Acer saccharum, Betula papyrifera, Populus grandidentata, Quercus rubra",3.86,3.86,3.86,3.86,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Castanea sativa, Corylus avellana, Acer pseudoplatanus",3.86,3.86,3.86,3.86,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Vismia, Bellucia",3.86,3.86,3.86,3.86,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Lonicera tibetica, Artemisia gmelinii",3.83,3.83,3.83,3.83,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Guapira macrocarpa, Lonchocarpus eriocarnalis, Plumeria rubra, Piptadenia constricta, Bursera instabilis",3.8,3.8,3.8,3.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Pinus contorta, Picea glauca, Populus tremuloides, Populus balsamifera",3.79,3.79,3.79,3.79,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus alba, Quercus coccinea",3.79,3.79,3.79,3.79,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Dipterocarpus obtusifolius, Shorea obtusa et al.",3.775,3.775,2.65,4.9,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Vismia, Cecropia",3.71,3.71,3.71,3.71,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Anogeissus latifolia, Diospyros melanoxylon, Buchanania lanzan, Pterocarpus marsupium et al.",3.705,3.705,3.65,3.76,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Quercus ilex, Pinus halepensis",3.7,3.7,3.5,3.9,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus chihuahuana, Pinus ponderosa, Quercus hypoleucoides, Quercus arizonica",3.7,3.7,3.7,3.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Leguminosae combination (Parkia multijuga, Dinizia excelsa, Dalbergia nigra)",3.7,3.7,3.7,3.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Dipterocarpaceae, Myrtaceae, Podocarpaceae family (the conposition varied with altitude)",3.637,3.7,1.6,5.6,16,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Rhododendron tymifolium, Potentilla fruticosa",3.6,3.6,3.6,3.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Fagus grandifolia, Acer saccharum, Betula alleghaniensis, Acer rubrum, Betula papyrifera",3.6,3.6,3.6,3.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus elliottii, Pinus massoniana, Cunnighamia lanceolata",3.6,3.6,3.6,3.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Cecropia sp., Clusia sp., Miconia sp., Psychotria sp. etc.",3.6,3.6,3.6,3.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Alnus glutinosa, Betulab pendula",3.6,3.6,3.6,3.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Populus grandidentata, Acer rubrum, Quercus rubra, Populus tremuloides",3.59,3.59,3.59,3.59,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus sylvestris, Picea abies",3.567,3.6,1.49,5.4,16,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Populus tremuloides, Populus grandidentata",3.551,3.43,1.29,5.68,66,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus halepensis, Quercus ilex",3.5,3.5,3.5,3.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Abies sibirica, Picea obovata",3.5,3.5,3.5,3.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus rubra, Quercus alba",3.5,3.5,3.5,3.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Ilex pedunculosa, Symplocos prunifolia, Quercus serrata, Evodiopanax innovans",3.5,3.5,3.5,3.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer platanoides, Tilia cordata, Qercus robur",3.5,3.5,3.5,3.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus muricata, Pinus radiata, Pinus nigra?",3.5,3.5,3.5,3.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer saccharum, Fagus grandifolia",3.48,3.52,3.34,3.58,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer saccharum, Fraxinus americana",3.47,3.47,3.47,3.47,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus rubra, Quercus alba, Quercus prinus, Quercus velutina",3.4,3.4,3.4,3.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Picea glehnii, Betula platyphylla",3.4,3.4,3.4,3.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus alba, Cornus florida",3.4,3.4,3.4,3.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Betula papyrifera, Fagus grandifolia",3.39,3.39,3.39,3.39,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eucalyptus nitens, Acacia dealbata",3.35,3.55,2.3,4.0,12,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Quercus rubra, Fagus grandifolia",3.35,3.35,3.35,3.35,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Fagus grandifolia, Quercus rubra",3.33,3.33,3.33,3.33,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Guapira macrocarpa, Plumeria rubra, Lonchocarpus constrictus, Bursera instabilis, Colubrina heteroneura",3.3,3.3,3.3,3.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Quercus alba, Acer rubrum, Fagus grandifolia, Quercus velutina",3.3,3.3,3.3,3.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus prinus, Quercus florida",3.28,3.28,3.28,3.28,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Taxodium distichum, Nyssa biflora",3.267,3.4,2.0,4.4,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus ellipsoidalis, Quercus macrocarpa",3.254,2.95,2.36,4.73,10,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Micarandra sprucei, Glycoxylon media luna?",3.23,3.23,3.23,3.23,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Family of Myrtaceae, Myristicaceae (all sites), Lauraceae, Sapotaceae, Meliaceae and Myristicaceae (lower sites)",3.215,3.175,1.75,4.76,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Populus tremuloides, Betula papyrifera",3.0,3.0,3.0,3.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acer saccharum, Quercus prinus, Cornus florida",3.0,3.0,3.0,3.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus alba, Quercus velutina, Fagus grandifolia",3.0,3.0,3.0,3.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Populus balsamifera, Alnus tenuifolia",3.0,3.0,3.0,3.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Picea abies, Betual pendula",3.0,3.0,3.0,3.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus ponderosa, Larix occidentalis, Abies grandis",2.98,2.98,2.74,3.22,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus montana, Pinus cembra",2.96,3.035,1.78,3.99,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Salix pulchra, Betual nana",2.95,2.95,2.95,2.95,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus prinus, Cornus florida, Quercus velutina",2.9,2.9,2.9,2.9,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Populus grandidentata, Acer rubrum, Quercus rubra",2.9,2.9,2.9,2.9,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus sylvestris, Picea abies, Quercus robur",2.89,2.89,2.89,2.89,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Picea, Betula",2.89,2.89,2.89,2.89,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus ilex, Buxus sp, Thymus sp",2.86,2.86,2.86,2.86,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Micarandra sprucei, Eperua cunuri 3?",2.81,2.81,2.81,2.81,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Potentilla fruticosa, Kobresia humilis, Poa Annua, Festuca rubra",2.8,2.8,2.8,2.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Rhizophora mangle, Laguncularia racemosa",2.79,3.01,1.33,3.81,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Tsuga canadensis, Picea rubens",2.78,2.78,2.78,2.78,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus, Picea",2.73,2.73,2.43,3.03,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus prinus, Quercus spp.",2.72,2.72,2.72,2.72,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Cyclobalanopsis glaucoldes, Keteleerla evekyniana",2.7,2.7,2.6,2.8,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus prinus, Cornus florida, Quercus alba",2.7,2.7,2.6,2.8,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus yunnanensis, Keteleerla evekyniana",2.633,2.7,2.4,2.8,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Larix laricina, Picea mariana",2.61,2.61,2.61,2.61,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus myrtifolia, Quercus geminata, Quercus chapmanii",2.6,2.6,2.6,2.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Loiseleuria procumbens, Cetraria islandica",2.6,2.6,2.6,2.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Picea rubens, Betula papyrifera",2.58,2.58,2.58,2.58,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pistacia lentiscus, Juniperus phoenicea",2.56,2.56,2.56,2.56,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Avicennia marina, Rhizophora stylosa",2.525,2.5,1.7,3.4,8,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acacia Koa, Toona ciliata",2.5,2.5,2.4,2.6,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Eucalyptus signata, Eucalyptus umbra",2.46,2.46,2.46,2.46,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Tamarix chinensis, Distichlis spicata",2.45,2.45,2.45,2.45,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eucalyptus delegatensis, Eucalyptus dalrymplean",2.4,2.4,2.4,2.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Pinus ponderosa, Calocedrus decurrens",2.37,2.37,1.46,3.28,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Banksia, Xanth, Blackbutt, Casurina etc.",2.37,2.37,2.37,2.37,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Quercus ilex, Quercus suber",2.35,2.35,2.35,2.35,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus ponderosa, Larix occidentalis, Pinus contorta, Pesudotsuga menziessii",2.35,2.35,1.95,2.75,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Abies guatemalensis, Pinus, Oak",2.317,2.36,1.93,2.66,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pterocarpus marsupium, Cleasistanthus collinus, Grewia tilifolia, Tectona grandis, Lagerostromia parviflora, Diosporus melanoxylon, Terminalia alata, Dendrocalamus strictus, Bamboosa arundinacea",2.31,2.31,2.31,2.31,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Aspidosperma album, Mauritia carana (total 53 species)",2.233,2.6,1.5,2.6,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Betula nana, Eriophorum vaginatum, Sphagnum mosses",2.15,2.15,2.15,2.15,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Brachystegia spiciformis, B. bakerana",2.15,2.15,2.15,2.15,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus sylvestris, Pinus nigra",2.14,2.14,2.14,2.14,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Populus tremuloides, Populus balsamifera",2.14,2.14,2.14,2.14,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Abies guatemalensis, Pinus",2.13,2.42,1.42,2.55,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Diospyros sandwicensis, Psydrax odorata",2.105,2.105,1.35,2.86,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eucalyptus tetrodonta, E. miniata",2.1,2.1,2.1,2.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Schinzophyton rautanenii, Baikiaea plurijuga, Kirkia Africana, Pterocarpus angolensis",2.1,2.1,2.1,2.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Salix glauca, Salix planifolia, Betula nana, Eriophorum angustifolium",2.09,2.09,2.09,2.09,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Cupressus pygmaea, Vaccinium ovatum, Pinus contorta",2.09,2.09,2.09,2.09,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eucalyptus globulus, Acacia mearnsii",2.07,2.07,2.07,2.07,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Tabebuia rigida, Ocotea spathulata, Clusia sp.",2.02,2.02,2.02,2.02,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Eucalyptus globulus, Eucalyptus viminalis, Eucalyptus radiata",2.01,2.01,2.01,2.01,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Quercus robur, Fraxinus oxyphylla",2.0,2.0,2.0,2.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus cembroides, Juniperus deppeana",2.0,2.0,2.0,2.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Picea abies, Pinus sylvestris",1.99,1.99,1.99,1.99,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Rhododendron catawbiense, Kalmia latifolia, Gaylyssacia baccata",1.97,1.97,1.97,1.97,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eucalyptus radiata, Eucalyptus dalrympleana",1.92,1.92,1.92,1.92,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Betula glandulosa, Salix spp.",1.89,1.89,1.89,1.89,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus rubra, Quercus prinus",1.88,1.88,1.88,1.88,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Shorea robusta, Dipterocarpus tuberculatus, Parinarium anamense et al.",1.8,1.8,1.8,1.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Pinus edulis, Juniperus monosperma",1.785,1.785,1.72,1.85,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Quercus oblongifolia, Quercus emoryi",1.76,1.76,1.76,1.76,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Alnus sp., Betula pendula",1.74,1.74,1.74,1.74,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eucalyptus marginata, Eucalyptus calophylla",1.733,1.7,0.3,2.6,18,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Betula glandulosa, Vaccinium uliginosum",1.7,1.7,1.7,1.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Betula pendula, Betula pubescens",1.67,1.77,0.47,2.98,22,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Betula nana, Ledum decumbens, Salix pulchra",1.65,1.65,1.65,1.65,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Picea glauca, Picea mariana, Betula glandulosa",1.61,1.61,1.61,1.61,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pentacme siamensis, Terminalia tomentosa, Terminalia mucronata et al.",1.6,1.6,1.6,1.6,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Picea glauca, Picea mariana",1.593,1.26,0.44,3.08,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus contorta, Pinus monticola, Abies magnifica, Tsuga mertensiana",1.59,1.59,1.59,1.59,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Fouquieria splendens, Prosopis juliflora et al.",1.58,1.58,1.58,1.58,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Carex limosa, Smilacina trifolia, Andromeda polifolia, Picea mariana",1.5,1.5,1.5,1.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eucalyptus maculata, E. gummifera",1.471,1.52,1.06,1.96,26,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Alnus, Betual exilis, Salix alaxensis, Salix pulchra",1.416,1.48,0.37,2.9,18,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eucalyptus globulus, Eucalyptus radiata",1.39,1.39,1.39,1.39,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Shrub; Deciduous (70-100%), evergreen(0-30%)",1.327,1.52,0.58,1.88,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eucalyptus radiata, Eucalyptus mannifera",1.32,1.32,1.32,1.32,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Ledum groenlandicum, Chamaedaphne calyculata, Kalmia augustifolium, Vaccinium myrtilloides",1.3,1.3,1.3,1.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eucalyptus creba, Eucalyptus drepanophylla",1.3,1.3,1.3,1.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Eucalyptus pauciflora, Eucalyptus dalrympleana",1.285,1.285,1.17,1.4,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Eucalyptus umbonata, E. tetrodonta",1.25,1.25,1.25,1.25,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Acacia koa, Fraxinus udhei",1.24,1.33,0.68,1.71,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Eucalyptus delegatensis, Eucalyptus dalrympleana",1.228,1.2,0.73,1.72,10,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Evergreen and deciduous shrub, Graminoids",1.2,1.2,1.2,1.2,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eucalyptus baxteri, E. faciculosa, E. leucoxylon",1.07,1.07,1.07,1.07,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Sphagnum mosses, Epriophorum vaginatum, Betual nana",1.04,1.04,1.04,1.04,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eucalyptus rossii, E. maculata",1.025,1.025,0.81,1.24,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Chamaedaphne calyculata, Ledum groenlandicum, Kalmia angustifolia, Kalmia polifolia, Andromeda glaucophylla",1.015,1.015,0.82,1.21,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Acacia mellifera,Terminalia sericea, Boscia albitrunca",1.0,1.0,1.0,1.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Carnegiea gigantea, Cercidium microphyllum, Fouquieria splendens",0.94,0.94,0.94,0.94,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Picea mariana, Larix laricina",0.892,0.905,0.42,1.29,12,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eucalyptus macrorhyncha, Eucalyptus albens",0.875,0.875,0.83,0.92,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Colophospermum mopane, Terminalia sericea",0.87,0.87,0.87,0.87,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Eucalyptus leucoxylon, E. occidentalis",0.8,0.8,0.8,0.8,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Eucalyptus tetrodonta, Eucalyptus miniata",0.789,0.8,0.4,1.1,36,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Acacia leuderitzii, Acacia mellifera, Grewia flava",0.71,0.71,0.71,0.71,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Ledum palustre, Empetrum nigrum, Sphagnuim spp.",0.7,0.7,0.7,0.7,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Cercidium microphyllum, Franseria deltoidea, Fouquieria splendens",0.59,0.59,0.59,0.59,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Heath; deciduous(35-60%), evergreen(30-60%)",0.53,0.65,0.11,0.83,6,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Vaccinium uliginosum, evergreen shrub",0.52,0.52,0.52,0.52,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Eucalyptus terminalis, E. capricornia",0.25,0.25,0.25,0.25,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,Multi-Species
+"Dryas integrifolia, Salix arctica",0.23,0.23,0.23,0.23,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Evergreen shrub (L. palustre, V vitis-ideaea, E. nigrum, L. procumbens)",0.18,0.18,0.18,0.18,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Pinus, Betula",0.17,0.17,0.17,0.17,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+"Deschampsia flexuosa, Leiophyllum lyoni",0.08,0.08,0.08,0.08,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,Multi-Species
+Dipterocarp,10.2,10.2,10.2,10.2,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,REVIEW
+Acacia mollissima,9.9,9.9,9.9,9.9,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,REVIEW
+Puseudotsuga menziesii,8.601,8.42,6.41,11.06,24,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,REVIEW
+Acacia dealbata,6.5,6.5,6.5,6.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,REVIEW
+Geum urbanum,6.313,6.37,5.13,8.75,21,TRY,TRY Database (summary),,False,False,False,REVIEW
+Camellia japonica,5.48,5.625,3.7,6.8,16,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,REVIEW
+Aextoxicon punctatum,4.05,4.05,3.5,4.6,2,TRY,TRY Database (summary),,False,False,False,REVIEW
+Luma apiculata,4.0,4.0,4.0,4.0,1,TRY,TRY Database (summary),,False,False,False,REVIEW
+Tepualia stipularis,4.0,4.0,4.0,4.0,1,TRY,TRY Database (summary),,False,False,False,REVIEW
+Amomyrtus meli,3.6,3.6,3.6,3.6,1,TRY,TRY Database (summary),,False,False,False,REVIEW
+Drimys winteri,3.3,3.3,3.0,3.6,2,TRY,TRY Database (summary),,False,False,False,REVIEW
+Acacia mangium,3.0,3.0,3.0,3.0,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,REVIEW
+Myrceugenia spp,2.85,2.85,2.3,3.4,2,TRY,TRY Database (summary),,False,False,False,REVIEW
+Nephelium ramboutan-ake,2.82,2.82,2.82,2.82,1,TRY,TRY Database (summary),,False,False,False,REVIEW
+Acacia koa,2.661,2.355,1.17,5.34,28,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,REVIEW
+Acacia melanoxylon,2.5,2.5,2.5,2.5,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,REVIEW
+Laureliopsis philippiana,2.45,2.45,1.6,3.3,2,TRY,TRY Database (summary),,False,False,False,REVIEW
+Inga oerstediana etc.,2.4,2.4,2.4,2.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,REVIEW
+Myrcia fallax etc.,2.3,2.3,2.3,2.3,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,REVIEW
+Hedyosmum racemosum etc.,2.1,2.1,2.1,2.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,REVIEW
+Euxylophora paraensis,2.1,2.1,2.1,2.1,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,REVIEW
+Eriotheca pubescens,1.749,1.79,0.74,2.8,22,TRY,TRY Database (summary),,False,False,False,REVIEW
+Byrsonima verbascifolia,1.48,1.48,0.74,2.38,20,TRY,TRY Database (summary),,False,False,False,REVIEW
+Caryocar brasiliense,1.475,1.415,0.88,2.35,20,TRY,TRY Database (summary),,False,False,False,REVIEW
+Salacia crassifolia,1.457,1.57,0.56,2.26,20,TRY,TRY Database (summary),,False,False,False,REVIEW
+Stryphnodendron adstringens,1.436,1.51,0.54,2.43,22,TRY,TRY Database (summary),,False,False,False,REVIEW
+Cercocarpus breviflorus,1.4,1.4,1.4,1.4,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,REVIEW
+Byrsonima coccolobifolia,1.384,1.365,0.36,2.56,22,TRY,TRY Database (summary),,False,False,False,REVIEW
+Acacia mearnsii,1.35,1.35,1.35,1.35,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,REVIEW
+Pentace laxifolia,1.34,1.34,1.34,1.34,1,TRY,TRY Database (summary),,False,False,False,REVIEW
+Roupala montana,1.251,1.075,0.5,2.72,20,TRY,TRY Database (summary),,False,False,False,REVIEW
+Artemesia tridentata,1.25,1.25,1.25,1.25,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,REVIEW
+Styrax ferrugineus,1.25,1.235,0.89,1.7,20,TRY,TRY Database (summary),,False,False,False,REVIEW
+Madhuca mindanaensis,1.22,1.22,1.22,1.22,1,TRY,TRY Database (summary),,False,False,False,REVIEW
+Ouratea hexasperma,1.203,1.145,0.24,2.25,22,TRY,TRY Database (summary),,False,False,False,REVIEW
+Juniperus occidentalis,1.2,1.2,0.4,2.0,4,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,REVIEW
+Mallotus griffithianum,1.2,1.2,1.2,1.2,1,TRY,TRY Database (summary),,False,False,False,REVIEW
+Ryparosa hulletii,1.18,1.18,1.18,1.18,1,TRY,TRY Database (summary),,False,False,False,REVIEW
+Plenckia populnea,1.132,1.31,0.37,1.74,20,TRY,TRY Database (summary),,False,False,False,REVIEW
+Nephelium daedaleum,1.11,1.11,1.11,1.11,1,TRY,TRY Database (summary),,False,False,False,REVIEW
+Scaevola plumieri,1.05,1.05,1.05,1.05,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,REVIEW
+Pentace borneensis,1.01,1.01,1.01,1.01,1,TRY,TRY Database (summary),,False,False,False,REVIEW
+Madhuca pallida,1.0,1.0,1.0,1.0,1,TRY,TRY Database (summary),,False,False,False,REVIEW
+Mallotus caudatus,0.94,0.94,0.94,0.94,1,TRY,TRY Database (summary),,False,False,False,REVIEW
+Kielmeyera coriacea,0.936,1.015,0.36,1.36,22,TRY,TRY Database (summary),,False,False,False,REVIEW
+Ryparosa hirsuta,0.88,0.88,0.88,0.88,1,TRY,TRY Database (summary),,False,False,False,REVIEW
+Iva frutescens,0.84,0.84,0.84,0.84,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,REVIEW
+Guiera senegalensis,0.82,0.82,0.82,0.82,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,REVIEW
+Teijsmanniodendron holophyllum,0.81,0.81,0.81,0.81,1,TRY,TRY Database (summary),,False,False,False,REVIEW
+Acacia aneura,0.791,0.58,0.13,2.13,38,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,REVIEW
+Teijsmanniodendron pteropodum,0.73,0.73,0.73,0.73,1,TRY,TRY Database (summary),,False,False,False,REVIEW
+Cordia africana,0.61,0.61,0.61,0.61,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,REVIEW
+Other Acacia,0.553,0.51,0.18,1.04,12,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,REVIEW
+Acacia,0.38,0.3,0.1,1.0,10,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,True,True,REVIEW
+Colophospermum mopane,0.26,0.26,0.26,0.26,2,"ORNL, TRY",ORNL Global LAI Woody Plants | TRY Database (summary),,False,False,False,REVIEW

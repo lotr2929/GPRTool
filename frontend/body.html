@@ -1,84 +1,260 @@
 <!-- Main Content Area -->
 <div id="main-container">
-  <!-- Left Panel: Commands -->
+
+  <!-- Left Panel: Tools -->
   <aside id="left-panel" class="side-panel">
     <div class="panel-header">
-      <h3>Commands</h3>
-      <button class="collapse-btn" data-panel="left">◄</button>
+      <h3>Tools</h3>
+      <button class="collapse-btn collapse-btn-left" data-panel="left" title="Collapse">&#9664;</button>
     </div>
     <div class="panel-content">
-      <div class="command-section">
-        <h4>Geometry</h4>
-        <button class="command-btn" data-action="create-box">Create Box</button>
-        <button class="command-btn" data-action="create-cylinder">Create Cylinder</button>
-        <button class="command-btn" data-action="create-sphere">Create Sphere</button>
+
+      <!-- SITE -->
+      <div class="command-section" id="section-site">
+        <div class="section-header" data-section="site">
+          <span>Site</span>
+          <svg class="section-arrow" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+        </div>
+        <div class="section-body">
+          <button class="command-btn" id="importGeoJSONBtn" title="Import a GeoJSON boundary file">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2v8M5 7l3 3 3-3"/><rect x="2" y="11" width="12" height="3" rx="0.5"/></svg>
+            Import GeoJSON
+          </button>
+          <input type="file" id="geojsonFileInput" accept=".geojson,.json" style="display:none">
+          <button class="command-btn" id="importImageBtn" title="Import a site plan image as underlay">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="2.5" width="13" height="11" rx="1"/><circle cx="5.5" cy="6" r="1.2"/><path d="M1.5 10.5l3.5-3 3 2.5 2.5-2.5 3.5 3"/></svg>
+            Import Site Image
+          </button>
+          <button class="command-btn" id="setScaleBtn" title="Set scale for non-georeferenced images">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><line x1="2" y1="8" x2="14" y2="8"/><line x1="2" y1="6" x2="2" y2="10"/><line x1="14" y1="6" x2="14" y2="10"/></svg>
+            Set Scale
+          </button>
+          <button class="command-btn" id="setNorthBtn" title="Set orientation manually">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="6"/><path d="M8 4v8M8 4L6 7h4L8 4z" fill="currentColor" stroke="none"/></svg>
+            Set North
+          </button>
+          <button class="command-btn btn-danger" id="clearSiteBtn" style="display:none" title="Remove current site">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 3l10 10M13 3L3 13"/></svg>
+            Clear Site
+          </button>
+        </div>
       </div>
-      <div class="command-section">
-        <h4>Modify</h4>
-        <button class="command-btn" data-action="scale">Scale</button>
-        <button class="command-btn" data-action="rotate">Rotate</button>
-        <button class="command-btn" data-action="translate">Translate</button>
+
+      <!-- BUILDING -->
+      <div class="command-section" id="section-building">
+        <div class="section-header" data-section="building">
+          <span>Building</span>
+          <svg class="section-arrow" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+        </div>
+        <div class="section-body">
+          <div class="tool-group-label">2D</div>
+          <button class="command-btn tool-btn" data-action="rectangle" title="Draw rectangle (Shift = square)">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="4" width="12" height="8" rx="0.5"/></svg>
+            Rectangle
+          </button>
+          <button class="command-btn tool-btn" data-action="ellipse" title="Draw ellipse (Shift = circle)">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><ellipse cx="8" cy="8" rx="6" ry="4"/></svg>
+            Ellipse
+          </button>
+          <button class="command-btn tool-btn" data-action="polygon" title="Draw regular polygon — prompts for sides">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><polygon points="8,2 14,6 12,13 4,13 2,6"/></svg>
+            Polygon
+          </button>
+          <button class="command-btn tool-btn" data-action="line" title="Draw a line or polyline">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><line x1="2" y1="13" x2="14" y2="3"/></svg>
+            Line
+          </button>
+          <button class="command-btn tool-btn" data-action="arc-3point" title="Draw arc through 3 points">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 13 Q8 1 14 13"/></svg>
+            3-Point Arc
+          </button>
+          <button class="command-btn tool-btn" data-action="arc-tangent" title="Draw arc tangent to existing edge">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 8 Q8 2 14 8"/><line x1="2" y1="8" x2="2" y2="14"/></svg>
+            Tangent Arc
+          </button>
+          <button class="command-btn tool-btn" data-action="offset" title="Offset a shape inward or outward">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="2" width="12" height="12" rx="0.5"/><rect x="5" y="5" width="6" height="6" rx="0.5" stroke-dasharray="2 1"/></svg>
+            Offset
+          </button>
+          <button class="command-btn tool-btn" data-action="edit-points" title="Click edge to add vertex, drag to reshape">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="5" width="12" height="8" rx="0.5"/><circle cx="2" cy="9" r="1.5" fill="currentColor" stroke="none"/><circle cx="8" cy="5" r="1.5" fill="currentColor" stroke="none"/><circle cx="14" cy="9" r="1.5" fill="currentColor" stroke="none"/></svg>
+            Edit Points
+          </button>
+          <button class="command-btn tool-btn" data-action="dimension" title="Right-click line for length / click 2+ points for distance">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><line x1="2" y1="11" x2="14" y2="11"/><line x1="2" y1="9" x2="2" y2="13"/><line x1="14" y1="9" x2="14" y2="13"/><line x1="8" y1="5" x2="8" y2="10" stroke-dasharray="1.5 1"/></svg>
+            Dimension
+          </button>
+
+          <div class="tool-group-label">3D</div>
+          <button class="command-btn tool-btn" data-action="extrude" title="Push or pull a face to create height">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="8" width="10" height="6" rx="0.5"/><path d="M2 8l3-4h10M12 4v10"/><path d="M5 4h9"/></svg>
+            Extrude
+          </button>
+          <button class="command-btn tool-btn" data-action="subtract" title="Boolean cut — subtract one shape from another">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="2" width="9" height="9" rx="0.5"/><rect x="6" y="6" width="8" height="8" rx="0.5" stroke-dasharray="2 1"/></svg>
+            Subtract
+          </button>
+        </div>
       </div>
-      <div class="command-section">
-        <h4>View</h4>
-        <button class="command-btn" data-action="reset-camera">Reset Camera</button>
-        <button class="command-btn" data-action="fit-view">Fit to View</button>
+
+      <!-- LANDSCAPE -->
+      <div class="command-section" id="section-landscape">
+        <div class="section-header" data-section="landscape">
+          <span>Landscape</span>
+          <svg class="section-arrow" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+        </div>
+        <div class="section-body">
+          <button class="command-btn tool-btn" data-action="planting-bed" title="Draw a planting bed area">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="1.5" width="13" height="13" rx="0.5" stroke-dasharray="2.5 1.5"/></svg>
+            Planting Bed
+          </button>
+          <button class="command-btn tool-btn" data-action="wall" title="Draw a wall element">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="6" width="13" height="4" rx="0.5"/></svg>
+            Wall
+          </button>
+          <button class="command-btn" id="componentLibraryBtn" title="Browse landscape components (V2)">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="2" width="5" height="5" rx="0.5"/><rect x="9" y="2" width="5" height="5" rx="0.5"/><rect x="2" y="9" width="5" height="5" rx="0.5"/><rect x="9" y="9" width="5" height="5" rx="0.5"/></svg>
+            Component Library&#8230;
+          </button>
+        </div>
       </div>
+
+      <!-- PLANTS -->
+      <div class="command-section" id="section-plants">
+        <div class="section-header" data-section="plants">
+          <span>Plants</span>
+          <svg class="section-arrow" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+        </div>
+        <div class="section-body">
+          <button class="command-btn" id="plantLibraryBtn" title="Browse plant library — then click to place or drag to fill area">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 13V7"/><path d="M8 7C8 4 5 2 2 3c0 3 2 5 6 4"/><path d="M8 7c0-3 3-5 6-4 0 3-2 5-6 4"/></svg>
+            Plant Library&#8230;
+          </button>
+          <button class="command-btn btn-danger" id="clearPlantsBtn" disabled title="Remove all plant assignments">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 3l10 10M13 3L3 13"/></svg>
+            Clear All Plants
+          </button>
+        </div>
+      </div>
+
     </div>
   </aside>
 
   <!-- Center: Viewport -->
   <main id="viewport" class="viewport">
     <canvas id="three-canvas"></canvas>
+    <!-- 2D/3D toggle - always visible top-right of viewport -->
+    <div class="mode-toggle-container">
+      <button class="mode-btn active" data-mode="2d" title="2D Plan View"></button>
+      <button class="mode-btn" data-mode="3d" title="3D View"></button>
+    </div>
   </main>
 
   <!-- Right Panel: Properties -->
   <aside id="right-panel" class="side-panel">
     <div class="panel-header">
-      <button class="collapse-btn" data-panel="right">►</button>
+      <button class="collapse-btn collapse-btn-right" data-panel="right" title="Collapse">&#9654;</button>
       <h3>Properties</h3>
     </div>
     <div class="panel-content">
-      <div class="property-section">
-        <h4>Dimensions</h4>
-        <label>
-          Width (X):
-          <input type="number" id="widthX" value="1" step="0.1" min="0.1">
-        </label>
-        <label>
-          Height (Y):
-          <input type="number" id="heightY" value="1" step="0.1" min="0.1">
-        </label>
-        <label>
-          Depth (Z):
-          <input type="number" id="depthZ" value="1" step="0.1" min="0.1">
-        </label>
+
+      <!-- Empty state -->
+      <div class="property-section" id="empty-props">
+        <p class="empty-state-msg">Import a GeoJSON site boundary to begin.</p>
       </div>
-      <div class="property-section">
-        <h4>Actions</h4>
-        <button class="command-btn" id="resetBtn">Reset</button>
-        <button class="command-btn" id="centerBtn">Center View</button>
+
+      <!-- Site info -->
+      <div class="property-section" id="site-info-section" style="display:none">
+        <h4>Site</h4>
+        <div class="info-row">
+          <span class="info-label">Area</span>
+          <span class="info-value" id="site-area">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Perimeter</span>
+          <span class="info-value" id="site-perimeter">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Boundary points</span>
+          <span class="info-value" id="site-points">—</span>
+        </div>
       </div>
-      <div class="property-section">
-        <h4>Transform</h4>
-        <label>
-          Position X:
-          <input type="number" id="posX" value="0" step="0.1">
-        </label>
-        <label>
-          Position Y:
-          <input type="number" id="posY" value="0" step="0.1">
-        </label>
-        <label>
-          Position Z:
-          <input type="number" id="posZ" value="0" step="0.1">
-        </label>
+
+      <!-- Selected object -->
+      <div class="property-section" id="selection-section" style="display:none">
+        <h4>Selected Object</h4>
+        <label>Type<input type="text" id="sel-type" readonly></label>
+        <label>Width (m)<input type="number" id="widthX" value="1" step="0.1" min="0.1"></label>
+        <label>Depth (m)<input type="number" id="depthZ" value="1" step="0.1" min="0.1"></label>
+        <label>Height (m)<input type="number" id="heightY" value="1" step="0.1" min="0.1"></label>
+        <hr class="prop-divider">
+        <label>Position X<input type="number" id="posX" value="0" step="0.1"></label>
+        <label>Position Y<input type="number" id="posY" value="0" step="0.1"></label>
+        <label>Position Z<input type="number" id="posZ" value="0" step="0.1"></label>
+        <hr class="prop-divider">
+        <label>Plant species<input type="text" id="sel-plant" placeholder="None assigned"></label>
+        <label>LAI value<input type="text" id="sel-lai" readonly placeholder="—"></label>
+        <label>Water retention<input type="text" id="sel-water" readonly placeholder="— (future)"></label>
       </div>
+
+      <!-- GPR -->
+      <div class="property-section" id="gpr-section" style="display:none">
+        <h4>GPR</h4>
+        <div class="info-row">
+          <span class="info-label">GPR Overlay</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="gprOverlayToggle">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Plant Schedule</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="plantScheduleToggle">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <hr class="prop-divider">
+        <div class="info-row">
+          <span class="info-label">Target GPR</span>
+          <input type="number" id="gpr-target" class="gpr-input" step="0.1" min="0" placeholder="—">
+        </div>
+        <div class="info-row gpr-result">
+          <span class="info-label">Current GPR</span>
+          <span class="info-value" id="gpr-value">—</span>
+        </div>
+        <button class="command-btn" id="generateReportBtn" style="margin-top:10px">
+          <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="1.5" width="10" height="13" rx="1"/><line x1="5.5" y1="5" x2="10.5" y2="5"/><line x1="5.5" y1="7.5" x2="10.5" y2="7.5"/><line x1="5.5" y1="10" x2="8.5" y2="10"/></svg>
+          Generate GPR Report
+        </button>
+      </div>
+
+      <!-- View actions -->
+      <div class="property-section" id="view-actions-section">
+        <button class="command-btn" id="fitSiteBtn" title="Fit view to site boundary (Ctrl+F)">
+          <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.5 5.5V2h3.5M9 2h3.5v3.5M14.5 10.5V14H11M7 14H3.5v-3.5"/></svg>
+          Fit to Site
+        </button>
+        <button class="command-btn" id="resetCameraBtn" title="Reset camera to default">
+          <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 8a5 5 0 1 1 1.5 3.5"/><path d="M3 12V8.5h3.5"/></svg>
+          Reset Camera
+        </button>
+        <button class="command-btn" id="toggleGridBtn" title="Toggle grid (Ctrl+G)">
+          <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><line x1="5.5" y1="1.5" x2="5.5" y2="14.5"/><line x1="10.5" y1="1.5" x2="10.5" y2="14.5"/><line x1="1.5" y1="5.5" x2="14.5" y2="5.5"/><line x1="1.5" y1="10.5" x2="14.5" y2="10.5"/><rect x="1.5" y="1.5" width="13" height="13"/></svg>
+          Toggle Grid
+        </button>
+      </div>
+
     </div>
   </aside>
+
 </div>
 
-<!-- Bottom: Feedback Bar -->
+<!-- Status bar -->
 <footer id="feedback-bar">
-  <span id="status-message">Ready</span>
+  <span id="status-mode">2D</span>
+  <span id="status-divider">|</span>
+  <span id="status-coords"></span>
+  <span id="status-divider2" style="display:none">|</span>
+  <span id="status-message">Ready — import a GeoJSON file to start</span>
 </footer>

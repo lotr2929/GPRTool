@@ -5,6 +5,13 @@ import { OrbitControls } from "./js/OrbitControls.js";
 import { createCamera } from "./js/camera.js";
 
 /* ======================================
+   ALARM VARIABLES (declared at top)
+====================================== */
+let alarmTime = null;
+let alarmInterval = null;
+let isRinging = false;
+
+/* ======================================
    1) Load header + body
 ====================================== */
 async function loadLayout() {
@@ -17,6 +24,46 @@ async function loadLayout() {
   }
   updateHeaderTime();
   setInterval(updateHeaderTime, 1000);
+
+  // Alarm click handler - runs after header is loaded
+  document.getElementById('header-datetime').addEventListener('click', function() {
+    if (isRinging) {
+      // Stop alarm if it's ringing
+      stopAlarm();
+      return;
+    }
+    
+    // Toggle popup
+    let popup = document.getElementById('alarm-popup');
+    if (popup) {
+      popup.remove();
+      return;
+    }
+    
+    // Create and show popup
+    popup = createAlarmPopup();
+    document.body.appendChild(popup);
+    
+    // Set current time as default
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    document.getElementById('alarm-time-input').value = timeStr;
+    
+    // Set alarm button
+    document.getElementById('set-alarm-btn').addEventListener('click', function() {
+      const timeInput = document.getElementById('alarm-time-input').value;
+      if (timeInput) {
+        setAlarm(timeInput);
+        popup.remove();
+      }
+    });
+    
+    // Cancel button
+    document.getElementById('cancel-alarm-btn').addEventListener('click', function() {
+      clearAlarm();
+      popup.remove();
+    });
+  });
 
   const bodyHTML = await fetch("body.html").then(r => r.text());
   document.getElementById("body-container").innerHTML = bodyHTML;
@@ -194,3 +241,100 @@ function animate() {
   requestAnimationFrame(animate);
 }
 animate();
+
+/* ======================================
+   11) ALARM FUNCTIONALITY
+====================================== */
+
+// Create alarm popup
+function createAlarmPopup() {
+  const popup = document.createElement('div');
+  popup.className = 'alarm-popup';
+  popup.id = 'alarm-popup';
+  popup.innerHTML = `
+    <h4>Set Alarm</h4>
+    <input type="time" id="alarm-time-input" />
+    <button id="set-alarm-btn">Set Alarm</button>
+    <button id="cancel-alarm-btn" style="background: var(--color-border); margin-top: 6px;">Cancel</button>
+  `;
+  return popup;
+}
+
+// Set alarm
+function setAlarm(timeStr) {
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  const now = new Date();
+  alarmTime = new Date();
+  alarmTime.setHours(hours, minutes, 0, 0);
+  
+  // If time is in the past, set for tomorrow
+  if (alarmTime <= now) {
+    alarmTime.setDate(alarmTime.getDate() + 1);
+  }
+  
+  // Visual indicator that alarm is set
+  const datetimeEl = document.getElementById('header-datetime');
+  datetimeEl.classList.add('alarm-active');
+  
+  // Check alarm every second
+  if (alarmInterval) clearInterval(alarmInterval);
+  alarmInterval = setInterval(checkAlarm, 1000);
+  
+  console.log('Alarm set for:', alarmTime.toLocaleTimeString());
+}
+
+// Check if alarm should ring
+function checkAlarm() {
+  if (!alarmTime) return;
+  
+  const now = new Date();
+  if (now >= alarmTime) {
+    triggerAlarm();
+  }
+}
+
+// Trigger alarm (flash)
+function triggerAlarm() {
+  isRinging = true;
+  const datetimeEl = document.getElementById('header-datetime');
+  datetimeEl.classList.remove('alarm-active');
+  datetimeEl.classList.add('alarm-ringing');
+  
+  // Clear the interval
+  if (alarmInterval) {
+    clearInterval(alarmInterval);
+    alarmInterval = null;
+  }
+  
+  console.log('ALARM RINGING!');
+}
+
+// Stop alarm
+function stopAlarm() {
+  isRinging = false;
+  const datetimeEl = document.getElementById('header-datetime');
+  datetimeEl.classList.remove('alarm-ringing');
+  datetimeEl.classList.remove('alarm-active');
+  alarmTime = null;
+  
+  if (alarmInterval) {
+    clearInterval(alarmInterval);
+    alarmInterval = null;
+  }
+  
+  console.log('Alarm stopped');
+}
+
+// Clear alarm (cancel before it rings)
+function clearAlarm() {
+  const datetimeEl = document.getElementById('header-datetime');
+  datetimeEl.classList.remove('alarm-active');
+  alarmTime = null;
+  
+  if (alarmInterval) {
+    clearInterval(alarmInterval);
+    alarmInterval = null;
+  }
+  
+  console.log('Alarm cleared');
+}

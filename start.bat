@@ -1,6 +1,6 @@
 @echo off
 
-echo Starting GPRToolDemo...
+echo Starting GPRTool-Demo...
 
 REM -----------------------------------------
 REM 1. Activate virtual environment
@@ -41,7 +41,7 @@ REM -----------------------------------------
 REM 4. Open VS Code
 REM -----------------------------------------
 echo Opening VS Code...
-start "" code C:\GPRToolDemo
+start "" code C:\Users\263350F\_myProjects\GPRTool-Demo
 
 
 REM -----------------------------------------

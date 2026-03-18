@@ -1,0 +1,9 @@
+============================================================
+LAI Database1.accdb — Schema Summary
+============================================================
+
+Table: MAIN DATABASE  (0 rows)
+  ID                                  COUNTER
+  Plant Species                       VARCHAR
+  LAI Value                           VARCHAR
+  Source                              VARCHAR

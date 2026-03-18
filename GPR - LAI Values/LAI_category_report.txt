@@ -1,0 +1,84 @@
+=======================================================
+GPRTool — LAI Category Report
+=======================================================
+
+── CATEGORY COUNTS ───────────────────────────────────
+  Tree                  248  █████████████████████████████████████████████████
+  Shrub                  29  █████
+  Grass                  22  ████
+  Groundcover            25  █████
+  Bamboo                  9  █
+  Mangrove               10  ██
+  Palm                    1  
+  Generic-Benchmark      38  ███████
+  Multi-Species         323  ████████████████████████████████████████████████████████████████
+  REVIEW                 55  ███████████
+  TOTAL                 760
+
+── REVIEW LIST (unrecognised genus) ──────────────────
+  55 entries need manual categorisation:
+    Acacia
+    Acacia aneura
+    Acacia dealbata
+    Acacia koa
+    Acacia mangium
+    Acacia mearnsii
+    Acacia melanoxylon
+    Acacia mollissima
+    Aextoxicon punctatum
+    Amomyrtus meli
+    Artemesia tridentata
+    Byrsonima coccolobifolia
+    Byrsonima verbascifolia
+    Camellia japonica
+    Caryocar brasiliense
+    Cercocarpus breviflorus
+    Colophospermum mopane
+    Cordia africana
+    Dipterocarp
+    Drimys winteri
+    Eriotheca pubescens
+    Euxylophora paraensis
+    Geum urbanum
+    Guiera senegalensis
+    Hedyosmum racemosum etc.
+    Inga oerstediana etc.
+    Iva frutescens
+    Juniperus occidentalis
+    Kielmeyera coriacea
+    Laureliopsis philippiana
+    Luma apiculata
+    Madhuca mindanaensis
+    Madhuca pallida
+    Mallotus caudatus
+    Mallotus griffithianum
+    Myrceugenia spp
+    Myrcia fallax etc.
+    Nephelium daedaleum
+    Nephelium ramboutan-ake
+    Other Acacia
+    Ouratea hexasperma
+    Pentace borneensis
+    Pentace laxifolia
+    Plenckia populnea
+    Puseudotsuga menziesii
+    Roupala montana
+    Ryparosa hirsuta
+    Ryparosa hulletii
+    Salacia crassifolia
+    Scaevola plumieri
+    Stryphnodendron adstringens
+    Styrax ferrugineus
+    Teijsmanniodendron holophyllum
+    Teijsmanniodendron pteropodum
+    Tepualia stipularis
+
+── NOTES ─────────────────────────────────────────────
+  1. Open LAI_categorised.csv
+  2. Filter category = REVIEW
+  3. Assign correct category for each species
+  4. Mangrove / Palm may overlap with Tree — adjust
+     if preferred for GPRTool UI grouping
+  5. Multi-Species and Generic-Benchmark can be used
+     as planning-level LAI presets in GPRTool
+=======================================================

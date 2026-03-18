@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <title>GPRTool Demo</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
 
-  <!-- External stylesheet (contains all colour tokens) -->
+  <!-- External stylesheet -->
   <link rel="stylesheet" href="styles.css" />
 
   <!-- Resolve bare specifier 'three' to your local module -->
@@ -16,72 +19,83 @@
   }
   </script>
 
- <style>
-  /* ==== Layout only (no colours here) ==== */
-  html, body { height: 100%; margin: 0; }
+  <style>
+    /* Layout styles */
+    html, body { 
+      height: 100%; 
+      margin: 0; 
+    }
 
-  body {
-    display: flex;
-    flex-direction: column;
-    font-family: system-ui, Segoe UI, Arial, sans-serif;
-  }
+    body {
+      display: flex;
+      flex-direction: column;
+      font-family: system-ui, Segoe UI, Arial, sans-serif;
+    }
 
-  #header-container { flex: 0 0 auto; width: 100%; }
+    #header-container { 
+      flex: 0 0 auto; 
+      width: 100%; 
+    }
 
-  #body-container {
-    flex: 1 1 auto;
-    min-height: 0;
-    width: 100%;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
+    #body-container {
+      flex: 1 1 auto;
+      min-height: 0;
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
 
-  /* Ensure main container and viewport fill space */
-  #main-container { 
-    flex: 1;
-    display: flex;
-    min-height: 0;
-    overflow: hidden;
-  }
+    #main-container { 
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      overflow: hidden;
+    }
 
-  #viewport { 
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
-  }
-  
-  #feedback-bar {
-    flex-shrink: 0;
-  }
+    #viewport { 
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+      isolation: isolate;
+    }
+    
+    #feedback-bar {
+      flex-shrink: 0;
+    }
 
-  #three-canvas {
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
-  
+    #three-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
   </style>
 </head>
 
 <body>
-
   <div id="header-container"></div>
   <div id="body-container"></div>
 
   <script type="module">
     /* ========================
-       0) Module imports
+       MODULE IMPORTS
        ======================== */
     const THREE = await import('three');
     const { OrbitControls } = await import('./js/OrbitControls.js');
 
-
     /* ========================
-       1) Load header + body
+       LOAD HEADER + BODY
        ======================== */
     const header = await fetch('header.html').then(r => r.text());
     document.getElementById('header-container').innerHTML = header;
+
+    /* ========================
+       HEADER TIME & ALARM
+       ======================== */
+    let alarmTime = null;
+    let alarmInterval = null;
+    let isRinging = false;
 
     function updateHeaderTime() {
       const el = document.getElementById('header-datetime');
@@ -90,290 +104,705 @@
         const day = now.getDate();
         const month = now.toLocaleDateString('en-GB', { month: 'short' });
         const year = now.getFullYear();
-            const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    const seconds = now.getSeconds().toString().padStart(2, '0');
+        const hours = now.getHours().toString().padStart(2, '0');
+        const minutes = now.getMinutes().toString().padStart(2, '0');
+        const seconds = now.getSeconds().toString().padStart(2, '0');
         el.textContent = `${day} ${month} ${year}  ${hours}:${minutes}:${seconds}`;
       }
     }
     updateHeaderTime();
     setInterval(updateHeaderTime, 1000);
 
+    function createAlarmPopup() {
+      const popup = document.createElement('div');
+      popup.className = 'alarm-popup';
+      popup.id = 'alarm-popup';
+      popup.innerHTML = `
+        <h4>Set Alarm</h4>
+        <input type="time" id="alarm-time-input" />
+        <button id="set-alarm-btn">Set Alarm</button>
+        <button id="cancel-alarm-btn" style="background: var(--color-border); margin-top: 6px;">Cancel</button>
+      `;
+      return popup;
+    }
+
+    function setAlarm(timeStr) {
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      const now = new Date();
+      alarmTime = new Date();
+      alarmTime.setHours(hours, minutes, 0, 0);
+      
+      if (alarmTime <= now) {
+        alarmTime.setDate(alarmTime.getDate() + 1);
+      }
+      
+      const datetimeEl = document.getElementById('header-datetime');
+      datetimeEl.classList.add('alarm-active');
+      
+      if (alarmInterval) clearInterval(alarmInterval);
+      alarmInterval = setInterval(checkAlarm, 1000);
+      
+      console.log('Alarm set for:', alarmTime.toLocaleTimeString());
+    }
+
+    function checkAlarm() {
+      if (!alarmTime) return;
+      const now = new Date();
+      if (now >= alarmTime) {
+        triggerAlarm();
+      }
+    }
+
+    function triggerAlarm() {
+      isRinging = true;
+      const datetimeEl = document.getElementById('header-datetime');
+      datetimeEl.classList.remove('alarm-active');
+      datetimeEl.classList.add('alarm-ringing');
+      
+      if (alarmInterval) {
+        clearInterval(alarmInterval);
+        alarmInterval = null;
+      }
+      
+      console.log('ALARM RINGING!');
+    }
+
+    function stopAlarm() {
+      isRinging = false;
+      const datetimeEl = document.getElementById('header-datetime');
+      datetimeEl.classList.remove('alarm-ringing');
+      datetimeEl.classList.remove('alarm-active');
+      alarmTime = null;
+      
+      if (alarmInterval) {
+        clearInterval(alarmInterval);
+        alarmInterval = null;
+      }
+      
+      console.log('Alarm stopped');
+    }
+
+    function clearAlarm() {
+      const datetimeEl = document.getElementById('header-datetime');
+      datetimeEl.classList.remove('alarm-active');
+      alarmTime = null;
+      
+      if (alarmInterval) {
+        clearInterval(alarmInterval);
+        alarmInterval = null;
+      }
+      
+      console.log('Alarm cleared');
+    }
+
+    // Attach alarm click handler
+    document.getElementById('header-datetime').addEventListener('click', function() {
+      if (isRinging) {
+        stopAlarm();
+        return;
+      }
+      
+      let popup = document.getElementById('alarm-popup');
+      if (popup) {
+        popup.remove();
+        return;
+      }
+      
+      popup = createAlarmPopup();
+      document.body.appendChild(popup);
+      
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      document.getElementById('alarm-time-input').value = timeStr;
+      
+      document.getElementById('set-alarm-btn').addEventListener('click', function() {
+        const timeInput = document.getElementById('alarm-time-input').value;
+        if (timeInput) {
+          setAlarm(timeInput);
+          popup.remove();
+        }
+      });
+      
+      document.getElementById('cancel-alarm-btn').addEventListener('click', function() {
+        clearAlarm();
+        popup.remove();
+      });
+    });
+
+    /* ========================
+       LOAD BODY
+       ======================== */
     const bodyHTML = await fetch('body.html').then(r => r.text());
     document.getElementById('body-container').innerHTML = bodyHTML;
 
+    // Collapsible section headers
+    document.querySelectorAll('.section-header').forEach(header => {
+      header.addEventListener('click', () => {
+        header.closest('.command-section').classList.toggle('collapsed');
+      });
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (ctrl && e.key === 'f') { e.preventDefault(); document.getElementById('fitSiteBtn')?.click(); }
+      if (ctrl && e.key === 'g') { e.preventDefault(); document.getElementById('toggleGridBtn')?.click(); }
+      if (ctrl && e.key === 'z') { e.preventDefault(); showFeedback('Undo — coming soon'); }
+      if (ctrl && e.shiftKey && e.key === 'Z') { e.preventDefault(); showFeedback('Redo — coming soon'); }
+      if (e.key === 'Escape')    { showFeedback('Ready'); }
+    });
+
+    // Attach GeoJSON listeners now that body.html is in the DOM
+    document.getElementById('importGeoJSONBtn').addEventListener('click', () => {
+      document.getElementById('geojsonFileInput').click();
+    });
+
+    document.getElementById('geojsonFileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const geojson = JSON.parse(ev.target.result);
+          const coords = extractCoordinates(geojson);
+          if (!coords || coords.length < 3) {
+            showFeedback('Error: No valid polygon found in GeoJSON');
+            return;
+          }
+          drawSiteBoundary(coords);
+        } catch {
+          showFeedback('Error: Could not parse GeoJSON file');
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+
+    document.getElementById('clearSiteBtn').addEventListener('click', () => {
+      if (siteBoundaryLine) {
+        scene.remove(siteBoundaryLine);
+        siteBoundaryLine.geometry.dispose();
+        siteBoundaryLine = null;
+      }
+      document.getElementById('left-panel').classList.remove('site-imported');
+      document.getElementById('clearSiteBtn').style.display = 'none';
+      document.getElementById('site-info-section').style.display = 'none';
+      document.getElementById('gpr-section').style.display = 'none';
+      document.getElementById('empty-props').style.display = 'block';
+      showFeedback('Site cleared');
+    });
+
+    // Fit to site
+    document.getElementById('fitSiteBtn').addEventListener('click', () => {
+      if (siteBoundaryLine) {
+        const box = new THREE.Box3().setFromObject(siteBoundaryLine);
+        const size = new THREE.Vector3();
+        const center = new THREE.Vector3();
+        box.getSize(size);
+        box.getCenter(center);
+        const maxDim = Math.max(size.x, size.z);
+        const aspect = container.clientWidth / container.clientHeight;
+        const frustumSize = maxDim * 1.3;
+        camera2D.left   = -frustumSize * aspect / 2;
+        camera2D.right  =  frustumSize * aspect / 2;
+        camera2D.top    =  frustumSize / 2;
+        camera2D.bottom = -frustumSize / 2;
+        camera2D.updateProjectionMatrix();
+        controls2D.target.copy(center);
+        controls2D.update();
+        showFeedback('Fitted to site');
+      } else {
+        showFeedback('No site loaded');
+      }
+    });
+
+    // Reset camera
+    document.getElementById('resetCameraBtn').addEventListener('click', () => {
+      if (currentMode === '2d') {
+        camera2D.position.set(0, 10, 0);
+        camera2D.lookAt(0, 0, 0);
+        controls2D.target.set(0, 0, 0);
+        controls2D.update();
+      } else {
+        camera3D.position.set(100, 100, 100);
+        camera3D.lookAt(0, 0, 0);
+        controls3D.target.set(0, 0, 0);
+        controls3D.update();
+      }
+      showFeedback('Camera reset');
+    });
+
+    // Toggle grid
+    document.getElementById('toggleGridBtn').addEventListener('click', () => {
+      if (gridHelper) {
+        gridHelper.visible = !gridHelper.visible;
+        showFeedback('Grid ' + (gridHelper.visible ? 'on' : 'off'));
+      }
+    });
+
+    // Plant library placeholder
+    document.getElementById('plantLibraryBtn').addEventListener('click', () => {
+      showFeedback('Plant Library — coming soon');
+    });
+
+    // Calculate GPR placeholder
+    document.getElementById('calculateGPRBtn').addEventListener('click', () => {
+      showFeedback('GPR calculation — coming soon');
+    });
+
+    // Centre view button
+    document.getElementById('centerBtn')?.addEventListener('click', () => {
+      if (siteBoundaryLine) {
+        document.getElementById('fitSiteBtn').click();
+      }
+    });
+
     /* ========================
-       2) DOM hooks
+       DOM ELEMENTS
        ======================== */
     const canvas = document.getElementById('three-canvas');
     if (!canvas) throw new Error('No #three-canvas found.');
 
     const container = canvas.parentElement;
-
     const xIn = document.getElementById('widthX');
     const yIn = document.getElementById('heightY');
     const zIn = document.getElementById('depthZ');
     const resetBtn = document.getElementById('resetBtn');
 
-
     /* ========================
-       3) Renderer, scene, camera
+       RENDERER & SCENE
        ======================== */
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
     const scene = new THREE.Scene();
 
-    /* === Viewport background from CSS token === */
     function applyViewportBackground() {
       const styles = getComputedStyle(document.documentElement);
-      const cssColor = styles.getPropertyValue('--vp-bgcolor').trim() || '#0b1222';
+      const cssColor = styles.getPropertyValue('--vp-bgcolor').trim() || '#e8eedf';
       renderer.setClearColor(new THREE.Color(cssColor), 1.0);
     }
     applyViewportBackground();
 
-    /* Optional: auto-update if data-theme changes */
     new MutationObserver(applyViewportBackground)
       .observe(document.documentElement, {
         attributes: true,
         attributeFilter: ['data-theme']
       });
 
-    const camera = new THREE.PerspectiveCamera(45, 2, 0.1, 1000);
-    camera.position.set(1.5, 1.5, 1.5);
-    camera.updateProjectionMatrix();
+    /* ========================
+       GEOJSON SITE IMPORT
+       ======================== */
+    let siteBoundaryLine = null;
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
+    function latlonToMetres(lon, lat, centerLon, centerLat) {
+      const x = (lon - centerLon) * Math.cos(centerLat * Math.PI / 180) * 111320;
+      const y = (lat - centerLat) * 111320;
+      return [x, y];
+    }
 
-    // ===== smoother feel + limits to prevent flips/zoom-through =====
-    controls.dampingFactor = 0.08;
-    controls.rotateSpeed   = 0.6;
-    controls.zoomSpeed     = 0.8;
+    function drawSiteBoundary(coordinates) {
+      // Remove existing boundary
+      if (siteBoundaryLine) {
+        scene.remove(siteBoundaryLine);
+        siteBoundaryLine.geometry.dispose();
+        siteBoundaryLine = null;
+      }
 
-    controls.minDistance   = 0.4;
-    controls.maxDistance   = 50;
+      // Calculate centroid
+      const lons = coordinates.map(c => c[0]);
+      const lats = coordinates.map(c => c[1]);
+      const centerLon = (Math.min(...lons) + Math.max(...lons)) / 2;
+      const centerLat = (Math.min(...lats) + Math.max(...lats)) / 2;
 
-    controls.minPolarAngle = 0.01;
-    controls.maxPolarAngle = Math.PI - 0.01;
+      // Convert to metres, scale to Three.js units (1 unit = 1 metre)
+      const points = coordinates.map(c => {
+        const [x, y] = latlonToMetres(c[0], c[1], centerLon, centerLat);
+        return new THREE.Vector3(x, 0, -y); // z is depth in Three.js
+      });
 
-    // ===== keep auto-rotate, but pause while user interacts =====
-    const ROT_X = 0.6;  // radians per second
-    const ROT_Y = 0.8;
-    let userInteracting = false;
-    controls.addEventListener('start', () => { userInteracting = true;  });
-    controls.addEventListener('end',   () => { userInteracting = false; });
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      const material = new THREE.LineBasicMaterial({
+        color: 0xff6600,
+        linewidth: 2
+      });
+      siteBoundaryLine = new THREE.LineLoop(geometry, material);
+      scene.add(siteBoundaryLine);
 
+      // Fit camera to boundary
+      const box = new THREE.Box3().setFromObject(siteBoundaryLine);
+      const size = new THREE.Vector3();
+      const center = new THREE.Vector3();
+      box.getSize(size);
+      box.getCenter(center);
+
+      const maxDim = Math.max(size.x, size.z);
+      const aspect = container.clientWidth / container.clientHeight;
+      const frustumSize = maxDim * 1.3;
+
+      camera2D.left   = -frustumSize * aspect / 2;
+      camera2D.right  =  frustumSize * aspect / 2;
+      camera2D.top    =  frustumSize / 2;
+      camera2D.bottom = -frustumSize / 2;
+      camera2D.updateProjectionMatrix();
+      controls2D.target.copy(center);
+      controls2D.update();
+
+      // Update grid and axes to match site scale
+      updateSceneHelpers(Math.max(size.x, size.z));
+
+      // Switch to 2D mode
+      switchMode('2d');
+
+      // Update UI
+      document.getElementById('left-panel').classList.add('site-imported');
+      document.getElementById('clearSiteBtn').style.display = 'block';
+
+      // Show site info in properties panel
+      const siteArea = computePolygonArea(coordinates);
+      const sitePerimeter = computePolygonPerimeter(coordinates);
+      document.getElementById('site-info-section').style.display = 'block';
+      document.getElementById('gpr-section').style.display = 'block';
+      document.getElementById('empty-props').style.display = 'none';
+      document.getElementById('site-area').textContent = siteArea.toFixed(0) + ' m²';
+      document.getElementById('site-perimeter').textContent = sitePerimeter.toFixed(0) + ' m';
+      document.getElementById('site-points').textContent = (coordinates.length - 1);
+      document.getElementById('gpr-site-area').textContent = siteArea.toFixed(0) + ' m²';
+
+      showFeedback(`Site loaded — ${(coordinates.length - 1)} points, ${siteArea.toFixed(0)} m²`);
+    }
+
+    function computePolygonArea(coords) {
+      // Shoelace formula on projected metres
+      const pts = coords.map(c => latlonToMetres(c[0], c[1],
+        (Math.min(...coords.map(x=>x[0])) + Math.max(...coords.map(x=>x[0]))) / 2,
+        (Math.min(...coords.map(x=>x[1])) + Math.max(...coords.map(x=>x[1]))) / 2
+      ));
+      let area = 0;
+      for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+        area += (pts[j][0] + pts[i][0]) * (pts[j][1] - pts[i][1]);
+      }
+      return Math.abs(area / 2);
+    }
+
+    function computePolygonPerimeter(coords) {
+      const cx = (Math.min(...coords.map(x=>x[0])) + Math.max(...coords.map(x=>x[0]))) / 2;
+      const cy = (Math.min(...coords.map(x=>x[1])) + Math.max(...coords.map(x=>x[1]))) / 2;
+      let perim = 0;
+      for (let i = 0; i < coords.length - 1; i++) {
+        const [x1, y1] = latlonToMetres(coords[i][0], coords[i][1], cx, cy);
+        const [x2, y2] = latlonToMetres(coords[i+1][0], coords[i+1][1], cx, cy);
+        perim += Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+      }
+      return perim;
+    }
+
+    function extractCoordinates(geojson) {
+      const features = geojson.features || [geojson];
+      for (const feature of features) {
+        const geom = feature.geometry || feature;
+        if (geom.type === 'Polygon') return geom.coordinates[0];
+        if (geom.type === 'MultiPolygon') return geom.coordinates[0][0];
+      }
+      return null;
+    }
+
+    // GeoJSON button listeners — attached after body.html is loaded (see below)
 
     /* ========================
-       4) Lights
+       CAMERA & CONTROLS
+       ======================== */
+    let currentMode = '3d'; // Track current view mode
+
+    // 3D Camera (Perspective)
+    const camera3D = new THREE.PerspectiveCamera(45, 2, 0.1, 1000);
+    camera3D.position.set(1.5, 1.5, 1.5);
+
+    // 2D Camera (Orthographic top-down)
+    const camera2D = new THREE.OrthographicCamera(-5, 5, 5, -5, 0.1, 1000);
+    camera2D.position.set(0, 10, 0);
+    camera2D.lookAt(0, 0, 0);
+
+    let camera = camera3D; // Start with 3D camera
+
+    // 3D Controls (Orbit)
+    const controls3D = new OrbitControls(camera3D, renderer.domElement);
+    controls3D.enableDamping = true;
+    controls3D.dampingFactor = 0.08;
+    controls3D.rotateSpeed = 0.6;
+    controls3D.zoomSpeed = 0.8;
+    controls3D.panSpeed = 1.0;
+    controls3D.enablePan = true;
+    controls3D.screenSpacePanning = true;
+    controls3D.minDistance = 1;
+    controls3D.maxDistance = 5000;
+    controls3D.minPolarAngle = 0.01;
+    controls3D.maxPolarAngle = Math.PI * 0.85;
+    // Standard touchpad: 1-finger=select/drag, 2-finger=pan, pinch=zoom
+    controls3D.mouseButtons = {
+      LEFT: THREE.MOUSE.ROTATE,
+      MIDDLE: THREE.MOUSE.DOLLY,
+      RIGHT: THREE.MOUSE.PAN
+    };
+    controls3D.touches = {
+      ONE: THREE.TOUCH.ROTATE,
+      TWO: THREE.TOUCH.DOLLY_PAN
+    };
+
+    // 2D Controls (Pan only, no rotation)
+    const controls2D = new OrbitControls(camera2D, renderer.domElement);
+    controls2D.enableRotate = false;
+    controls2D.enableDamping = true;
+    controls2D.dampingFactor = 0.08;
+    controls2D.minZoom = 0.1;
+    controls2D.maxZoom = 10;
+
+    let controls = controls3D; // Start with 3D controls
+
+    // Track user interaction
+    let userInteracting = false;
+    controls.addEventListener('start', () => { userInteracting = true; });
+    controls.addEventListener('end', () => { userInteracting = false; });
+
+    /* ========================
+       LIGHTS
        ======================== */
     const keyLight = new THREE.DirectionalLight(0xffffff, 1);
     keyLight.position.set(2, 3, 4);
-    scene.add(keyLight, new THREE.AmbientLight(0xffffff, 0.25));
-
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
+    scene.add(keyLight, ambientLight);
 
     /* ========================
-       4.5) Camera fit helper
+       GRID & AXES HELPERS
        ======================== */
-    // Preserves current view direction; adjusts only distance + planes
+    // Grid and axes — sized dynamically after site loads
+    let gridHelper = null;
+    let axesHelper = null;
+
+    function updateSceneHelpers(sizeMetres) {
+      // Remove old helpers
+      if (gridHelper) { scene.remove(gridHelper); gridHelper = null; }
+      if (axesHelper) { scene.remove(axesHelper); axesHelper = null; }
+
+      // Grid: cover the site with ~50 divisions
+      const gridSize = Math.ceil(sizeMetres * 1.5 / 10) * 10;
+      const divisions = Math.min(50, Math.ceil(gridSize / 10));
+      gridHelper = new THREE.GridHelper(gridSize, divisions, 0x7a8a5a, 0x8a9b6f);
+      gridHelper.visible = (currentMode === '2d');
+      scene.add(gridHelper);
+
+      // Axes: 10% of site size
+      axesHelper = new THREE.AxesHelper(sizeMetres * 0.1);
+      scene.add(axesHelper);
+    }
+
+    // Default helpers for empty scene
+    updateSceneHelpers(100);
+
+    // Cube removed — scene starts empty, waiting for GeoJSON site import
+
+    /* ========================
+       MODE TOGGLE BUTTONS
+       ======================== */
+    // Mode switching function
+    function switchMode(mode) {
+      currentMode = mode;
+      
+      // Update button states
+      document.querySelectorAll('.mode-btn').forEach(btn => {
+        if (btn.dataset.mode === mode) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      if (mode === '2d') {
+        camera = camera2D;
+        controls = controls2D;
+        if (gridHelper) gridHelper.visible = true;
+        controls2D.update();
+        document.getElementById('status-mode').textContent = '2D';
+        showFeedback('2D Plan View');
+      } else {
+        // Switch to 3D mode
+        camera = camera3D;
+        controls = controls3D;
+        if (gridHelper) gridHelper.visible = false;
+
+        // Position camera based on site size if site is loaded
+        if (siteBoundaryLine) {
+          const box = new THREE.Box3().setFromObject(siteBoundaryLine);
+          const center = new THREE.Vector3();
+          const size = new THREE.Vector3();
+          box.getCenter(center);
+          box.getSize(size);
+          const dist = Math.max(size.x, size.z) * 1.2;
+          camera3D.position.set(center.x, dist, center.z + dist);
+          camera3D.far = dist * 10;
+          camera3D.updateProjectionMatrix();
+          controls3D.target.copy(center);
+        }
+
+        controls3D.update();
+        document.getElementById('status-mode').textContent = '3D';
+        showFeedback('3D View');
+      }
+    }
+
+    // Attach click handlers to mode buttons
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        switchMode(this.dataset.mode);
+      });
+    });
+
+    // Start in 2D mode
+    switchMode('2d');
+
+    /* ========================
+       CAMERA FIT HELPERS
+       ======================== */
     function fitCameraToObject({ camera, object, controls, padding = 2 }) {
       const box = new THREE.Box3().setFromObject(object);
-      const size = new THREE.Vector3(); box.getSize(size);
-      const center = new THREE.Vector3(); box.getCenter(center);
+      const size = new THREE.Vector3();
+      box.getSize(size);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
 
-      const radius    = 0.5 * Math.max(size.x, size.y, size.z);
+      const radius = 0.5 * Math.max(size.x, size.y, size.z);
       const fitRadius = radius * padding;
 
-      const fov    = THREE.MathUtils.degToRad(camera.fov);
-      const aspect = camera.aspect || 1;
+      if (camera.isPerspectiveCamera) {
+        const fov = THREE.MathUtils.degToRad(camera.fov);
+        const aspect = camera.aspect || 1;
 
-      const distV = fitRadius / Math.sin(fov / 2);
-      const distH = fitRadius / Math.sin(Math.atan(Math.tan(fov / 2) * aspect));
-      const distance = Math.max(distV, distH);
+        const distV = fitRadius / Math.sin(fov / 2);
+        const distH = fitRadius / Math.sin(Math.atan(Math.tan(fov / 2) * aspect));
+        const distance = Math.max(distV, distH);
 
-      // Preserve current orbit angles; adjust only distance
-      const fromTarget = new THREE.Vector3().copy(camera.position).sub(controls.target);
-      const spherical  = new THREE.Spherical().setFromVector3(fromTarget);
-      spherical.radius = distance;
+        const fromTarget = new THREE.Vector3().copy(camera.position).sub(controls.target);
+        const spherical = new THREE.Spherical().setFromVector3(fromTarget);
+        spherical.radius = distance;
 
-      // New target is the object's center
-      controls.target.copy(center);
-      const newOffset = new THREE.Vector3().setFromSpherical(spherical);
-      camera.position.copy(controls.target).add(newOffset);
+        controls.target.copy(center);
+        const newOffset = new THREE.Vector3().setFromSpherical(spherical);
+        camera.position.copy(controls.target).add(newOffset);
 
-      // Tighten camera planes to reduce clipping/fighting
-      camera.near = Math.max(0.01, distance - fitRadius * 2);
-      camera.far  = distance + fitRadius * 2;
-      camera.updateProjectionMatrix();
+        camera.near = Math.max(0.01, distance - fitRadius * 2);
+        camera.far = distance + fitRadius * 2;
+        camera.updateProjectionMatrix();
+      }
 
       controls.update();
     }
 
-    // Keep near/far in sync as object size changes, without refitting every keystroke
     function updateCameraPlanesForObject(object, padding = 2) {
       const box = new THREE.Box3().setFromObject(object);
-      const size = new THREE.Vector3(); box.getSize(size);
-      const radius    = 0.5 * Math.max(size.x, size.y, size.z);
+      const size = new THREE.Vector3();
+      box.getSize(size);
+      const radius = 0.5 * Math.max(size.x, size.y, size.z);
       const fitRadius = radius * padding;
 
-      const distance = camera.position.distanceTo(controls.target);
-      camera.near = Math.max(0.01, distance - fitRadius * 2);
-      camera.far  = distance + fitRadius * 2;
-      camera.updateProjectionMatrix();
+      if (camera.isPerspectiveCamera) {
+        const distance = camera.position.distanceTo(controls.target);
+        camera.near = Math.max(0.01, distance - fitRadius * 2);
+        camera.far = distance + fitRadius * 2;
+        camera.updateProjectionMatrix();
+      }
     }
 
-
     /* ========================
-       5) Cube with plywood texture
-       ======================== */
-    const cubeGeom = new THREE.BoxGeometry(1, 1, 1);
-
-    let woodMat;
-    try {
-      const tex = new THREE.TextureLoader().load('./textures/plywood.webp');
-      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-
-      woodMat = new THREE.MeshStandardMaterial({
-        map: tex,
-        metalness: 0,
-        roughness: 0.6
-      });
-    } catch {
-      woodMat = new THREE.MeshNormalMaterial();
-      console.warn('Using fallback material.');
-    }
-
-    const cube = new THREE.Mesh(cubeGeom, woodMat);
-    scene.add(cube);
-
-    /* (Removed initial fit here — it now runs after the first resize) */
-
-
-    /* ========================
-       6) Resize to container
+       RESIZE HANDLER
        ======================== */
     function resizeToContainer() {
-      const w = container.clientWidth  || 1;
+      const w = container.clientWidth || 1;
       const h = container.clientHeight || 1;
 
       renderer.setSize(w, h, false);
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      controls.update();
       
+      if (camera.isPerspectiveCamera) {
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      } else if (camera.isOrthographicCamera) {
+        const aspect = w / h;
+        const frustumSize = 10; // Adjust as needed
+        camera.left = -frustumSize * aspect / 2;
+        camera.right = frustumSize * aspect / 2;
+        camera.top = frustumSize / 2;
+        camera.bottom = -frustumSize / 2;
+        camera.updateProjectionMatrix();
+      }
+      
+      controls.update();
     }
+
     new ResizeObserver(resizeToContainer).observe(container);
     addEventListener('resize', resizeToContainer);
     resizeToContainer();
 
-    // Initial fit AFTER first resize (so aspect is correct)
-    fitCameraToObject({ camera, object: cube, controls, padding: 2 });
-
-    /* ========================
-       7) Input controls
-       ======================== */
-    function applyScale() {
-      const x = Math.max(0.1, parseFloat(xIn?.value) || 1);
-      const y = Math.max(0.1, parseFloat(yIn?.value) || 1);
-      const z = Math.max(0.1, parseFloat(zIn?.value) || 1);
-
-      cube.scale.set(x, y, z);
-
-      // keep camera planes appropriate for new size
-      updateCameraPlanesForObject(cube);
-
-      const map = woodMat?.map;
-      if (map?.repeat) {
-        map.repeat.set(Math.max(1, x), Math.max(1, y));
-        map.needsUpdate = true;
-      }
-    }
-
-    if (xIn && yIn && zIn) {
-      ['input', 'change'].forEach(ev => {
-        xIn.addEventListener(ev, applyScale);
-        yIn.addEventListener(ev, applyScale);
-        zIn.addEventListener(ev, applyScale);
-      });
-    }
-
+    // Input controls wired up for future object selection
     resetBtn?.addEventListener('click', () => {
-      xIn.value = yIn.value = zIn.value = '1';
-      applyScale();
-      fitCameraToObject({ camera, object: cube, controls, padding: 2 });
+      showFeedback('No object selected');
     });
 
-    applyScale();
-
-
     /* ========================
-       8) Animation Loop
+       ANIMATION LOOP
        ======================== */
-    // Delta time + pause while interacting
     const clock = new THREE.Clock();
     (function animate() {
       const dt = clock.getDelta();
-
-      // Gentle auto-rotate unless user is interacting
-      if (!userInteracting) {
-        //cube.rotation.x += dt * ROT_X;
-        //cube.rotation.y += dt * ROT_Y;
-      }
 
       controls.update();
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
     })();
-/* ========================
-   Panel collapse functionality
-   ======================== */
-document.querySelectorAll('.collapse-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    const panelId = this.dataset.panel;
-    const panel = document.getElementById(`${panelId}-panel`);
-    panel.classList.toggle('collapsed');
-    
-    // Update button text
-    if (panel.classList.contains('collapsed')) {
-      this.textContent = panelId === 'left' ? '►' : '◄';
-    } else {
-      this.textContent = panelId === 'left' ? '◄' : '►';
-    }
-  });
-});
 
-/* Feedback system */
-function showFeedback(message, duration = 3000) {
-  const feedbackEl = document.getElementById('status-message');
-  if (feedbackEl) {
-    feedbackEl.textContent = message;
-    
-    if (duration > 0) {
-      setTimeout(() => {
-        feedbackEl.textContent = 'Ready';
-      }, duration);
-    }
-  }
-}
+    /* ========================
+       PANEL COLLAPSE
+       ======================== */
+    document.querySelectorAll('.collapse-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const panelId = this.dataset.panel;
+        const panel = document.getElementById(`${panelId}-panel`);
+        panel.classList.toggle('collapsed');
+        
+        if (panel.classList.contains('collapsed')) {
+          this.textContent = panelId === 'left' ? '►' : '◄';
+        } else {
+          this.textContent = panelId === 'left' ? '◄' : '►';
+        }
+      });
+    });
 
-/* Command button handlers */
-document.querySelectorAll('.command-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    const action = this.dataset.action;
-    if (action) {
-      showFeedback(`Action: ${action}`);
-      // Add your action handlers here
-      console.log('Command:', action);
+    /* ========================
+       FEEDBACK SYSTEM
+       ======================== */
+    function showFeedback(message, duration = 3000) {
+      const feedbackEl = document.getElementById('status-message');
+      if (feedbackEl) {
+        feedbackEl.textContent = message;
+        
+        if (duration > 0) {
+          setTimeout(() => {
+            feedbackEl.textContent = 'Ready';
+          }, duration);
+        }
+      }
     }
-  });
-});
 
-// Show ready message
-showFeedback('GPRTool Demo ready');
+    /* Command button handlers */
+    document.querySelectorAll('.command-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const action = this.dataset.action;
+        if (action) {
+          showFeedback(`Action: ${action}`);
+          console.log('Command:', action);
+        }
+      });
+    });
+
+    showFeedback('GPRTool Demo ready');
   </script>
-
 </body>
 </html>

@@ -1,5 +1,5 @@
 @echo off
-echo Closing GPRToolDemo...
+echo Closing GPRTool-Demo...
 
 REM --------------------------------------------
 REM 1. Close backend terminal (search by title)
