@@ -9,14 +9,54 @@
   <script type="importmap">
   {
     "imports": {
-      "three": "./js/three.module.js"
+      "three": "./js/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160/examples/jsm/"
     }
   }
   </script>
 
   <style>
-    /* index.html inline styles — layout rules live in styles.css */
     #three-canvas { width: 100%; height: 100%; display: block; }
+
+    /* Surface list items in left panel */
+    .surface-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-primary);
+      transition: background 0.15s;
+    }
+    .surface-item:hover { background: var(--chrome-hover); }
+    .surface-item.selected { background: var(--accent-mid); color: #fff; }
+    .surface-item.hovered  { background: var(--chrome-hover); outline: 1px solid var(--accent-mid); }
+    .surface-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .surface-dot.ground { background: #7ab648; }
+    .surface-dot.roof   { background: #e8a020; }
+    .surface-dot.wall   { background: #5b9bd5; }
+    .surface-dot.sloped { background: #a0a0a0; }
+    .surface-label { flex: 1; }
+    .surface-area  { color: var(--text-secondary); font-size: 11px; }
+
+    /* Note text in building panel */
+    .tool-group-note {
+      font-size: 11px;
+      color: var(--text-secondary);
+      padding: 4px 8px 6px;
+      font-style: italic;
+      line-height: 1.4;
+    }
+
+    /* Hover highlight material applied via raycaster */
+    .surface-hover-indicator {
+      position: absolute;
+      pointer-events: none;
+    }
   </style>
 </head>
 
@@ -27,6 +67,8 @@
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from './js/OrbitControls.js';
+    import { OBJLoader }  from 'three/addons/loaders/OBJLoader.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
     /* ============================================================
        LOAD HEADER + BODY
@@ -134,7 +176,7 @@
       if (ctrl && !e.shiftKey && e.key === 'g') { e.preventDefault(); document.getElementById('toggleGridBtn')?.click(); }
       if (ctrl && !e.shiftKey && e.key === 'z') { e.preventDefault(); showFeedback('Undo — coming soon'); }
       if (ctrl &&  e.shiftKey && e.key === 'Z') { e.preventDefault(); showFeedback('Redo — coming soon'); }
-      if (e.key === 'Escape') { showFeedback('Ready'); }
+      if (e.key === 'Escape') { deselectSurface(); showFeedback('Ready'); }
     });
 
     /* ============================================================
@@ -144,12 +186,35 @@
     const container = canvas.parentElement;
 
     let currentMode      = '2d';
-    let siteBoundaryLine = null;   // THREE.LineLoop  — orange site outline
-    let siteSurface      = null;   // THREE.Mesh      — filled site polygon, light beige
-    let terrainMesh      = null;   // THREE.Mesh      — elevation surface (terrain session)
+    let siteBoundaryLine = null;
+    let siteSurface      = null;
+    let terrainMesh      = null;
+    let importedModel    = null;   // THREE.Group — the loaded 3D model
     let gridHelper       = null;
     let axesHelper       = null;
-    let feedbackTimer    = null;   // moved here to avoid temporal dead zone
+    let feedbackTimer    = null;
+
+    // Surface registry — populated after model load
+    // Each entry: { id, mesh, type, area, elevation, normalAngle, originalMaterial }
+    let surfaces         = [];
+    let hoveredSurface   = null;
+    let selectedSurface  = null;
+
+    // 2D canvas mode: 'ortho' = top-down/elevation, 'surface' = normal-aligned
+    let canvasMode = 'ortho';
+
+    /* ============================================================
+       MATERIALS
+    ============================================================ */
+    const MAT = {
+      model:    new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }),
+      ground:   new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }),
+      roof:     new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }),
+      wall:     new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }),
+      sloped:   new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }),
+      hover:    new THREE.MeshBasicMaterial({ color: 0xd8d8d8, side: THREE.DoubleSide }),
+      selected: new THREE.MeshBasicMaterial({ color: 0xc8e8c8, side: THREE.DoubleSide }),
+    };
 
     /* ============================================================
        RENDERER
@@ -171,45 +236,37 @@
     /* ============================================================
        CAMERAS
     ============================================================ */
-    // 3D — perspective
     const camera3D = new THREE.PerspectiveCamera(45, 2, 0.1, 10000);
     camera3D.position.set(100, 100, 100);
 
-    // 2D — orthographic top-down
-    // Simplest correct setup: position high on Y, rotation via quaternion pointing straight down.
     const camera2D = new THREE.OrthographicCamera(-50, 50, 50, -50, 0.1, 20000);
     camera2D.position.set(0, 10000, 0);
     camera2D.quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
 
-    let camera = camera2D; // start in 2D
+    let camera = camera2D;
 
     /* ============================================================
        CONTROLS
     ============================================================ */
     const controls3D = new OrbitControls(camera3D, renderer.domElement);
-    controls3D.enableDamping     = true;
-    controls3D.dampingFactor     = 0.08;
-    controls3D.rotateSpeed       = 0.6;
-    controls3D.zoomSpeed         = 0.8;
-    controls3D.panSpeed          = 1.0;
+    controls3D.enableDamping      = true;
+    controls3D.dampingFactor      = 0.08;
+    controls3D.rotateSpeed        = 0.6;
+    controls3D.zoomSpeed          = 0.8;
+    controls3D.panSpeed           = 1.0;
     controls3D.screenSpacePanning = true;
-    controls3D.minDistance       = 1;
-    controls3D.maxDistance       = 5000;
-    controls3D.minPolarAngle     = 0.01;
-    controls3D.maxPolarAngle     = Math.PI * 0.85;
-    controls3D.mouseButtons      = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
-    controls3D.touches           = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+    controls3D.minDistance        = 1;
+    controls3D.maxDistance        = 5000;
+    controls3D.minPolarAngle      = 0.01;
+    controls3D.maxPolarAngle      = Math.PI * 0.85;
+    controls3D.mouseButtons       = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+    controls3D.touches            = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
 
-    // 2D pan/zoom — handled manually, not via OrbitControls.
-    // OrbitControls fights with orthographic cameras and resets lookAt.
-    const pan2D = { x: 0, z: 0 };  // world-space camera target
-    let zoom2D = 1;                 // orthographic zoom multiplier
-    let base2DhalfH = 50;           // base frustum half-height set by fit2DCamera
-
-    // Dummy controls2D object so switchMode code doesn't break
+    const pan2D = { x: 0, z: 0 };
+    let zoom2D = 1;
+    let base2DhalfH = 50;
     const controls2D = { update: () => {}, saveState: () => {}, target: new THREE.Vector3() };
 
-    // Manual 2D input handling
     let pan2DActive = false;
     let pan2DLast   = { x: 0, y: 0 };
 
@@ -225,12 +282,33 @@
       const dx = e.clientX - pan2DLast.x;
       const dy = e.clientY - pan2DLast.y;
       pan2DLast = { x: e.clientX, y: e.clientY };
-      // Convert screen pixels to world metres
-      const frustumW = (camera2D.right - camera2D.left) / camera2D.zoom;
-      const frustumH = (camera2D.top - camera2D.bottom) / camera2D.zoom;
-      pan2D.x -= (dx / container.clientWidth)  * frustumW;
-      pan2D.z -= (dy / container.clientHeight) * frustumH;
-      update2DCamera();
+
+      if (selectedSurface && camera2D.userData.surfaceCentre) {
+        // Surface canvas mode: pan along surface U/V axes
+        const frustumW = (camera2D.right - camera2D.left) / camera2D.zoom;
+        const frustumH = (camera2D.top - camera2D.bottom) / camera2D.zoom;
+        const scaleX   = frustumW / container.clientWidth;
+        const scaleY   = frustumH / container.clientHeight;
+
+        // Right axis = cross(up, normal); Up axis = camera up
+        const n    = camera2D.userData.surfaceNormal.clone();
+        const up   = camera2D.userData.surfaceUp.clone();
+        const right = new THREE.Vector3().crossVectors(up, n).normalize();
+
+        camera2D.position.addScaledVector(right,  dx * scaleX);
+        camera2D.position.addScaledVector(up,     -dy * scaleY);
+        camera2D.lookAt(
+          camera2D.position.clone().addScaledVector(n, -camera2D.far * 0.5)
+        );
+        camera2D.updateProjectionMatrix();
+      } else {
+        // Top-down plan mode
+        const frustumW = (camera2D.right - camera2D.left) / camera2D.zoom;
+        const frustumH = (camera2D.top - camera2D.bottom) / camera2D.zoom;
+        pan2D.x -= (dx / container.clientWidth)  * frustumW;
+        pan2D.z -= (dy / container.clientHeight) * frustumH;
+        update2DCamera();
+      }
     });
 
     renderer.domElement.addEventListener('pointerup', e => {
@@ -243,18 +321,29 @@
       if (currentMode !== '2d') return;
       e.preventDefault();
       const factor = e.deltaY > 0 ? 0.9 : 1.1;
-      zoom2D = Math.max(0.05, Math.min(50, zoom2D * factor));
-      update2DCamera();
+      if (selectedSurface) {
+        // Surface canvas zoom: scale the orthographic frustum
+        camera2D.left   *= factor;
+        camera2D.right  *= factor;
+        camera2D.top    *= factor;
+        camera2D.bottom *= factor;
+        camera2D.updateProjectionMatrix();
+      } else {
+        zoom2D = Math.max(0.05, Math.min(50, zoom2D * factor));
+        update2DCamera();
+      }
     }, { passive: false });
 
     function update2DCamera() {
+      // If in surface canvas mode, the camera is managed by fitSurfaceCamera — don't override it
+      if (currentMode === '2d' && selectedSurface) return;
       camera2D.zoom = zoom2D;
       camera2D.position.set(pan2D.x, 10000, pan2D.z);
       camera2D.quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
       camera2D.updateProjectionMatrix();
     }
 
-    let controls = controls2D; // keeps switchMode interface compatible
+    let controls = controls2D;
 
     /* ============================================================
        LIGHTS
@@ -271,13 +360,9 @@
     ============================================================ */
     function updateSceneHelpers(siteSpan) {
       if (gridHelper) { scene.remove(gridHelper); gridHelper.geometry?.dispose(); gridHelper = null; }
-      if (axesHelper) { scene.remove(axesHelper); axesHelper = null; } // Group or AxesHelper
+      if (axesHelper) { scene.remove(axesHelper); axesHelper = null; }
 
-      // Grid is always large enough that the user can never zoom out to its edge.
-      // 10,000m covers any realistic urban site at any zoom level.
       const gridSize = 10000;
-
-      // Cell size scales with site: round-metre intervals, ~100 visible cells across site
       const rawCell  = siteSpan / 100;
       const cellSize = rawCell < 1 ? 1 : rawCell < 2 ? 2 : rawCell < 5 ? 5 : 10;
       const divisions = gridSize / cellSize;
@@ -286,7 +371,6 @@
       gridHelper.visible = (currentMode === '2d');
       scene.add(gridHelper);
 
-      // Custom axes — sit exactly on the Y=0 plane, clearly visible on the grid
       const axisLen = siteSpan * 0.3;
       const makeAxis = (x2, z2, color) => {
         const geom = new THREE.BufferGeometry().setFromPoints([
@@ -296,18 +380,16 @@
         return new THREE.Line(geom, new THREE.LineBasicMaterial({ color, depthTest: false }));
       };
       axesHelper = new THREE.Group();
-      axesHelper.add(makeAxis(axisLen, 0, 0xff2222)); // X — red (east)
-      axesHelper.add(makeAxis(0, axisLen, 0x2255ff)); // Z — blue (south)
-      axesHelper.renderOrder = 999; // always draw on top
+      axesHelper.add(makeAxis(axisLen, 0, 0xff2222));
+      axesHelper.add(makeAxis(0, axisLen, 0x2255ff));
+      axesHelper.renderOrder = 999;
       scene.add(axesHelper);
     }
-    updateSceneHelpers(100); // default until site loads
+    updateSceneHelpers(100);
 
     /* ============================================================
        GEO UTILITIES
     ============================================================ */
-    // Equirectangular projection: lon/lat → local metres (Y=0 plane)
-    // Three.js convention: X = East, Z = South (negated lat offset)
     function latlonToMetres(lon, lat, cLon, cLat) {
       const x =  (lon - cLon) * Math.cos(cLat * Math.PI / 180) * 111320;
       const z = -(lat - cLat) * 111320;
@@ -357,11 +439,550 @@
     }
 
     /* ============================================================
-       SITE BOUNDARY DRAWING
+       SURFACE DETECTION
+       Classify every mesh face by its world-space normal:
+         Y >  0.7  → ground (facing up, low elevation) or roof (facing up, higher)
+         Y < -0.5  → underside — skip
+         |Y| < 0.3 → wall (mostly vertical)
+         else      → sloped
+       We split the model into per-face submeshes so each face is
+       individually selectable. For MVP we group by object/submesh
+       and classify by the average normal of that submesh.
+    ============================================================ */
+    function classifyNormal(normal) {
+      const y = Math.abs(normal.y);
+      if (normal.y < -0.5) return 'underside';  // skip floor undersides
+      if (normal.y >  0.7) return 'horizontal'; // ground or roof — distinguish by elevation later
+      if (y          < 0.3) return 'wall';
+      return 'sloped';
+    }
+
+    function detectSurfaces(modelGroup) {
+      surfaces = [];
+      let idCounter = 0;
+
+      modelGroup.traverse(child => {
+        if (!child.isMesh) return;
+
+        const posAttr = child.geometry.attributes.position;
+        if (!posAttr || posAttr.count < 3) return;
+
+        // ── Compute face normal from vertex positions (cross product of first two edges)
+        // This is reliable regardless of whether the OBJ had vn normals or not.
+        // We use the first triangle (indices 0,1,2) which is always present.
+        child.updateMatrixWorld(true);
+
+        const idxAttr = child.geometry.index;
+        let iA = 0, iB = 1, iC = 2;
+        if (idxAttr) { iA = idxAttr.getX(0); iB = idxAttr.getX(1); iC = idxAttr.getX(2); }
+
+        const pA = new THREE.Vector3().fromBufferAttribute(posAttr, iA);
+        const pB = new THREE.Vector3().fromBufferAttribute(posAttr, iB);
+        const pC = new THREE.Vector3().fromBufferAttribute(posAttr, iC);
+
+        // Local-space face normal
+        const edge1 = new THREE.Vector3().subVectors(pB, pA);
+        const edge2 = new THREE.Vector3().subVectors(pC, pA);
+        const localNormal = new THREE.Vector3().crossVectors(edge1, edge2).normalize();
+
+        // Transform to world space (rotation only, no translation/scale)
+        const worldNormal = localNormal.clone().transformDirection(child.matrixWorld).normalize();
+
+        // Ensure normal points outward/upward (not into the ground)
+        // For horizontal faces we want the upward-facing normal
+        if (worldNormal.y < -0.1) worldNormal.negate();
+
+        const classification = classifyNormal(worldNormal);
+        if (classification === 'underside') return;
+
+        // Bounding box for area and elevation
+        child.geometry.computeBoundingBox();
+        const box = new THREE.Box3().copy(child.geometry.boundingBox).applyMatrix4(child.matrixWorld);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+
+        // Area estimate
+        let area;
+        if (classification === 'horizontal') {
+          area = size.x * size.z;
+        } else {
+          const dims = [size.x, size.y, size.z].sort((a, b) => b - a);
+          area = dims[0] * dims[1];
+        }
+
+        // Elevation = min Y of bounding box
+        const elevation = box.min.y;
+
+        // Surface type
+        let type;
+        if (classification === 'horizontal') {
+          // Ground if base is within 0.5m of Y=0, otherwise roof
+          type = elevation < 0.5 ? 'ground' : 'roof';
+        } else if (classification === 'wall') {
+          type = 'wall';
+        } else {
+          type = 'sloped';
+        }
+
+        const normalAngle = Math.round(THREE.MathUtils.radToDeg(Math.acos(Math.min(1, Math.abs(worldNormal.y)))));
+
+        surfaces.push({
+          id:               idCounter++,
+          mesh:             child,
+          type,
+          area:             Math.round(area * 10) / 10,
+          elevation:        Math.round(elevation * 100) / 100,
+          normalAngle,
+          worldNormal:      worldNormal.clone(),
+          originalMaterial: child.material,
+        });
+
+        // Apply colour-coded material
+        child.material = MAT[type] ? MAT[type].clone() : MAT.model.clone();
+        child.material.polygonOffset      = true;
+        child.material.polygonOffsetFactor = 1;
+        child.material.polygonOffsetUnits  = 1;
+      });
+
+      return surfaces;
+    }
+
+    /* ============================================================
+       SURFACE PANEL — populate left panel list
+    ============================================================ */
+    function populateSurfacePanel() {
+      const section = document.getElementById('section-surfaces');
+      const list    = document.getElementById('surfaces-list');
+      if (!section || !list) return;
+
+      list.innerHTML = '';
+
+      const groups = { ground: [], roof: [], wall: [], sloped: [] };
+      surfaces.forEach(s => (groups[s.type] || groups.sloped).push(s));
+
+      const labels = { ground: 'Ground', roof: 'Roof', wall: 'Wall', sloped: 'Sloped' };
+
+      Object.entries(groups).forEach(([type, items]) => {
+        if (!items.length) return;
+        const groupLabel = document.createElement('div');
+        groupLabel.className = 'tool-group-label';
+        groupLabel.textContent = `${labels[type]} (${items.length})`;
+        list.appendChild(groupLabel);
+
+        items.forEach(s => {
+          const item = document.createElement('div');
+          item.className = 'surface-item';
+          item.dataset.surfaceId = s.id;
+          item.innerHTML = `
+            <span class="surface-dot ${type}"></span>
+            <span class="surface-label">${labels[type]} ${s.id + 1}</span>
+            <span class="surface-area">${s.area} m²</span>`;
+
+          item.addEventListener('mouseenter', () => hoverSurface(s));
+          item.addEventListener('mouseleave', () => unhoverSurface(s));
+          item.addEventListener('click', ()       => selectSurface(s));
+          list.appendChild(item);
+        });
+      });
+
+      section.style.display = 'block';
+
+      // Summary in right panel
+      const groundCount = groups.ground.length;
+      const roofCount   = groups.roof.length;
+      const wallCount   = groups.wall.length;
+      document.getElementById('model-surface-count').textContent = surfaces.length;
+      document.getElementById('model-ground-count').textContent  = groundCount;
+      document.getElementById('model-roof-count').textContent    = roofCount;
+      document.getElementById('model-wall-count').textContent    = wallCount;
+    }
+
+    /* ============================================================
+       SURFACE HOVER + SELECTION
+    ============================================================ */
+    function typeMat(s) {
+      const m = MAT[s.type] ? MAT[s.type].clone() : MAT.model.clone();
+      m.polygonOffset = true; m.polygonOffsetFactor = 1; m.polygonOffsetUnits = 1;
+      return m;
+    }
+
+    function hoverSurface(s) {
+      if (s === selectedSurface) return;
+      if (hoveredSurface && hoveredSurface !== selectedSurface) {
+        hoveredSurface.mesh.material = typeMat(hoveredSurface);
+      }
+      hoveredSurface = s;
+      const hm = MAT.hover.clone();
+      hm.polygonOffset = true; hm.polygonOffsetFactor = -2; hm.polygonOffsetUnits = -2;
+      s.mesh.material = hm;
+      document.querySelectorAll('.surface-item').forEach(el => {
+        el.classList.toggle('hovered', parseInt(el.dataset.surfaceId) === s.id);
+      });
+    }
+
+    function unhoverSurface(s) {
+      if (s === selectedSurface) return;
+      s.mesh.material = typeMat(s);
+      hoveredSurface = null;
+      document.querySelectorAll('.surface-item').forEach(el => el.classList.remove('hovered'));
+    }
+
+    function selectSurface(s) {
+      if (selectedSurface && selectedSurface !== s) {
+        selectedSurface.mesh.material = typeMat(selectedSurface);
+        document.querySelectorAll('.surface-item').forEach(el => el.classList.remove('selected'));
+      }
+      selectedSurface = s;
+      const sm = MAT.selected.clone();
+      sm.polygonOffset = true; sm.polygonOffsetFactor = -2; sm.polygonOffsetUnits = -2;
+      s.mesh.material = sm;
+
+      // Highlight list item
+      document.querySelectorAll('.surface-item').forEach(el => {
+        el.classList.toggle('selected', parseInt(el.dataset.surfaceId) === s.id);
+      });
+
+      // Update right panel
+      const typeLabels = { ground: 'Ground plane', roof: 'Roof plane', wall: 'Wall plane', sloped: 'Sloped surface' };
+      document.getElementById('surface-section').style.display = 'block';
+      document.getElementById('surf-type').textContent      = typeLabels[s.type] || s.type;
+      document.getElementById('surf-area').textContent      = s.area + ' m²';
+      document.getElementById('surf-elevation').textContent = s.elevation + ' m';
+      document.getElementById('surf-normal').textContent    = s.normalAngle + '° from vertical';
+
+      document.getElementById('gpr-section').style.display = 'block';
+      showFeedback(`${typeLabels[s.type]} selected — ${s.area} m²`);
+    }
+
+    function deselectSurface() {
+      if (selectedSurface) {
+        selectedSurface.mesh.material = typeMat(selectedSurface);
+        selectedSurface = null;
+      }
+      document.querySelectorAll('.surface-item').forEach(el => el.classList.remove('selected'));
+      document.getElementById('surface-section').style.display = 'none';
+      // Always return to 3D model view so user can select the next surface
+      if (currentMode === '2d') switchMode('3d');
+    }
+
+    /* ============================================================
+       RAYCASTER — hover and click surfaces in 3D viewport
+    ============================================================ */
+    const raycaster  = new THREE.Raycaster();
+    const pointerNDC = new THREE.Vector2();
+
+    function getPointerNDC(e) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointerNDC.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+      pointerNDC.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+    }
+
+    renderer.domElement.addEventListener('pointermove', e => {
+      if (currentMode !== '3d' || !importedModel || pan2DActive) return;
+      getPointerNDC(e);
+      raycaster.setFromCamera(pointerNDC, camera3D);
+      const meshes = surfaces.map(s => s.mesh);
+      const hits   = raycaster.intersectObjects(meshes, false);
+      if (hits.length) {
+        const hit = surfaces.find(s => s.mesh === hits[0].object);
+        if (hit && hit !== hoveredSurface && hit !== selectedSurface) hoverSurface(hit);
+      } else {
+        if (hoveredSurface && hoveredSurface !== selectedSurface) unhoverSurface(hoveredSurface);
+      }
+    });
+
+    renderer.domElement.addEventListener('click', e => {
+      if (currentMode !== '3d' || !importedModel) return;
+      getPointerNDC(e);
+      raycaster.setFromCamera(pointerNDC, camera3D);
+      const meshes = surfaces.map(s => s.mesh);
+      const hits   = raycaster.intersectObjects(meshes, false);
+      if (hits.length) {
+        const hit = surfaces.find(s => s.mesh === hits[0].object);
+        if (hit) selectSurface(hit);
+      } else {
+        deselectSurface();
+      }
+    });
+
+    /* ============================================================
+       MODEL LOADING — OBJ
+    ============================================================ */
+    function loadOBJ(file) {
+      showFeedback('Loading OBJ model…', 0);
+      const url    = URL.createObjectURL(file);
+      const loader = new OBJLoader();
+      loader.load(
+        url,
+        group => {
+          URL.revokeObjectURL(url);
+          onModelLoaded(group, file.name, 'OBJ');
+        },
+        xhr => {
+          if (xhr.total) showFeedback(`Loading… ${Math.round(xhr.loaded / xhr.total * 100)}%`, 0);
+        },
+        err => {
+          URL.revokeObjectURL(url);
+          showFeedback('Error loading OBJ: ' + err.message);
+          console.error(err);
+        }
+      );
+    }
+
+    /* ============================================================
+       MODEL LOADING — glTF / GLB
+    ============================================================ */
+    function loadGLTF(file) {
+      showFeedback('Loading glTF model…', 0);
+      const url    = URL.createObjectURL(file);
+      const loader = new GLTFLoader();
+      loader.load(
+        url,
+        gltf => {
+          URL.revokeObjectURL(url);
+          onModelLoaded(gltf.scene, file.name, file.name.toLowerCase().endsWith('.glb') ? 'GLB' : 'glTF');
+        },
+        xhr => {
+          if (xhr.total) showFeedback(`Loading… ${Math.round(xhr.loaded / xhr.total * 100)}%`, 0);
+        },
+        err => {
+          URL.revokeObjectURL(url);
+          showFeedback('Error loading glTF: ' + err.message);
+          console.error(err);
+        }
+      );
+    }
+
+    /* ============================================================
+       MODEL LOADING — IFC (stub — full implementation V1.1)
+    ============================================================ */
+    function loadIFC(file) {
+      showFeedback('IFC import — coming in next build');
+    }
+
+    /* ============================================================
+       EDGE OVERLAY
+       Merges all mesh geometries into world space, runs EdgesGeometry
+       once across the whole model, and draws a single LineSegments.
+       This correctly draws every edge including shared edges between
+       surfaces (site-to-podium, podium-to-tower, etc.) exactly once.
+    ============================================================ */
+    const edgeMat   = new THREE.LineBasicMaterial({ color: 0x444444, linewidth: 1 });
+    const edgeGroup = new THREE.Group();
+    let   edgeLines = null; // single LineSegments for the whole model
+
+    function addEdgeOverlay(modelGroup) {
+      while (edgeGroup.children.length) {
+        const c = edgeGroup.children[0];
+        c.geometry?.dispose();
+        edgeGroup.remove(c);
+      }
+      edgeLines = null;
+      modelGroup.updateMatrixWorld(true);
+
+      // Round a world-space vector to nearest mm for reliable hashing
+      const vKey = v =>
+        `${Math.round(v.x*1000)},${Math.round(v.y*1000)},${Math.round(v.z*1000)}`;
+
+      // One pass: collect per-mesh face outlines AND build junction edge map
+      // edgeMap: edgeKey -> { a, b, meshIds: Set }
+      // An edge that appears in 2+ different meshes is a junction edge.
+      const edgeMap = new Map();
+
+      modelGroup.traverse(child => {
+        if (!child.isMesh) return;
+        const pos = child.geometry.attributes.position;
+        const idx = child.geometry.index;
+        if (!pos) return;
+
+        const meshId = child.uuid;
+        const getV   = i => new THREE.Vector3()
+          .fromBufferAttribute(pos, i)
+          .applyMatrix4(child.matrixWorld);
+
+        // ── Face outline: collect unique verts in appearance order ──
+        const seen  = new Map();
+        const verts = [];
+        const total = idx ? idx.count : pos.count;
+        for (let i = 0; i < total; i++) {
+          const vi = idx ? idx.getX(i) : i;
+          const v  = getV(vi);
+          const k  = vKey(v);
+          if (!seen.has(k)) { seen.set(k, true); verts.push(v); }
+        }
+        if (verts.length >= 2) {
+          const geom = new THREE.BufferGeometry().setFromPoints(verts);
+          const loop = new THREE.LineLoop(geom, edgeMat);
+          loop.renderOrder = 1;
+          edgeGroup.add(loop);
+        }
+
+        // ── Junction map: register every triangle edge with its mesh ──
+        for (let i = 0; i < total; i += 3) {
+          const ia = idx ? idx.getX(i)   : i;
+          const ib = idx ? idx.getX(i+1) : i+1;
+          const ic = idx ? idx.getX(i+2) : i+2;
+          [[ia,ib],[ib,ic],[ic,ia]].forEach(([x,y]) => {
+            const va = getV(x), vb = getV(y);
+            const ka = vKey(va), kb = vKey(vb);
+            const ek = ka < kb ? `${ka}|${kb}` : `${kb}|${ka}`;
+            if (!edgeMap.has(ek)) edgeMap.set(ek, { a: va, b: vb, meshIds: new Set() });
+            edgeMap.get(ek).meshIds.add(meshId);
+          });
+        }
+      });
+
+      // ── Shared-vertex junction edges (e.g. podium walls ↔ podium roof) ──
+      const jPts = [];
+      edgeMap.forEach(({ a, b, meshIds }) => {
+        if (meshIds.size >= 2) jPts.push(a.clone(), b.clone());
+      });
+
+      // ── Raycast junction edges (e.g. podium base onto site surface) ──
+      // For every boundary edge (belongs to exactly 1 mesh), cast a ray
+      // from each endpoint along +Y and -Y and test against all other meshes.
+      // If a hit is found, record that intersection point. When both endpoints
+      // of an edge hit the same target mesh, draw the line between the two
+      // projected points on that mesh surface.
+      const meshList = [];
+      modelGroup.traverse(c => { if (c.isMesh) meshList.push(c); });
+
+      // Collect boundary edges — edges that belong to exactly 1 mesh
+      const boundaryEdges = [];
+      edgeMap.forEach(({ a, b, meshIds }) => {
+        if (meshIds.size === 1) boundaryEdges.push({ a, b, meshId: [...meshIds][0] });
+      });
+
+      const rayDown = new THREE.Vector3(0, -1, 0);
+      const rayUp   = new THREE.Vector3(0,  1, 0);
+      const caster  = new THREE.Raycaster();
+
+      boundaryEdges.forEach(({ a, b, meshId }) => {
+        // Only cast for edges that are not at the very top of their mesh
+        // (i.e. base edges that might intersect the surface below)
+        meshList.forEach(targetMesh => {
+          if (targetMesh.uuid === meshId) return; // skip self
+
+          // Cast ray downward from point a
+          caster.set(a.clone().setY(a.y + 0.1), rayDown);
+          const hitsA = caster.intersectObject(targetMesh, false);
+
+          // Cast ray downward from point b
+          caster.set(b.clone().setY(b.y + 0.1), rayDown);
+          const hitsB = caster.intersectObject(targetMesh, false);
+
+          // Also try upward in case the target is above
+          const hitsAup = hitsA.length ? hitsA :
+            (() => { caster.set(a.clone().setY(a.y - 0.1), rayUp); return caster.intersectObject(targetMesh, false); })();
+          const hitsBup = hitsB.length ? hitsB :
+            (() => { caster.set(b.clone().setY(b.y - 0.1), rayUp); return caster.intersectObject(targetMesh, false); })();
+
+          const hitA = hitsAup[0];
+          const hitB = hitsBup[0];
+
+          if (hitA && hitB) {
+            // Both endpoints project onto this target mesh — draw the junction line
+            jPts.push(hitA.point.clone(), hitB.point.clone());
+          }
+        });
+      });
+
+      if (jPts.length) {
+        const jGeom = new THREE.BufferGeometry().setFromPoints(jPts);
+        const jSeg  = new THREE.LineSegments(jGeom, edgeMat);
+        jSeg.renderOrder = 2;
+        edgeGroup.add(jSeg);
+      }
+
+      edgeGroup.renderOrder = 1;
+      if (!scene.children.includes(edgeGroup)) scene.add(edgeGroup);
+
+      modelGroup.traverse(child => {
+        if (!child.isMesh) return;
+        child.material.polygonOffset      = true;
+        child.material.polygonOffsetFactor = 1;
+        child.material.polygonOffsetUnits  = 1;
+        child.material.needsUpdate = true;
+      });
+    }
+
+    /* ============================================================
+       ON MODEL LOADED — common handler for all formats
+    ============================================================ */
+    function onModelLoaded(group, filename, format) {
+      // Remove previous model
+      if (importedModel) {
+        scene.remove(importedModel);
+        scene.remove(edgeGroup);
+        importedModel = null;
+        surfaces = [];
+      }
+
+      importedModel = group;
+
+      // Centre model at origin
+      const box    = new THREE.Box3().setFromObject(group);
+      const centre = new THREE.Vector3();
+      box.getCenter(centre);
+      group.position.sub(centre);
+      // Sit on Y=0 plane
+      box.setFromObject(group); // recompute after position change
+      group.position.y -= box.min.y;
+
+      scene.add(group);
+
+      // Detect and colour surfaces
+      detectSurfaces(group);
+
+      // Add edge outlines
+      addEdgeOverlay(group);
+
+      // Compute span for helpers and camera
+      const finalBox  = new THREE.Box3().setFromObject(group);
+      const finalSize = new THREE.Vector3();
+      finalBox.getSize(finalSize);
+      const span = Math.max(finalSize.x, finalSize.z);
+
+      updateSceneHelpers(span);
+      fit3DCamera(finalBox);
+      switchMode('3d');
+
+      // Update UI
+      populateSurfacePanel();
+
+      document.getElementById('empty-props').style.display        = 'none';
+      document.getElementById('model-info-section').style.display = 'block';
+      document.getElementById('gpr-section').style.display        = 'block';
+      document.getElementById('model-filename').textContent        = filename;
+      document.getElementById('model-format').textContent          = format;
+      document.getElementById('clearSiteBtn').style.display        = 'block';
+      document.getElementById('left-panel').classList.add('site-imported');
+
+      showFeedback(`${format} model loaded — ${surfaces.length} surfaces detected`);
+    }
+
+    /* ============================================================
+       FILE PICKER — model import
+    ============================================================ */
+    document.getElementById('import3DModelBtn').addEventListener('click', () =>
+      document.getElementById('modelFileInput').click());
+
+    document.getElementById('modelFileInput').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const ext = file.name.split('.').pop().toLowerCase();
+      if      (ext === 'obj')                    loadOBJ(file);
+      else if (ext === 'gltf' || ext === 'glb')  loadGLTF(file);
+      else if (ext === 'ifc')                    loadIFC(file);
+      else showFeedback('Unsupported format. Use OBJ, glTF, GLB, or IFC.');
+      e.target.value = '';
+    });
+
+    /* ============================================================
+       SITE BOUNDARY DRAWING (GeoJSON — unchanged)
     ============================================================ */
     function drawSiteBoundary(coords) {
-      suppressResize = true; // prevent ResizeObserver firing during DOM updates
-      // Remove any existing boundary
+      suppressResize = true;
       if (siteBoundaryLine) {
         scene.remove(siteBoundaryLine);
         siteBoundaryLine.geometry.dispose();
@@ -369,8 +990,6 @@
       }
 
       const bbox = computeBBox(coords);
-
-      // Build boundary line — flat at Y=0 for now; terrain will lift it later
       const points = coords.map(c => {
         const [x, z] = latlonToMetres(c[0], c[1], bbox.cLon, bbox.cLat);
         return new THREE.Vector3(x, 0, z);
@@ -381,14 +1000,10 @@
       siteBoundaryLine = new THREE.LineLoop(geom, mat);
       scene.add(siteBoundaryLine);
 
-      // Filled site surface — light beige, slightly below the boundary line (Y=-0.05)
-      // Uses THREE.Shape + ShapeGeometry for automatic triangulation
       if (siteSurface) { scene.remove(siteSurface); siteSurface.geometry.dispose(); siteSurface = null; }
-      const shape = new THREE.Shape(points.map(p => new THREE.Vector2(p.x, p.z)));
+      const shape     = new THREE.Shape(points.map(p => new THREE.Vector2(p.x, p.z)));
       const shapeGeom = new THREE.ShapeGeometry(shape);
-      // ShapeGeometry is in XY plane — rotate to XZ (lay flat)
       shapeGeom.rotateX(-Math.PI / 2);
-      // Shift down slightly so boundary line renders on top
       shapeGeom.translate(0, -0.05, 0);
       siteSurface = new THREE.Mesh(
         shapeGeom,
@@ -396,7 +1011,6 @@
       );
       scene.add(siteSurface);
 
-      // Compute extents for camera framing
       const box    = new THREE.Box3().setFromObject(siteBoundaryLine);
       const size   = new THREE.Vector3();
       const center = new THREE.Vector3();
@@ -408,21 +1022,18 @@
       fit2DCamera(box);
       switchMode('2d');
 
-      // Update properties panel
       const area      = computePolygonArea(coords);
       const perimeter = computePolygonPerimeter(coords);
-      document.getElementById('empty-props').style.display       = 'none';
-      document.getElementById('site-info-section').style.display = 'block';
-      document.getElementById('gpr-section').style.display       = 'block';
-      document.getElementById('site-area').textContent           = area.toFixed(0) + ' m²';
-      document.getElementById('site-perimeter').textContent      = perimeter.toFixed(0) + ' m';
-      document.getElementById('site-points').textContent         = coords.length - 1;
-      document.getElementById('clearSiteBtn').style.display      = 'block';
+      document.getElementById('empty-props').style.display        = 'none';
+      document.getElementById('site-info-section').style.display  = 'block';
+      document.getElementById('gpr-section').style.display        = 'block';
+      document.getElementById('site-area').textContent            = area.toFixed(0) + ' m²';
+      document.getElementById('site-perimeter').textContent       = perimeter.toFixed(0) + ' m';
+      document.getElementById('site-points').textContent          = coords.length - 1;
+      document.getElementById('clearSiteBtn').style.display       = 'block';
       document.getElementById('left-panel').classList.add('site-imported');
 
       suppressResize = false;
-      // Wait two frames for layout to fully settle, then refit the 2D camera.
-      // Two rAFs needed: first lets the DOM paint, second lets the renderer resize.
       requestAnimationFrame(() => requestAnimationFrame(() => {
         const w = container.clientWidth  || 1;
         const h = container.clientHeight || 1;
@@ -450,14 +1061,12 @@
       const siteH  = size.z * 1.3;
       const halfH  = Math.max(siteW / (2 * aspect), siteH / 2);
 
-      // Set frustum based on site — zoom=1, no OrbitControls interference
       base2DhalfH     = halfH;
       camera2D.left   = -halfH * aspect;
       camera2D.right  =  halfH * aspect;
       camera2D.top    =  halfH;
       camera2D.bottom = -halfH;
 
-      // Reset manual pan/zoom state to centre on site
       pan2D.x = center.x;
       pan2D.z = center.z;
       zoom2D  = 1;
@@ -481,6 +1090,166 @@
     }
 
     /* ============================================================
+       SURFACE CANVAS — outline drawn when a surface is active in 2D
+    ============================================================ */
+    let surfaceCanvasOutline = null;
+
+    function drawSurfaceCanvasOutline(surface) {
+      // Remove previous outline
+      if (surfaceCanvasOutline) {
+        scene.remove(surfaceCanvasOutline);
+        surfaceCanvasOutline.geometry.dispose();
+        surfaceCanvasOutline = null;
+      }
+
+      // Build world-space bounding box of the surface mesh
+      surface.mesh.geometry.computeBoundingBox();
+      const box = new THREE.Box3()
+        .copy(surface.mesh.geometry.boundingBox)
+        .applyMatrix4(surface.mesh.matrixWorld);
+
+      const min = box.min;
+      const max = box.max;
+
+      // For horizontal surfaces: draw rectangle in XZ plane at surface elevation
+      // For walls: draw rectangle using the two widest dimensions
+      let pts;
+      const n = surface.worldNormal;
+      const isHorizontal = Math.abs(n.y) > 0.7;
+
+      if (isHorizontal) {
+        const y = (min.y + max.y) / 2 + 0.05; // slightly above surface
+        pts = [
+          new THREE.Vector3(min.x, y, min.z),
+          new THREE.Vector3(max.x, y, min.z),
+          new THREE.Vector3(max.x, y, max.z),
+          new THREE.Vector3(min.x, y, max.z),
+          new THREE.Vector3(min.x, y, min.z), // close
+        ];
+      } else {
+        // Wall: draw outline in world space using bounding box corners
+        // Determine which axis the wall faces along
+        const facingX = Math.abs(n.x) > Math.abs(n.z);
+        const offset  = 0.05;
+        if (facingX) {
+          const x = n.x > 0 ? max.x + offset : min.x - offset;
+          pts = [
+            new THREE.Vector3(x, min.y, min.z),
+            new THREE.Vector3(x, min.y, max.z),
+            new THREE.Vector3(x, max.y, max.z),
+            new THREE.Vector3(x, max.y, min.z),
+            new THREE.Vector3(x, min.y, min.z),
+          ];
+        } else {
+          const z = n.z > 0 ? max.z + offset : min.z - offset;
+          pts = [
+            new THREE.Vector3(min.x, min.y, z),
+            new THREE.Vector3(max.x, min.y, z),
+            new THREE.Vector3(max.x, max.y, z),
+            new THREE.Vector3(min.x, max.y, z),
+            new THREE.Vector3(min.x, min.y, z),
+          ];
+        }
+      }
+
+      const geom = new THREE.BufferGeometry().setFromPoints(pts);
+      surfaceCanvasOutline = new THREE.Line(
+        geom,
+        new THREE.LineBasicMaterial({ color: 0x2a7a2a, linewidth: 2, depthTest: false })
+      );
+      surfaceCanvasOutline.renderOrder = 999;
+      scene.add(surfaceCanvasOutline);
+    }
+
+    function clearSurfaceCanvasOutline() {
+      if (surfaceCanvasOutline) {
+        scene.remove(surfaceCanvasOutline);
+        surfaceCanvasOutline.geometry.dispose();
+        surfaceCanvasOutline = null;
+      }
+    }
+
+    /* ============================================================
+       SURFACE CAMERA — fit orthographic camera to a selected surface
+    ============================================================ */
+    function fitSurfaceCamera(surface) {
+      surface.mesh.geometry.computeBoundingBox();
+      const box = new THREE.Box3()
+        .copy(surface.mesh.geometry.boundingBox)
+        .applyMatrix4(surface.mesh.matrixWorld);
+
+      const centre = new THREE.Vector3();
+      box.getCenter(centre);
+
+      const size = new THREE.Vector3();
+      box.getSize(size);
+
+      const n = surface.worldNormal.clone().normalize();
+      const isHorizontal = Math.abs(n.y) > 0.7;
+
+      const aspect = container.clientWidth / (container.clientHeight || 1);
+      let halfW, halfH, camPos, up, camNormal;
+
+      if (canvasMode === 'surface') {
+        // Surface mode: camera aligns exactly to the surface normal
+        const camDist = Math.max(size.x, size.y, size.z) * 3;
+        camPos    = centre.clone().addScaledVector(n, camDist);
+        up        = isHorizontal ? new THREE.Vector3(0, 0, -1) : new THREE.Vector3(0, 1, 0);
+        camNormal = n.clone();
+        halfW = isHorizontal ? (size.x / 2) * 1.3 : (Math.abs(n.x) > Math.abs(n.z) ? size.z : size.x) / 2 * 1.3;
+        halfH = isHorizontal ? (size.z / 2) * 1.3 : size.y / 2 * 1.3;
+      } else {
+        // Ortho mode: use standard architectural viewpoints
+        if (isHorizontal) {
+          // Ground / roof: pure vertical top-down — camera exactly above, no angle
+          const camDist = Math.max(size.x, size.z) * 3;
+          camPos    = new THREE.Vector3(centre.x, centre.y + camDist, centre.z);
+          up        = new THREE.Vector3(0, 0, -1);
+          camNormal = new THREE.Vector3(0, -1, 0);
+          halfW = (size.x / 2) * 1.3;
+          halfH = (size.z / 2) * 1.3;
+        } else {
+          // Wall: snap to nearest cardinal elevation view (N/S/E/W)
+          const camDist = Math.max(size.x, size.y, size.z) * 3;
+          const facingX = Math.abs(n.x) > Math.abs(n.z);
+          // Snap normal to nearest axis
+          const snapped = facingX
+            ? new THREE.Vector3(Math.sign(n.x), 0, 0)
+            : new THREE.Vector3(0, 0, Math.sign(n.z));
+          camPos    = centre.clone().addScaledVector(snapped, camDist);
+          up        = new THREE.Vector3(0, 1, 0);
+          camNormal = snapped.clone();
+          halfW = (facingX ? size.z : size.x) / 2 * 1.3;
+          halfH = size.y / 2 * 1.3;
+        }
+      }
+
+      // Fit frustum to viewport aspect ratio
+      if (halfW / halfH < aspect) halfW = halfH * aspect;
+      else halfH = halfW / aspect;
+
+      camera2D.left   = -halfW;
+      camera2D.right  =  halfW;
+      camera2D.top    =  halfH;
+      camera2D.bottom = -halfH;
+      camera2D.near   = 0.1;
+      camera2D.far    = Math.max(size.x, size.y, size.z) * 12;
+      camera2D.zoom   = 1;
+
+      camera2D.position.copy(camPos);
+      camera2D.up.copy(up);
+      camera2D.lookAt(centre);
+      camera2D.updateProjectionMatrix();
+
+      pan2D.x = 0; pan2D.z = 0; zoom2D = 1;
+      base2DhalfH = halfH;
+
+      camera2D.userData.surfaceCentre = centre.clone();
+      camera2D.userData.surfaceNormal = camNormal.clone();
+      camera2D.userData.surfaceUp     = up.clone();
+    }
+
+    /* ============================================================
        MODE SWITCHING (2D <-> 3D)
     ============================================================ */
     function switchMode(mode) {
@@ -492,57 +1261,95 @@
       if (mode === '2d') {
         camera   = camera2D;
         controls = controls2D;
-        if (gridHelper) gridHelper.visible = true;
-        document.getElementById('status-mode').textContent = '2D';
-        // Always refit when entering 2D — frustum may be stale after resize or 3D navigation
-        if (siteBoundaryLine) {
-          fit2DCamera(new THREE.Box3().setFromObject(siteBoundaryLine));
+
+        if (selectedSurface) {
+          // Surface-aligned 2D canvas
+          fitSurfaceCamera(selectedSurface);
+          drawSurfaceCanvasOutline(selectedSurface);
+          if (gridHelper) gridHelper.visible = false;
+          if (axesHelper)  axesHelper.visible = false;
+          const typeLabels = { ground: 'Ground plane', roof: 'Roof plane', wall: 'Wall plane', sloped: 'Sloped surface' };
+          document.getElementById('status-mode').textContent = '2D';
+          const modeLabel = canvasMode === 'ortho' ? 'Ortho' : 'Surface';
+          showFeedback(`2D canvas [${modeLabel}] — ${typeLabels[selectedSurface.type] || selectedSurface.type} — ${selectedSurface.area} m²`, 0);
+        } else {
+          // Default top-down plan view
+          clearSurfaceCanvasOutline();
+          if (gridHelper) gridHelper.visible = true;
+          if (siteBoundaryLine) fit2DCamera(new THREE.Box3().setFromObject(siteBoundaryLine));
+          else if (importedModel)  fit2DCamera(new THREE.Box3().setFromObject(importedModel));
+          document.getElementById('status-mode').textContent = '2D';
+          showFeedback('2D Plan View');
         }
-        showFeedback('2D Plan View');
       } else {
         camera   = camera3D;
         controls = controls3D;
+        clearSurfaceCanvasOutline();
         if (gridHelper) gridHelper.visible = false;
-        if (siteBoundaryLine) {
-          fit3DCamera(new THREE.Box3().setFromObject(siteBoundaryLine));
-        }
+        if (axesHelper)  axesHelper.visible = true;
+        const target = importedModel
+          ? new THREE.Box3().setFromObject(importedModel)
+          : (siteBoundaryLine ? new THREE.Box3().setFromObject(siteBoundaryLine) : null);
+        if (target) fit3DCamera(target);
         document.getElementById('status-mode').textContent = '3D';
-        showFeedback('3D View');
+        showFeedback('3D View — click a surface to select it');
       }
     }
 
     document.querySelectorAll('.mode-btn').forEach(btn =>
       btn.addEventListener('click', () => switchMode(btn.dataset.mode)));
 
-    // Start in 2D
+    // Right-click on 2D button shows canvas mode menu
+    const menu2D   = document.getElementById('mode-2d-menu');
+    const btn2D    = document.querySelector('.mode-btn[data-mode="2d"]');
+
+    btn2D.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      menu2D.style.display = menu2D.style.display === 'none' ? 'block' : 'none';
+    });
+
+    document.querySelectorAll('.mode-context-item').forEach(item => {
+      item.addEventListener('click', () => {
+        canvasMode = item.dataset.canvas;
+        // Update active state
+        document.querySelectorAll('.mode-context-item').forEach(i =>
+          i.classList.toggle('active', i.dataset.canvas === canvasMode));
+        menu2D.style.display = 'none';
+        // Re-enter 2D with new mode if already in 2D with a surface
+        if (currentMode === '2d' && selectedSurface) switchMode('2d');
+        showFeedback(`2D mode: ${canvasMode === 'ortho' ? 'Ortho (standard viewpoints)' : 'Surface (normal-aligned)'}`);
+      });
+    });
+
+    // Close menu when clicking anywhere else
+    document.addEventListener('click', e => {
+      if (!btn2D.contains(e.target) && !menu2D.contains(e.target)) {
+        menu2D.style.display = 'none';
+      }
+    });
+
     switchMode('2d');
-    update2DCamera(); // ensure camera is correctly positioned on first render
+    update2DCamera();
 
     /* ============================================================
        RESIZE
     ============================================================ */
-    // Guard: true while drawSiteBoundary is running — suppresses spurious
-    // ResizeObserver callbacks triggered by DOM changes during site load.
     let suppressResize = false;
-
     let resizeRAF = null;
+
     function resizeToContainer() {
       if (suppressResize) return;
-      // Debounce — only execute on the trailing edge of rapid calls
       if (resizeRAF) cancelAnimationFrame(resizeRAF);
       resizeRAF = requestAnimationFrame(() => {
         resizeRAF = null;
         const w = container.clientWidth  || 1;
         const h = container.clientHeight || 1;
         renderer.setSize(w, h, false);
-
         camera3D.aspect = w / h;
         camera3D.updateProjectionMatrix();
-
         if (siteBoundaryLine) {
           fit2DCamera(new THREE.Box3().setFromObject(siteBoundaryLine));
         } else {
-          // No site — update frustum for new aspect, keep current pan/zoom
           const aspect = w / h;
           const halfH  = base2DhalfH || 50;
           camera2D.left   = -halfH * aspect;
@@ -612,9 +1419,12 @@
         }
       };
       reader.readAsText(file);
-      e.target.value = ''; // allow re-import of same file
+      e.target.value = '';
     });
 
+    /* ============================================================
+       CLEAR SITE
+    ============================================================ */
     document.getElementById('clearSiteBtn').addEventListener('click', () => {
       if (siteBoundaryLine) {
         scene.remove(siteBoundaryLine);
@@ -626,16 +1436,35 @@
         siteSurface.geometry.dispose();
         siteSurface = null;
       }
+      if (importedModel) {
+        scene.remove(importedModel);
+        scene.remove(edgeGroup);
+        while (edgeGroup.children.length) {
+          const c = edgeGroup.children[0];
+          c.geometry.dispose();
+          edgeGroup.remove(c);
+        }
+        importedModel = null;
+      }
       if (terrainMesh) {
         scene.remove(terrainMesh);
         terrainMesh.geometry.dispose();
         terrainMesh = null;
       }
+      surfaces        = [];
+      hoveredSurface  = null;
+      selectedSurface = null;
+      clearSurfaceCanvasOutline();
+
       document.getElementById('left-panel').classList.remove('site-imported');
-      document.getElementById('clearSiteBtn').style.display       = 'none';
-      document.getElementById('site-info-section').style.display  = 'none';
-      document.getElementById('gpr-section').style.display        = 'none';
-      document.getElementById('empty-props').style.display        = 'block';
+      document.getElementById('clearSiteBtn').style.display          = 'none';
+      document.getElementById('site-info-section').style.display     = 'none';
+      document.getElementById('model-info-section').style.display    = 'none';
+      document.getElementById('surface-section').style.display       = 'none';
+      document.getElementById('gpr-section').style.display           = 'none';
+      document.getElementById('empty-props').style.display           = 'block';
+      document.getElementById('section-surfaces').style.display      = 'none';
+      document.getElementById('surfaces-list').innerHTML              = '';
       showFeedback('Site cleared');
     });
 
@@ -643,10 +1472,11 @@
        VIEW CONTROLS
     ============================================================ */
     document.getElementById('fitSiteBtn').addEventListener('click', () => {
-      if (!siteBoundaryLine) { showFeedback('No site loaded'); return; }
-      const box = new THREE.Box3().setFromObject(siteBoundaryLine);
+      const target = importedModel || siteBoundaryLine;
+      if (!target) { showFeedback('No model or site loaded'); return; }
+      const box = new THREE.Box3().setFromObject(target);
       if (currentMode === '2d') fit2DCamera(box); else fit3DCamera(box);
-      showFeedback('Fitted to site');
+      showFeedback('Fitted to model');
     });
 
     document.getElementById('resetCameraBtn').addEventListener('click', () => {
@@ -680,17 +1510,21 @@
     document.getElementById('componentLibraryBtn')?.addEventListener('click', () => showFeedback('Component Library — coming soon'));
     document.getElementById('generateReportBtn')?.addEventListener('click',   () => showFeedback('GPR Report — coming soon'));
 
-    // Drawing tool buttons
     document.querySelectorAll('.tool-btn').forEach(btn =>
       btn.addEventListener('click', () => showFeedback(`Tool: ${btn.dataset.action} — coming soon`)));
 
-    // Menu bar items
+    /* ============================================================
+       MENU BAR
+    ============================================================ */
     document.querySelectorAll('.dropdown-menu a').forEach(a =>
       a.addEventListener('click', e => {
         e.preventDefault();
         const action = a.dataset.action;
-        if      (action === 'fit-site')    document.getElementById('fitSiteBtn')?.click();
-        else if (action === 'toggle-grid') document.getElementById('toggleGridBtn')?.click();
+        if      (action === 'fit-site')           document.getElementById('fitSiteBtn')?.click();
+        else if (action === 'toggle-grid')         document.getElementById('toggleGridBtn')?.click();
+        else if (action === 'import-model')        document.getElementById('import3DModelBtn')?.click();
+        else if (action === 'import-geojson-menu') document.getElementById('importGeoJSONBtn')?.click();
+        else if (action === 'import-image')        document.getElementById('importImageBtn')?.click();
         else    showFeedback(`${action} — coming soon`);
       }));
 

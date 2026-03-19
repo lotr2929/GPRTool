@@ -16,14 +16,19 @@
           <svg class="section-arrow" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
         </div>
         <div class="section-body">
+          <button class="command-btn" id="import3DModelBtn" title="Import 3D model from architect (OBJ, glTF, GLB, IFC)">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 1l6 3.5V11L8 14.5 2 11V4.5L8 1z"/><path d="M8 1v13.5M2 4.5l6 3.5 6-3.5"/></svg>
+            Import 3D Model&#8230;
+          </button>
+          <input type="file" id="modelFileInput" accept=".obj,.gltf,.glb,.ifc" style="display:none">
           <button class="command-btn" id="importGeoJSONBtn" title="Import a GeoJSON boundary file">
             <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2v8M5 7l3 3 3-3"/><rect x="2" y="11" width="12" height="3" rx="0.5"/></svg>
-            Import GeoJSON
+            Import Site Boundary&#8230;
           </button>
           <input type="file" id="geojsonFileInput" accept=".geojson,.json" style="display:none">
           <button class="command-btn" id="importImageBtn" title="Import a site plan image as underlay">
             <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="2.5" width="13" height="11" rx="1"/><circle cx="5.5" cy="6" r="1.2"/><path d="M1.5 10.5l3.5-3 3 2.5 2.5-2.5 3.5 3"/></svg>
-            Import Site Image
+            Import Site Image&#8230;
           </button>
           <button class="command-btn" id="setScaleBtn" title="Set scale for non-georeferenced images">
             <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><line x1="2" y1="8" x2="14" y2="8"/><line x1="2" y1="6" x2="2" y2="10"/><line x1="14" y1="6" x2="14" y2="10"/></svg>
@@ -33,10 +38,21 @@
             <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="6"/><path d="M8 4v8M8 4L6 7h4L8 4z" fill="currentColor" stroke="none"/></svg>
             Set North
           </button>
-          <button class="command-btn btn-danger" id="clearSiteBtn" style="display:none" title="Remove current site">
+          <button class="command-btn btn-danger" id="clearSiteBtn" style="display:none" title="Remove current site and model">
             <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 3l10 10M13 3L3 13"/></svg>
             Clear Site
           </button>
+        </div>
+      </div>
+
+      <!-- SURFACES — populated after model load -->
+      <div class="command-section" id="section-surfaces" style="display:none">
+        <div class="section-header" data-section="surfaces">
+          <span>Surfaces</span>
+          <svg class="section-arrow" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+        </div>
+        <div class="section-body" id="surfaces-list">
+          <!-- Surface items injected by JS -->
         </div>
       </div>
 
@@ -47,6 +63,7 @@
           <svg class="section-arrow" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
         </div>
         <div class="section-body">
+          <p class="tool-group-note">Surface creation tools — define massing for landscape design</p>
           <div class="tool-group-label">2D</div>
           <button class="command-btn tool-btn" data-action="rectangle" title="Draw rectangle (Shift = square)">
             <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="4" width="12" height="8" rx="0.5"/></svg>
@@ -145,8 +162,21 @@
     <canvas id="three-canvas"></canvas>
     <!-- 2D/3D toggle - always visible top-right of viewport -->
     <div class="mode-toggle-container">
-      <button class="mode-btn active" data-mode="2d" title="2D Plan View"></button>
+      <button class="mode-btn active" data-mode="2d" title="2D View (right-click for options)"></button>
       <button class="mode-btn" data-mode="3d" title="3D View"></button>
+    </div>
+    <!-- Right-click context menu for 2D mode options -->
+    <div id="mode-2d-menu" class="mode-context-menu" style="display:none">
+      <button class="mode-context-item active" data-canvas="ortho" title="Standard orthographic plan/elevation views">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="1.5" width="13" height="13"/><line x1="1.5" y1="8" x2="14.5" y2="8" stroke-dasharray="2 1"/><line x1="8" y1="1.5" x2="8" y2="14.5" stroke-dasharray="2 1"/></svg>
+        Ortho
+        <span class="mode-context-desc">Top-down plan or cardinal elevation</span>
+      </button>
+      <button class="mode-context-item" data-canvas="surface" title="Camera aligns to surface normal">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="10" height="10" transform="rotate(45 8 8)"/><line x1="8" y1="1" x2="8" y2="4"/></svg>
+        Surface
+        <span class="mode-context-desc">Camera faces the selected surface directly</span>
+      </button>
     </div>
   </main>
 
@@ -160,12 +190,41 @@
 
       <!-- Empty state -->
       <div class="property-section" id="empty-props">
-        <p class="empty-state-msg">Import a GeoJSON site boundary to begin.</p>
+        <p class="empty-state-msg">Import a 3D model or site boundary to begin.</p>
       </div>
 
-      <!-- Site info -->
+      <!-- Model info — shown after 3D model load -->
+      <div class="property-section" id="model-info-section" style="display:none">
+        <h4>Model</h4>
+        <div class="info-row">
+          <span class="info-label">File</span>
+          <span class="info-value" id="model-filename">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Format</span>
+          <span class="info-value" id="model-format">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Surfaces found</span>
+          <span class="info-value" id="model-surface-count">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Ground</span>
+          <span class="info-value" id="model-ground-count">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Roofs</span>
+          <span class="info-value" id="model-roof-count">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Walls</span>
+          <span class="info-value" id="model-wall-count">—</span>
+        </div>
+      </div>
+
+      <!-- Site info — shown after GeoJSON load -->
       <div class="property-section" id="site-info-section" style="display:none">
-        <h4>Site</h4>
+        <h4>Site Boundary</h4>
         <div class="info-row">
           <span class="info-label">Area</span>
           <span class="info-value" id="site-area">—</span>
@@ -180,21 +239,34 @@
         </div>
       </div>
 
-      <!-- Selected object -->
+      <!-- Selected surface -->
+      <div class="property-section" id="surface-section" style="display:none">
+        <h4>Selected Surface</h4>
+        <div class="info-row">
+          <span class="info-label">Type</span>
+          <span class="info-value" id="surf-type">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Area</span>
+          <span class="info-value" id="surf-area">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Elevation</span>
+          <span class="info-value" id="surf-elevation">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Normal angle</span>
+          <span class="info-value" id="surf-normal">—</span>
+        </div>
+      </div>
+
+      <!-- Selected plant element -->
       <div class="property-section" id="selection-section" style="display:none">
-        <h4>Selected Object</h4>
+        <h4>Selected Element</h4>
         <label>Type<input type="text" id="sel-type" readonly></label>
-        <label>Width (m)<input type="number" id="widthX" value="1" step="0.1" min="0.1"></label>
-        <label>Depth (m)<input type="number" id="depthZ" value="1" step="0.1" min="0.1"></label>
-        <label>Height (m)<input type="number" id="heightY" value="1" step="0.1" min="0.1"></label>
-        <hr class="prop-divider">
-        <label>Position X<input type="number" id="posX" value="0" step="0.1"></label>
-        <label>Position Y<input type="number" id="posY" value="0" step="0.1"></label>
-        <label>Position Z<input type="number" id="posZ" value="0" step="0.1"></label>
         <hr class="prop-divider">
         <label>Plant species<input type="text" id="sel-plant" placeholder="None assigned"></label>
         <label>LAI value<input type="text" id="sel-lai" readonly placeholder="—"></label>
-        <label>Water retention<input type="text" id="sel-water" readonly placeholder="— (future)"></label>
       </div>
 
       <!-- GPR -->
@@ -231,7 +303,7 @@
 
       <!-- View actions -->
       <div class="property-section" id="view-actions-section">
-        <button class="command-btn" id="fitSiteBtn" title="Fit view to site boundary (Ctrl+F)">
+        <button class="command-btn" id="fitSiteBtn" title="Fit view to site/model (Ctrl+F)">
           <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.5 5.5V2h3.5M9 2h3.5v3.5M14.5 10.5V14H11M7 14H3.5v-3.5"/></svg>
           Fit to Site
         </button>
@@ -256,5 +328,5 @@
   <span id="status-divider">|</span>
   <span id="status-coords"></span>
   <span id="status-divider2" style="display:none">|</span>
-  <span id="status-message">Ready — import a GeoJSON file to start</span>
+  <span id="status-message">Ready — import a 3D model or site boundary to start</span>
 </footer>
