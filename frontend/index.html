@@ -346,7 +346,17 @@
       document.getElementById('clearSiteBtn').style.display      = 'block';
       document.getElementById('left-panel').classList.add('site-imported');
 
-      suppressResize = false; // re-enable resize handling
+      suppressResize = false;
+      // Force a clean resize + refit on the next frame, guaranteeing
+      // the canvas dimensions are settled before we compute the frustum.
+      requestAnimationFrame(() => {
+        const w = container.clientWidth  || 1;
+        const h = container.clientHeight || 1;
+        renderer.setSize(w, h, false);
+        camera3D.aspect = w / h;
+        camera3D.updateProjectionMatrix();
+        fit2DCamera(new THREE.Box3().setFromObject(siteBoundaryLine));
+      });
       showFeedback(`Site loaded — ${coords.length - 1} points, ${area.toFixed(0)} m²`);
     }
 
