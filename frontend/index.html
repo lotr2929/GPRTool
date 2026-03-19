@@ -222,17 +222,24 @@
     /* ============================================================
        GRID + AXES HELPERS
     ============================================================ */
-    function updateSceneHelpers(sizeMetres) {
+    function updateSceneHelpers(siteSpan) {
       if (gridHelper) { scene.remove(gridHelper); gridHelper.geometry?.dispose(); gridHelper = null; }
       if (axesHelper) { scene.remove(axesHelper); axesHelper = null; }
 
-      const gridSize  = Math.ceil(sizeMetres * 1.5 / 10) * 10;
-      const divisions = Math.min(100, Math.ceil(gridSize / 5));
+      // Grid is always large enough that the user can never zoom out to its edge.
+      // 10,000m covers any realistic urban site at any zoom level.
+      const gridSize = 10000;
+
+      // Cell size scales with site: round-metre intervals, ~100 visible cells across site
+      const rawCell  = siteSpan / 100;
+      const cellSize = rawCell < 1 ? 1 : rawCell < 2 ? 2 : rawCell < 5 ? 5 : 10;
+      const divisions = gridSize / cellSize;
+
       gridHelper = new THREE.GridHelper(gridSize, divisions, 0x7a8a5a, 0x8a9b6f);
       gridHelper.visible = (currentMode === '2d');
       scene.add(gridHelper);
 
-      axesHelper = new THREE.AxesHelper(sizeMetres * 0.08);
+      axesHelper = new THREE.AxesHelper(siteSpan * 0.08);
       scene.add(axesHelper);
     }
     updateSceneHelpers(100); // default until site loads
@@ -323,7 +330,7 @@
       const siteSpan = Math.max(size.x, size.z);
 
       fit2DCamera(box);
-      updateSceneHelpers(siteSpan);
+      updateSceneHelpers(siteSpan); // grid now reads correct frustum from fit2DCamera
       switchMode('2d');
 
       // Update properties panel
