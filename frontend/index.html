@@ -331,8 +331,8 @@
       box.getCenter(center);
       const siteSpan = Math.max(size.x, size.z);
 
-      fit2DCamera(box);
       updateSceneHelpers(siteSpan);
+      fit2DCamera(box);
       switchMode('2d');
 
       // Update properties panel
@@ -348,16 +348,18 @@
       document.getElementById('left-panel').classList.add('site-imported');
 
       suppressResize = false;
-      // Force a clean resize + refit on the next frame, guaranteeing
-      // the canvas dimensions are settled before we compute the frustum.
-      requestAnimationFrame(() => {
+      // Wait two frames for layout to fully settle, then refit the 2D camera.
+      // Two rAFs needed: first lets the DOM paint, second lets the renderer resize.
+      requestAnimationFrame(() => requestAnimationFrame(() => {
         const w = container.clientWidth  || 1;
         const h = container.clientHeight || 1;
         renderer.setSize(w, h, false);
         camera3D.aspect = w / h;
         camera3D.updateProjectionMatrix();
-        fit2DCamera(new THREE.Box3().setFromObject(siteBoundaryLine));
-      });
+        if (siteBoundaryLine) {
+          fit2DCamera(new THREE.Box3().setFromObject(siteBoundaryLine));
+        }
+      }));
       showFeedback(`Site loaded — ${coords.length - 1} points, ${area.toFixed(0)} m²`);
     }
 
@@ -384,11 +386,15 @@
       camera2D.right  =  halfH * aspect;
       camera2D.top    =  halfH;
       camera2D.bottom = -halfH;
+      camera2D.zoom = 1;
       camera2D.updateProjectionMatrix();
-      // Site geometry is centred at scene origin — target stays at site centre
+      // Always look straight down from directly above the site centre
       controls2D.target.set(center.x, 0, center.z);
       camera2D.position.set(center.x, 500, center.z);
+      camera2D.up.set(0, 0, -1);  // ensure 'up' points north (negative Z)
+      camera2D.lookAt(center.x, 0, center.z);
       controls2D.update();
+      controls2D.saveState();
     }
 
     function fit3DCamera(box) {
@@ -420,6 +426,10 @@
         controls = controls2D;
         if (gridHelper) gridHelper.visible = true;
         document.getElementById('status-mode').textContent = '2D';
+        // Always refit when entering 2D — frustum may be stale after resize or 3D navigation
+        if (siteBoundaryLine) {
+          fit2DCamera(new THREE.Box3().setFromObject(siteBoundaryLine));
+        }
         showFeedback('2D Plan View');
       } else {
         camera   = camera3D;
