@@ -1,0 +1,1357 @@
+  0
+SECTION
+  2
+HEADER
+  9
+$ACADVER
+  1
+AC1015
+  9
+$INSUNITS
+ 70
+6
+  9
+$MEASUREMENT
+ 70
+1
+  0
+ENDSEC
+  0
+SECTION
+  2
+TABLES
+  0
+TABLE
+  2
+LAYER
+ 70
+10
+  0
+LAYER
+  2
+SITE_BOUNDARY
+ 70
+0
+ 62
+3
+  6
+CONTINUOUS
+  0
+LAYER
+  2
+GROUND_PLANTING
+ 70
+0
+ 62
+3
+  6
+CONTINUOUS
+  0
+LAYER
+  2
+PODIUM_FOOTPRINT
+ 70
+0
+ 62
+1
+  6
+CONTINUOUS
+  0
+LAYER
+  2
+PODIUM_MASS
+ 70
+0
+ 62
+1
+  6
+CONTINUOUS
+  0
+LAYER
+  2
+RESIDENTIAL_FOOTPRINT
+ 70
+0
+ 62
+4
+  6
+CONTINUOUS
+  0
+LAYER
+  2
+RESIDENTIAL_MASS
+ 70
+0
+ 62
+4
+  6
+CONTINUOUS
+  0
+LAYER
+  2
+SKY_GARDEN
+ 70
+0
+ 62
+2
+  6
+CONTINUOUS
+  0
+LAYER
+  2
+PENTHOUSE_FOOTPRINT
+ 70
+0
+ 62
+5
+  6
+CONTINUOUS
+  0
+LAYER
+  2
+PENTHOUSE_MASS
+ 70
+0
+ 62
+5
+  6
+CONTINUOUS
+  0
+LAYER
+  2
+ROOF_GARDEN
+ 70
+0
+ 62
+2
+  6
+CONTINUOUS
+  0
+LAYER
+  2
+TERRAIN_CONTOURS
+ 70
+0
+ 62
+8
+  6
+CONTINUOUS
+  0
+ENDTABLE
+  0
+ENDSEC
+  0
+SECTION
+  2
+ENTITIES
+
+  0
+COMMENT
+  1
+=============================================================
+  GPRTool Test File — Kalamunda Mixed-Use Tower
+  DXF R2010 | Units: metres | Origin: site centroid
+  
+  BUILDING DESCRIPTION
+  --------------------
+  8-storey mixed-use development, Kalamunda foothills, Perth
+  Site area:        ~12,400 m2
+  
+  Storeys:
+    FL 00 (Z=0.0)    Ground — commercial podium + planting
+    FL 01 (Z=4.2)    Commercial podium roof / podium garden
+    FL 02 (Z=4.2)    Residential floors 3-5 base
+    FL 03-05         Residential (stepped back, north face)
+    FL 06 (Z=18.6)   Sky garden terrace — open planted deck
+    FL 07-08         Penthouse residential
+    ROOF (Z=28.2)    Roof garden
+  
+  Green elements (for GPR):
+    - Ground planting beds (GROUND_PLANTING layer)
+    - Sky garden terrace at FL06, Z=18.6m (SKY_GARDEN layer)
+    - Roof garden at Z=28.2m (ROOF_GARDEN layer)
+  
+  LAYER GUIDE
+  -----------
+  SITE_BOUNDARY        Closed LWPOLYLINE — site perimeter at Z=0
+  GROUND_PLANTING      Closed LWPOLYLINEs — planting beds at Z=0
+  PODIUM_FOOTPRINT     Closed LWPOLYLINE — FL1-2 footprint at Z=0
+  PODIUM_MASS          3DFACE — podium walls Z=0 to Z=8.4
+  RESIDENTIAL_FOOTPRINT  Closed LWPOLYLINE — FL3-5 footprint at Z=8.4
+  RESIDENTIAL_MASS     3DFACE — residential walls Z=8.4 to Z=18.6
+  SKY_GARDEN           Closed LWPOLYLINE — sky garden deck at Z=18.6
+  PENTHOUSE_FOOTPRINT  Closed LWPOLYLINE — FL7-8 footprint at Z=18.6
+  PENTHOUSE_MASS       3DFACE — penthouse walls Z=18.6 to Z=28.2
+  ROOF_GARDEN          Closed LWPOLYLINE — roof garden at Z=28.2
+  TERRAIN_CONTOURS     3D POLYLINEs — 2m contours, Z=elevation AHD
+  
+  STOREY HEIGHTS: 4.2m commercial / 3.6m residential
+  COORDINATE SYSTEM: local metres, right-hand, Z=up
+  CRS NOTE: no georeferencing — user aligns to site in GPRTool
+=============================================================
+
+  0
+COMMENT
+  1
+--- SITE BOUNDARY ---
+
+  0
+LWPOLYLINE
+  8
+SITE_BOUNDARY
+ 90
+8
+ 70
+1
+ 10
+-85.0
+ 20
+-70.0
+ 10
+25.0
+ 20
+-70.0
+ 10
+52.0
+ 20
+-35.0
+ 10
+48.0
+ 20
+62.0
+ 10
+8.0
+ 20
+62.0
+ 10
+-72.0
+ 20
+58.0
+ 10
+-107.0
+ 20
+22.0
+ 10
+-102.0
+ 20
+-30.0
+
+  0
+COMMENT
+  1
+--- GROUND PLANTING BEDS (4 beds around podium perimeter) ---
+
+  0
+LWPOLYLINE
+  8
+GROUND_PLANTING
+ 90
+4
+ 70
+1
+ 10
+-42.0
+ 20
+-68.0
+ 10
+22.0
+ 20
+-68.0
+ 10
+22.0
+ 20
+-52.0
+ 10
+-42.0
+ 20
+-52.0
+
+  0
+LWPOLYLINE
+  8
+GROUND_PLANTING
+ 90
+4
+ 70
+1
+ 10
+38.0
+ 20
+-30.0
+ 10
+50.0
+ 20
+-30.0
+ 10
+50.0
+ 20
+40.0
+ 10
+38.0
+ 20
+40.0
+
+  0
+LWPOLYLINE
+  8
+GROUND_PLANTING
+ 90
+4
+ 70
+1
+ 10
+-42.0
+ 20
+48.0
+ 10
+34.0
+ 20
+48.0
+ 10
+34.0
+ 20
+60.0
+ 10
+-42.0
+ 20
+60.0
+
+  0
+LWPOLYLINE
+  8
+GROUND_PLANTING
+ 90
+4
+ 70
+1
+ 10
+-100.0
+ 20
+-20.0
+ 10
+-46.0
+ 20
+-20.0
+ 10
+-46.0
+ 20
+44.0
+ 10
+-100.0
+ 20
+44.0
+
+  0
+COMMENT
+  1
+--- PODIUM FOOTPRINT (FL 1-2, Z=0, 80m x 120m) ---
+
+  0
+LWPOLYLINE
+  8
+PODIUM_FOOTPRINT
+ 90
+4
+ 70
+1
+ 10
+-40.0
+ 20
+-50.0
+ 10
+40.0
+ 20
+-50.0
+ 10
+40.0
+ 20
+46.0
+ 10
+-40.0
+ 20
+46.0
+
+  0
+COMMENT
+  1
+--- PODIUM MASS (Z=0 to Z=8.4, two commercial floors) ---
+
+  0
+3DFACE
+  8
+PODIUM_MASS
+ 10
+-40.0
+ 20
+-50.0
+ 30
+0.0
+ 11
+40.0
+ 21
+-50.0
+ 31
+0.0
+ 12
+40.0
+ 22
+-50.0
+ 32
+8.4
+ 13
+-40.0
+ 23
+-50.0
+ 33
+8.4
+
+  0
+3DFACE
+  8
+PODIUM_MASS
+ 10
+40.0
+ 20
+-50.0
+ 30
+0.0
+ 11
+40.0
+ 21
+46.0
+ 31
+0.0
+ 12
+40.0
+ 22
+46.0
+ 32
+8.4
+ 13
+40.0
+ 23
+-50.0
+ 33
+8.4
+
+  0
+3DFACE
+  8
+PODIUM_MASS
+ 10
+40.0
+ 20
+46.0
+ 30
+0.0
+ 11
+-40.0
+ 21
+46.0
+ 31
+0.0
+ 12
+-40.0
+ 22
+46.0
+ 32
+8.4
+ 13
+40.0
+ 23
+46.0
+ 33
+8.4
+
+  0
+3DFACE
+  8
+PODIUM_MASS
+ 10
+-40.0
+ 20
+46.0
+ 30
+0.0
+ 11
+-40.0
+ 21
+-50.0
+ 31
+0.0
+ 12
+-40.0
+ 22
+-50.0
+ 32
+8.4
+ 13
+-40.0
+ 23
+46.0
+ 33
+8.4
+
+  0
+3DFACE
+  8
+PODIUM_MASS
+ 10
+-40.0
+ 20
+-50.0
+ 30
+8.4
+ 11
+40.0
+ 21
+-50.0
+ 31
+8.4
+ 12
+40.0
+ 22
+46.0
+ 32
+8.4
+ 13
+-40.0
+ 23
+46.0
+ 33
+8.4
+
+  0
+COMMENT
+  1
+--- RESIDENTIAL FOOTPRINT (FL 3-5, Z=8.4, stepped back on north) ---
+  North face steps back 10m. 80m x 86m
+
+  0
+LWPOLYLINE
+  8
+RESIDENTIAL_FOOTPRINT
+ 90
+4
+ 70
+1
+ 10
+-40.0
+ 20
+-50.0
+ 10
+40.0
+ 20
+-50.0
+ 10
+40.0
+ 20
+36.0
+ 10
+-40.0
+ 20
+36.0
+
+  0
+COMMENT
+  1
+--- RESIDENTIAL MASS (Z=8.4 to Z=18.6, three residential floors) ---
+
+  0
+3DFACE
+  8
+RESIDENTIAL_MASS
+ 10
+-40.0
+ 20
+-50.0
+ 30
+8.4
+ 11
+40.0
+ 21
+-50.0
+ 31
+8.4
+ 12
+40.0
+ 22
+-50.0
+ 32
+18.6
+ 13
+-40.0
+ 23
+-50.0
+ 33
+18.6
+
+  0
+3DFACE
+  8
+RESIDENTIAL_MASS
+ 10
+40.0
+ 20
+-50.0
+ 30
+8.4
+ 11
+40.0
+ 21
+36.0
+ 31
+8.4
+ 12
+40.0
+ 22
+36.0
+ 32
+18.6
+ 13
+40.0
+ 23
+-50.0
+ 33
+18.6
+
+  0
+3DFACE
+  8
+RESIDENTIAL_MASS
+ 10
+40.0
+ 20
+36.0
+ 30
+8.4
+ 11
+-40.0
+ 21
+36.0
+ 31
+8.4
+ 12
+-40.0
+ 22
+36.0
+ 32
+18.6
+ 13
+40.0
+ 23
+36.0
+ 33
+18.6
+
+  0
+3DFACE
+  8
+RESIDENTIAL_MASS
+ 10
+-40.0
+ 20
+36.0
+ 30
+8.4
+ 11
+-40.0
+ 21
+-50.0
+ 31
+8.4
+ 12
+-40.0
+ 22
+-50.0
+ 32
+18.6
+ 13
+-40.0
+ 23
+36.0
+ 33
+18.6
+
+  0
+3DFACE
+  8
+RESIDENTIAL_MASS
+ 10
+-40.0
+ 20
+-50.0
+ 30
+18.6
+ 11
+40.0
+ 21
+-50.0
+ 31
+18.6
+ 12
+40.0
+ 22
+36.0
+ 32
+18.6
+ 13
+-40.0
+ 23
+36.0
+ 33
+18.6
+
+  0
+COMMENT
+  1
+--- SKY GARDEN (FL 6 terrace, Z=18.6) ---
+  Open planted deck on north stepback. 80m x 10m = 800 m2
+  Connects residential mass roof on north face to penthouse base.
+  This is the key GPR element: sky garden at height.
+
+  0
+LWPOLYLINE
+  8
+SKY_GARDEN
+ 90
+4
+ 70
+1
+ 38
+18.6
+ 10
+-40.0
+ 20
+36.0
+ 10
+40.0
+ 20
+36.0
+ 10
+40.0
+ 20
+46.0
+ 10
+-40.0
+ 20
+46.0
+
+  0
+COMMENT
+  1
+--- PENTHOUSE FOOTPRINT (FL 7-8, Z=18.6, further stepped back) ---
+  Steps back 10m on south, 8m each side. 64m x 70m
+
+  0
+LWPOLYLINE
+  8
+PENTHOUSE_FOOTPRINT
+ 90
+4
+ 70
+1
+ 10
+-32.0
+ 20
+-40.0
+ 10
+32.0
+ 20
+-40.0
+ 10
+32.0
+ 20
+36.0
+ 10
+-32.0
+ 20
+36.0
+
+  0
+COMMENT
+  1
+--- PENTHOUSE MASS (Z=18.6 to Z=28.2, two penthouse floors) ---
+
+  0
+3DFACE
+  8
+PENTHOUSE_MASS
+ 10
+-32.0
+ 20
+-40.0
+ 30
+18.6
+ 11
+32.0
+ 21
+-40.0
+ 31
+18.6
+ 12
+32.0
+ 22
+-40.0
+ 32
+28.2
+ 13
+-32.0
+ 23
+-40.0
+ 33
+28.2
+
+  0
+3DFACE
+  8
+PENTHOUSE_MASS
+ 10
+32.0
+ 20
+-40.0
+ 30
+18.6
+ 11
+32.0
+ 21
+36.0
+ 31
+18.6
+ 12
+32.0
+ 22
+36.0
+ 32
+28.2
+ 13
+32.0
+ 23
+-40.0
+ 33
+28.2
+
+  0
+3DFACE
+  8
+PENTHOUSE_MASS
+ 10
+32.0
+ 20
+36.0
+ 30
+18.6
+ 11
+-32.0
+ 21
+36.0
+ 31
+18.6
+ 12
+-32.0
+ 22
+36.0
+ 32
+28.2
+ 13
+32.0
+ 23
+36.0
+ 33
+28.2
+
+  0
+3DFACE
+  8
+PENTHOUSE_MASS
+ 10
+-32.0
+ 20
+36.0
+ 30
+18.6
+ 11
+-32.0
+ 21
+-40.0
+ 31
+18.6
+ 12
+-32.0
+ 22
+-40.0
+ 32
+28.2
+ 13
+-32.0
+ 23
+36.0
+ 33
+28.2
+
+  0
+3DFACE
+  8
+PENTHOUSE_MASS
+ 10
+-32.0
+ 20
+-40.0
+ 30
+28.2
+ 11
+32.0
+ 21
+-40.0
+ 31
+28.2
+ 12
+32.0
+ 22
+36.0
+ 32
+28.2
+ 13
+-32.0
+ 23
+36.0
+ 33
+28.2
+
+  0
+COMMENT
+  1
+--- ROOF GARDEN (Z=28.2, penthouse rooftop) ---
+  Full penthouse footprint. 64m x 76m = 4,864 m2
+  Primary GPR contribution from built green.
+
+  0
+LWPOLYLINE
+  8
+ROOF_GARDEN
+ 90
+4
+ 70
+1
+ 38
+28.2
+ 10
+-32.0
+ 20
+-40.0
+ 10
+32.0
+ 20
+-40.0
+ 10
+32.0
+ 20
+36.0
+ 10
+-32.0
+ 20
+36.0
+
+  0
+COMMENT
+  1
+--- TERRAIN CONTOURS (2m interval, Z=elevation AHD) ---
+  Slope runs SW to NE, ~12m total relief across site.
+
+  0
+POLYLINE
+  8
+TERRAIN_CONTOURS
+ 66
+1
+ 10
+0.0
+ 20
+0.0
+ 30
+50.0
+ 70
+8
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+-105.0
+ 20
+-65.0
+ 30
+50.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+25.0
+ 20
+-68.0
+ 30
+50.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+50.0
+ 20
+-40.0
+ 30
+50.0
+  0
+SEQEND
+  8
+TERRAIN_CONTOURS
+
+  0
+POLYLINE
+  8
+TERRAIN_CONTOURS
+ 66
+1
+ 10
+0.0
+ 20
+0.0
+ 30
+52.0
+ 70
+8
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+-108.0
+ 20
+-10.0
+ 30
+52.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+-50.0
+ 20
+-60.0
+ 30
+52.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+20.0
+ 20
+-55.0
+ 30
+52.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+48.0
+ 20
+-18.0
+ 30
+52.0
+  0
+SEQEND
+  8
+TERRAIN_CONTOURS
+
+  0
+POLYLINE
+  8
+TERRAIN_CONTOURS
+ 66
+1
+ 10
+0.0
+ 20
+0.0
+ 30
+54.0
+ 70
+8
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+-105.0
+ 20
+30.0
+ 30
+54.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+-40.0
+ 20
+-40.0
+ 30
+54.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+22.0
+ 20
+-38.0
+ 30
+54.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+46.0
+ 20
+5.0
+ 30
+54.0
+  0
+SEQEND
+  8
+TERRAIN_CONTOURS
+
+  0
+POLYLINE
+  8
+TERRAIN_CONTOURS
+ 66
+1
+ 10
+0.0
+ 20
+0.0
+ 30
+56.0
+ 70
+8
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+-100.0
+ 20
+52.0
+ 30
+56.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+-25.0
+ 20
+-18.0
+ 30
+56.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+24.0
+ 20
+-20.0
+ 30
+56.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+44.0
+ 20
+22.0
+ 30
+56.0
+  0
+SEQEND
+  8
+TERRAIN_CONTOURS
+
+  0
+POLYLINE
+  8
+TERRAIN_CONTOURS
+ 66
+1
+ 10
+0.0
+ 20
+0.0
+ 30
+58.0
+ 70
+8
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+-72.0
+ 20
+58.0
+ 30
+58.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+-10.0
+ 20
+5.0
+ 30
+58.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+22.0
+ 20
+2.0
+ 30
+58.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+42.0
+ 20
+40.0
+ 30
+58.0
+  0
+SEQEND
+  8
+TERRAIN_CONTOURS
+
+  0
+POLYLINE
+  8
+TERRAIN_CONTOURS
+ 66
+1
+ 10
+0.0
+ 20
+0.0
+ 30
+60.0
+ 70
+8
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+-70.0
+ 20
+58.0
+ 30
+60.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+0.0
+ 20
+25.0
+ 30
+60.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+18.0
+ 20
+22.0
+ 30
+60.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+38.0
+ 20
+55.0
+ 30
+60.0
+  0
+SEQEND
+  8
+TERRAIN_CONTOURS
+
+  0
+POLYLINE
+  8
+TERRAIN_CONTOURS
+ 66
+1
+ 10
+0.0
+ 20
+0.0
+ 30
+62.0
+ 70
+8
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+8.0
+ 20
+55.0
+ 30
+62.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+14.0
+ 20
+45.0
+ 30
+62.0
+  0
+VERTEX
+  8
+TERRAIN_CONTOURS
+ 10
+20.0
+ 20
+50.0
+ 30
+62.0
+  0
+SEQEND
+  8
+TERRAIN_CONTOURS
+
+  0
+ENDSEC
+  0
+EOF

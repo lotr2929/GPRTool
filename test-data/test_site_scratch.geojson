@@ -1,0 +1,31 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Test Site — Kalamunda Foothills",
+        "description": "Realistic residential development site, Perth Hills foothills. ~1.2 ha. For GPRTool scratch workflow testing.",
+        "area_approx_m2": 12400,
+        "location": "Kalamunda, Western Australia",
+        "crs": "WGS84"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [116.05420, -31.97350],
+            [116.05530, -31.97350],
+            [116.05560, -31.97390],
+            [116.05555, -31.97450],
+            [116.05510, -31.97490],
+            [116.05430, -31.97480],
+            [116.05390, -31.97440],
+            [116.05395, -31.97380],
+            [116.05420, -31.97350]
+          ]
+        ]
+      }
+    }
+  ]
+}
