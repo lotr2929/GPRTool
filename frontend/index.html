@@ -183,6 +183,7 @@
     let terrainMesh      = null;   // THREE.Mesh      — elevation surface (terrain session)
     let gridHelper       = null;
     let axesHelper       = null;
+    let feedbackTimer    = null;   // moved here to avoid temporal dead zone
 
     /* ============================================================
        RENDERER
@@ -492,7 +493,6 @@
     /* ============================================================
        FEEDBACK / STATUS BAR
     ============================================================ */
-    let feedbackTimer = null;
     function showFeedback(message, duration = 3000) {
       const el = document.getElementById('status-message');
       if (!el) return;
