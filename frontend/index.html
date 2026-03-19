@@ -176,6 +176,7 @@
 
     // 2D — orthographic top-down
     const camera2D = new THREE.OrthographicCamera(-50, 50, 50, -50, 0.1, 10000);
+    camera2D.up.set(0, 0, -1); // set BEFORE lookAt so matrix is correct from the start
     camera2D.position.set(0, 500, 0);
     camera2D.lookAt(0, 0, 0);
 
@@ -198,17 +199,62 @@
     controls3D.mouseButtons      = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
     controls3D.touches           = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
 
-    const controls2D = new OrbitControls(camera2D, renderer.domElement);
-    controls2D.enableRotate      = false;
-    controls2D.enableDamping     = true;
-    controls2D.dampingFactor     = 0.08;
-    controls2D.screenSpacePanning = true;
-    controls2D.minZoom           = 0.05;
-    controls2D.maxZoom           = 50;
-    controls2D.mouseButtons      = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
-    // No pan limits — grid is 10km×10km, effectively infinite for urban sites.
+    // 2D pan/zoom — handled manually, not via OrbitControls.
+    // OrbitControls fights with orthographic cameras and resets lookAt.
+    const pan2D = { x: 0, z: 0 };  // world-space camera target
+    let zoom2D = 1;                 // orthographic zoom multiplier
+    let base2DhalfH = 50;           // base frustum half-height set by fit2DCamera
 
-    let controls = controls2D; // matches starting camera
+    // Dummy controls2D object so switchMode code doesn't break
+    const controls2D = { update: () => {}, saveState: () => {}, target: new THREE.Vector3() };
+
+    // Manual 2D input handling
+    let pan2DActive = false;
+    let pan2DLast   = { x: 0, y: 0 };
+
+    renderer.domElement.addEventListener('pointerdown', e => {
+      if (currentMode !== '2d') return;
+      pan2DActive = true;
+      pan2DLast   = { x: e.clientX, y: e.clientY };
+      renderer.domElement.setPointerCapture(e.pointerId);
+    });
+
+    renderer.domElement.addEventListener('pointermove', e => {
+      if (currentMode !== '2d' || !pan2DActive) return;
+      const dx = e.clientX - pan2DLast.x;
+      const dy = e.clientY - pan2DLast.y;
+      pan2DLast = { x: e.clientX, y: e.clientY };
+      // Convert screen pixels to world metres
+      const frustumW = (camera2D.right - camera2D.left) / camera2D.zoom;
+      const frustumH = (camera2D.top - camera2D.bottom) / camera2D.zoom;
+      pan2D.x -= (dx / container.clientWidth)  * frustumW;
+      pan2D.z -= (dy / container.clientHeight) * frustumH;
+      update2DCamera();
+    });
+
+    renderer.domElement.addEventListener('pointerup', e => {
+      if (currentMode !== '2d') return;
+      pan2DActive = false;
+      renderer.domElement.releasePointerCapture(e.pointerId);
+    });
+
+    renderer.domElement.addEventListener('wheel', e => {
+      if (currentMode !== '2d') return;
+      e.preventDefault();
+      const factor = e.deltaY > 0 ? 0.9 : 1.1;
+      zoom2D = Math.max(0.05, Math.min(50, zoom2D * factor));
+      update2DCamera();
+    }, { passive: false });
+
+    function update2DCamera() {
+      camera2D.zoom = zoom2D;
+      camera2D.position.set(pan2D.x, 500, pan2D.z);
+      camera2D.up.set(0, 0, -1);
+      camera2D.lookAt(pan2D.x, 0, pan2D.z);
+      camera2D.updateProjectionMatrix();
+    }
+
+    let controls = controls2D; // keeps switchMode interface compatible
 
     /* ============================================================
        LIGHTS
@@ -243,6 +289,13 @@
       axesHelper = new THREE.AxesHelper(siteSpan * 0.08);
       scene.add(axesHelper);
     }
+    // DEBUG CUBE — centred at origin, visible in both 2D and 3D
+    const debugCube = new THREE.Mesh(
+      new THREE.BoxGeometry(20, 20, 20),
+      new THREE.MeshNormalMaterial()
+    );
+    scene.add(debugCube);
+
     updateSceneHelpers(100); // default until site loads
 
     /* ============================================================
@@ -372,29 +425,30 @@
       box.getSize(size);
       box.getCenter(center);
 
-      const aspect    = container.clientWidth / (container.clientHeight || 1);
-      const siteW     = size.x * 1.3;  // required horizontal span
-      const siteH     = size.z * 1.3;  // required vertical span
+      const aspect = container.clientWidth / (container.clientHeight || 1);
+      const siteW  = size.x * 1.3;
+      const siteH  = size.z * 1.3;
+      const halfH  = Math.max(siteW / (2 * aspect), siteH / 2);
 
-      // Choose the frustum half-height that fits both dimensions
-      // If fitting by width: halfH = siteW / (2 * aspect)
-      // If fitting by height: halfH = siteH / 2
-      // Take the larger to guarantee everything is visible
-      const halfH = Math.max(siteW / (2 * aspect), siteH / 2);
-
+      // Set frustum based on site — zoom=1, no OrbitControls interference
+      base2DhalfH     = halfH;
       camera2D.left   = -halfH * aspect;
       camera2D.right  =  halfH * aspect;
       camera2D.top    =  halfH;
       camera2D.bottom = -halfH;
-      camera2D.zoom = 1;
-      camera2D.updateProjectionMatrix();
-      // Always look straight down from directly above the site centre
-      controls2D.target.set(center.x, 0, center.z);
-      camera2D.position.set(center.x, 500, center.z);
-      camera2D.up.set(0, 0, -1);  // ensure 'up' points north (negative Z)
-      camera2D.lookAt(center.x, 0, center.z);
-      controls2D.update();
-      controls2D.saveState();
+
+      // Reset manual pan/zoom state to centre on site
+      pan2D.x = center.x;
+      pan2D.z = center.z;
+      zoom2D  = 1;
+
+      console.log('fit2DCamera: aspect=', aspect.toFixed(3),
+        'siteW=', siteW.toFixed(1), 'siteH=', siteH.toFixed(1),
+        'halfH=', halfH.toFixed(1),
+        'centre=(', center.x.toFixed(1), ',', center.z.toFixed(1), ')',
+        'canvas=', container.clientWidth, 'x', container.clientHeight);
+
+      update2DCamera();
     }
 
     function fit3DCamera(box) {
@@ -470,14 +524,15 @@
         camera3D.aspect = w / h;
         camera3D.updateProjectionMatrix();
 
-        const aspect = w / h;
-        const halfH  = (camera2D.top - camera2D.bottom) / 2 || 50;
-        camera2D.left   = -halfH * aspect;
-        camera2D.right  =  halfH * aspect;
-        camera2D.updateProjectionMatrix();
-
         if (siteBoundaryLine) {
           fit2DCamera(new THREE.Box3().setFromObject(siteBoundaryLine));
+        } else {
+          // No site yet — just update frustum aspect for current zoom
+          const aspect = w / h;
+          const halfH  = base2DhalfH || 50;
+          camera2D.left   = -halfH * aspect;
+          camera2D.right  =  halfH * aspect;
+          camera2D.updateProjectionMatrix();
         }
       });
     }
@@ -575,10 +630,8 @@
 
     document.getElementById('resetCameraBtn').addEventListener('click', () => {
       if (currentMode === '2d') {
-        camera2D.position.set(0, 500, 0);
-        camera2D.lookAt(0, 0, 0);
-        controls2D.target.set(0, 0, 0);
-        controls2D.update();
+        pan2D.x = 0; pan2D.z = 0; zoom2D = 1;
+        update2DCamera();
       } else {
         camera3D.position.set(100, 100, 100);
         camera3D.lookAt(0, 0, 0);
