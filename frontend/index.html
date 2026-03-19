@@ -357,13 +357,20 @@
       box.getSize(size);
       box.getCenter(center);
 
-      const span   = Math.max(size.x, size.z) * 1.3;
-      const aspect = container.clientWidth / (container.clientHeight || 1);
+      const aspect    = container.clientWidth / (container.clientHeight || 1);
+      const siteW     = size.x * 1.3;  // required horizontal span
+      const siteH     = size.z * 1.3;  // required vertical span
 
-      camera2D.left   = -span * aspect / 2;
-      camera2D.right  =  span * aspect / 2;
-      camera2D.top    =  span / 2;
-      camera2D.bottom = -span / 2;
+      // Choose the frustum half-height that fits both dimensions
+      // If fitting by width: halfH = siteW / (2 * aspect)
+      // If fitting by height: halfH = siteH / 2
+      // Take the larger to guarantee everything is visible
+      const halfH = Math.max(siteW / (2 * aspect), siteH / 2);
+
+      camera2D.left   = -halfH * aspect;
+      camera2D.right  =  halfH * aspect;
+      camera2D.top    =  halfH;
+      camera2D.bottom = -halfH;
       camera2D.updateProjectionMatrix();
       controls2D.target.set(center.x, 0, center.z);
       controls2D.update();
@@ -445,13 +452,7 @@
       }
     }
     new ResizeObserver(resizeToContainer).observe(container);
-    // Defer initial resize until after first paint so clientHeight is correct
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      console.log('viewport clientWidth:', container.clientWidth, 'clientHeight:', container.clientHeight);
-      console.log('viewport offsetWidth:', container.offsetWidth, 'offsetHeight:', container.offsetHeight);
-      console.log('viewport getBoundingClientRect:', JSON.stringify(container.getBoundingClientRect()));
-      resizeToContainer();
-    }));
+    requestAnimationFrame(() => requestAnimationFrame(resizeToContainer));
 
     /* ============================================================
        ANIMATION LOOP
