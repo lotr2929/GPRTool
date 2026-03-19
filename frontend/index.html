@@ -445,7 +445,8 @@
       }
     }
     new ResizeObserver(resizeToContainer).observe(container);
-    resizeToContainer();
+    // Defer initial resize until after first paint so clientHeight is correct
+    requestAnimationFrame(() => requestAnimationFrame(resizeToContainer));
 
     /* ============================================================
        ANIMATION LOOP
