@@ -221,24 +221,25 @@ body {
    MAIN LAYOUT
    ============================================================ */
 #header-container {
-  flex: 0 0 auto;
   width: 100%;
+  height: var(--header-h);
+  flex-shrink: 0;
 }
 
 #body-container {
-  flex: 1 1 0;       /* 0 base size forces height to be determined by flex, not content */
-  min-height: 0;
   width: 100%;
-  overflow: hidden;
+  height: calc(100vh - var(--header-h));
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 #main-container {
   display: flex;
-  flex: 1 1 auto;
+  align-items: stretch;
+  width: 100%;
+  height: calc(100vh - var(--header-h) - var(--status-h));
   overflow: hidden;
-  min-height: 0;
 }
 
 /* ============================================================
@@ -531,6 +532,7 @@ body {
    ============================================================ */
 #viewport {
   flex: 1;
+  height: 100%;
   position: relative;
   background: var(--vp-bgcolor);
   overflow: hidden;
@@ -612,15 +614,19 @@ body {
    STATUS BAR
    ============================================================ */
 #feedback-bar {
-  background: var(--chrome-dark);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   height: var(--status-h);
+  background: var(--chrome-dark);
   display: flex;
   align-items: center;
   padding: 0 10px;
   gap: 8px;
-  flex-shrink: 0;
   border-top: 1px solid var(--chrome-darkest);
   font-size: var(--fs-xs);
+  z-index: 1000;
 }
 
 #status-mode {
