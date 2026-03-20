@@ -1,0 +1,511 @@
+{
+  "version": "1.1",
+  "tier": "free",
+  "source_note": "LAI values from field measurements in Singapore (Boon Ong & Dr Tan, 2009) and ORNL/TRY global database. Urban calibration factors not yet applied — use as indicative values.",
+  "species": [
+    {
+      "id": "p001",
+      "common": "Turf grass (mixed)",
+      "scientific": "Agrostis capillaris",
+      "lai": 8.40,
+      "category": "Turf",
+      "surface_types": ["ground", "roof", "sloped"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p002",
+      "common": "Tall fescue / meadow grass",
+      "scientific": "Arrhenatherum elatius",
+      "lai": 7.66,
+      "category": "Turf",
+      "surface_types": ["ground", "sloped"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p003",
+      "common": "Meadow foxtail",
+      "scientific": "Alopecurus pratensis",
+      "lai": 7.65,
+      "category": "Turf",
+      "surface_types": ["ground", "sloped"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p004",
+      "common": "Sweet vernal grass",
+      "scientific": "Anthoxanthum odoratum",
+      "lai": 7.34,
+      "category": "Turf",
+      "surface_types": ["ground", "sloped"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p005",
+      "common": "Wild basil",
+      "scientific": "Clinopodium vulgare",
+      "lai": 6.93,
+      "category": "Herb / groundcover",
+      "surface_types": ["ground", "roof", "sloped"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p006",
+      "common": "Mountain maple",
+      "scientific": "Acer spicatum",
+      "lai": 6.91,
+      "category": "Tree (deciduous)",
+      "surface_types": ["ground"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p007",
+      "common": "Creeping thistle",
+      "scientific": "Cirsium arvense",
+      "lai": 6.62,
+      "category": "Shrub / groundcover",
+      "surface_types": ["ground", "sloped"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p008",
+      "common": "Feather reed grass",
+      "scientific": "Calamagrostis epigejos",
+      "lai": 6.42,
+      "category": "Ornamental grass",
+      "surface_types": ["ground", "roof", "sloped"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p009",
+      "common": "Kidney vetch",
+      "scientific": "Anthyllis vulneraria",
+      "lai": 5.52,
+      "category": "Herb / groundcover",
+      "surface_types": ["ground", "roof", "sloped"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p010",
+      "common": "Foxglove",
+      "scientific": "Digitalis purpurea",
+      "lai": 5.42,
+      "category": "Herb / shrub",
+      "surface_types": ["ground", "sloped"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p011",
+      "common": "Dwarf thistle",
+      "scientific": "Cirsium acaule",
+      "lai": 5.31,
+      "category": "Herb / groundcover",
+      "surface_types": ["ground", "roof"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p012",
+      "common": "Ground elder",
+      "scientific": "Aegopodium podagraria",
+      "lai": 5.04,
+      "category": "Groundcover",
+      "surface_types": ["ground", "sloped"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p013",
+      "common": "Burdock",
+      "scientific": "Arctium lappa",
+      "lai": 4.72,
+      "category": "Shrub",
+      "surface_types": ["ground"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p014",
+      "common": "Olivillo (Manio)",
+      "scientific": "Aextoxicon punctatum",
+      "lai": 4.60,
+      "category": "Tree (evergreen)",
+      "surface_types": ["ground"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p015",
+      "common": "Tufted hair grass",
+      "scientific": "Deschampsia cespitosa",
+      "lai": 4.52,
+      "category": "Ornamental grass",
+      "surface_types": ["ground", "roof", "sloped"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p016",
+      "common": "Common centaury",
+      "scientific": "Centaurium erythraea",
+      "lai": 3.83,
+      "category": "Herb / groundcover",
+      "surface_types": ["ground", "roof"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p017",
+      "common": "Soft brome",
+      "scientific": "Bromus hordeaceus",
+      "lai": 3.79,
+      "category": "Turf",
+      "surface_types": ["ground", "sloped"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p018",
+      "common": "False brome",
+      "scientific": "Brachypodium sylvaticum",
+      "lai": 3.50,
+      "category": "Ornamental grass",
+      "surface_types": ["ground", "sloped"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p019",
+      "common": "Harebell",
+      "scientific": "Campanula rotundifolia",
+      "lai": 2.97,
+      "category": "Herb / groundcover",
+      "surface_types": ["ground", "roof"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p020",
+      "common": "Murici (savanna shrub)",
+      "scientific": "Byrsonima coccolobifolia",
+      "lai": 2.57,
+      "category": "Shrub",
+      "surface_types": ["ground"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p021",
+      "common": "Pequi (Brazilian savanna)",
+      "scientific": "Caryocar brasiliense",
+      "lai": 2.36,
+      "category": "Tree (tropical)",
+      "surface_types": ["ground"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p022",
+      "common": "Soursop / custard apple",
+      "scientific": "Annona crassiflora",
+      "lai": 1.57,
+      "category": "Tree (tropical)",
+      "surface_types": ["ground"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p023",
+      "common": "Canarium (tropical forest)",
+      "scientific": "Canarium denticulatum",
+      "lai": 1.05,
+      "category": "Tree (tropical)",
+      "surface_types": ["ground"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p024",
+      "common": "Dogwood",
+      "scientific": "Cornus stolonifera",
+      "lai": 0.23,
+      "category": "Shrub (deciduous)",
+      "surface_types": ["ground", "sloped"],
+      "source": "Singapore field (Boon & Tan 2009)"
+    },
+    {
+      "id": "p025",
+      "common": "Western hemlock",
+      "scientific": "Tsuga heterophylla",
+      "lai": 12.00,
+      "category": "Tree (conifer)",
+      "surface_types": ["ground"],
+      "source": "ORNL/TRY (indicative - urban calibration pending)"
+    },
+    {
+      "id": "p026",
+      "common": "Douglas fir",
+      "scientific": "Pseudotsuga menziesii",
+      "lai": 8.54,
+      "category": "Tree (conifer)",
+      "surface_types": ["ground"],
+      "source": "ORNL/TRY median (indicative - urban calibration pending)"
+    },
+    {
+      "id": "p027",
+      "common": "Teak",
+      "scientific": "Tectona grandis",
+      "lai": 9.33,
+      "category": "Tree (tropical deciduous)",
+      "surface_types": ["ground"],
+      "source": "ORNL/TRY (indicative - urban calibration pending)"
+    },
+    {
+      "id": "p028",
+      "common": "Japanese cedar (Sugi)",
+      "scientific": "Cryptomeria japonica",
+      "lai": 9.26,
+      "category": "Tree (conifer)",
+      "surface_types": ["ground"],
+      "source": "ORNL/TRY (indicative - urban calibration pending)"
+    },
+    {
+      "id": "p029",
+      "common": "European hornbeam",
+      "scientific": "Carpinus betulus",
+      "lai": 8.73,
+      "category": "Tree (deciduous)",
+      "surface_types": ["ground"],
+      "source": "ORNL/TRY (indicative - urban calibration pending)"
+    },
+    {
+      "id": "p030",
+      "common": "Mahogany",
+      "scientific": "Swietenia macrophylla",
+      "lai": 10.40,
+      "category": "Tree (tropical)",
+      "surface_types": ["ground"],
+      "source": "ORNL/TRY (indicative - urban calibration pending)"
+    },
+    {
+      "id": "p031",
+      "common": "Balsam fir",
+      "scientific": "Abies balsamea",
+      "lai": 10.00,
+      "category": "Tree (conifer)",
+      "surface_types": ["ground"],
+      "source": "ORNL/TRY median (indicative - urban calibration pending)"
+    },
+    {
+      "id": "p032",
+      "common": "White oak (Japanese)",
+      "scientific": "Quercus crispula",
+      "lai": 10.10,
+      "category": "Tree (deciduous)",
+      "surface_types": ["ground"],
+      "source": "ORNL/TRY (indicative - urban calibration pending)"
+    },
+    {
+      "id": "p033",
+      "common": "Larch (European)",
+      "scientific": "Larix decidua",
+      "lai": 6.00,
+      "category": "Tree (conifer, deciduous)",
+      "surface_types": ["ground"],
+      "source": "ORNL/TRY (indicative - urban calibration pending)"
+    },
+    {
+      "id": "p034",
+      "common": "Silver maple",
+      "scientific": "Acer saccharinum",
+      "lai": 5.50,
+      "category": "Tree (deciduous)",
+      "surface_types": ["ground"],
+      "source": "ORNL/TRY (indicative - urban calibration pending)"
+    },
+    {
+      "id": "p035",
+      "common": "Common beech",
+      "scientific": "Fagus sylvatica",
+      "lai": 6.00,
+      "category": "Tree (deciduous)",
+      "surface_types": ["ground"],
+      "source": "ORNL/TRY (indicative - urban calibration pending)"
+    },
+    {
+      "id": "p036",
+      "common": "English ivy (wall climber)",
+      "scientific": "Hedera helix",
+      "lai": 5.00,
+      "category": "Climber / creeper",
+      "surface_types": ["wall", "sloped", "ground"],
+      "source": "ORNL/TRY (indicative - urban calibration pending)"
+    },
+    {
+      "id": "p037",
+      "common": "Boston ivy (Virginia creeper)",
+      "scientific": "Parthenocissus tricuspidata",
+      "lai": 4.50,
+      "category": "Climber / creeper",
+      "surface_types": ["wall", "sloped"],
+      "source": "ORNL/TRY (indicative - urban calibration pending)"
+    },
+    {
+      "id": "p038",
+      "common": "Chinese wisteria",
+      "scientific": "Wisteria sinensis",
+      "lai": 3.80,
+      "category": "Climber",
+      "surface_types": ["wall", "sloped"],
+      "source": "ORNL/TRY (indicative - urban calibration pending)"
+    },
+    {
+      "id": "p039",
+      "common": "Star jasmine",
+      "scientific": "Trachelospermum jasminoides",
+      "lai": 3.50,
+      "category": "Climber / groundcover",
+      "surface_types": ["wall", "ground", "sloped"],
+      "source": "ORNL/TRY (indicative - urban calibration pending)"
+    },
+    {
+      "id": "p040",
+      "common": "Sedum (extensive green roof)",
+      "scientific": "Sedum spp.",
+      "lai": 1.50,
+      "category": "Succulent / green roof",
+      "surface_types": ["roof", "wall"],
+      "source": "Literature (indicative)"
+    },
+    {
+      "id": "p041",
+      "common": "Sedum (intensive green roof)",
+      "scientific": "Sedum reflexum",
+      "lai": 2.20,
+      "category": "Succulent / green roof",
+      "surface_types": ["roof"],
+      "source": "Literature (indicative)"
+    },
+    {
+      "id": "p042",
+      "common": "Buffalo grass (lawn)",
+      "scientific": "Stenotaphrum secundatum",
+      "lai": 3.00,
+      "category": "Turf",
+      "surface_types": ["ground", "roof", "sloped"],
+      "source": "Literature (indicative)"
+    },
+    {
+      "id": "p043",
+      "common": "Couch grass (lawn)",
+      "scientific": "Cynodon dactylon",
+      "lai": 2.80,
+      "category": "Turf",
+      "surface_types": ["ground", "sloped"],
+      "source": "Literature (indicative)"
+    },
+    {
+      "id": "p044",
+      "common": "Mondo grass / lily turf",
+      "scientific": "Ophiopogon japonicus",
+      "lai": 3.20,
+      "category": "Groundcover",
+      "surface_types": ["ground", "roof"],
+      "source": "Literature (indicative)"
+    },
+    {
+      "id": "p045",
+      "common": "Liriope / border grass",
+      "scientific": "Liriope muscari",
+      "lai": 3.40,
+      "category": "Groundcover",
+      "surface_types": ["ground", "roof", "sloped"],
+      "source": "Literature (indicative)"
+    },
+    {
+      "id": "p046",
+      "common": "Bamboo — multiplex (hedge / clumping)",
+      "scientific": "Bambusa multiplex",
+      "lai": 6.50,
+      "category": "Bamboo",
+      "surface_types": ["ground", "wall"],
+      "source": "Literature (indicative)"
+    },
+    {
+      "id": "p047",
+      "common": "Japanese box / buxus",
+      "scientific": "Buxus microphylla",
+      "lai": 4.00,
+      "category": "Shrub (evergreen)",
+      "surface_types": ["ground", "roof", "wall"],
+      "source": "Literature (indicative)"
+    },
+    {
+      "id": "p048",
+      "common": "Rosemary",
+      "scientific": "Salvia rosmarinus",
+      "lai": 2.50,
+      "category": "Herb / shrub",
+      "surface_types": ["ground", "roof", "sloped"],
+      "source": "Literature (indicative)"
+    },
+    {
+      "id": "p049",
+      "common": "Agave / succulent",
+      "scientific": "Agave americana",
+      "lai": 1.20,
+      "category": "Succulent",
+      "surface_types": ["ground", "roof"],
+      "source": "Literature (indicative)"
+    },
+    {
+      "id": "p050",
+      "common": "Native sedge (wetland edge)",
+      "scientific": "Carex appressa",
+      "lai": 4.20,
+      "category": "Sedge / wetland",
+      "surface_types": ["ground", "sloped"],
+      "source": "Literature (indicative)"
+    },
+    {
+      "id": "p051",
+      "common": "Bamboo — vulgaris (giant grove)",
+      "scientific": "Bambusa vulgaris",
+      "lai": 7.20,
+      "category": "Bamboo",
+      "surface_types": ["ground"],
+      "source": "Literature (indicative)"
+    },
+    {
+      "id": "p052",
+      "common": "Bamboo — oldhamii (timber, tall screen)",
+      "scientific": "Bambusa oldhamii",
+      "lai": 6.80,
+      "category": "Bamboo",
+      "surface_types": ["ground"],
+      "source": "Literature (indicative)"
+    },
+    {
+      "id": "p053",
+      "common": "Bamboo — gracilis (slender weavers)",
+      "scientific": "Bambusa textilis var. gracilis",
+      "lai": 5.80,
+      "category": "Bamboo",
+      "surface_types": ["ground"],
+      "source": "Literature (indicative)"
+    },
+    {
+      "id": "p054",
+      "common": "Bamboo — phyllostachys (running, grove)",
+      "scientific": "Phyllostachys aurea",
+      "lai": 6.20,
+      "category": "Bamboo",
+      "surface_types": ["ground"],
+      "source": "Literature (indicative)"
+    },
+    {
+      "id": "p055",
+      "common": "Bamboo — alphonse karr (ornamental clumping)",
+      "scientific": "Bambusa multiplex var. alphonse karr",
+      "lai": 5.50,
+      "category": "Bamboo",
+      "surface_types": ["ground"],
+      "source": "Literature (indicative)"
+    },
+    {
+      "id": "p056",
+      "common": "Bamboo — moso (giant timber)",
+      "scientific": "Phyllostachys edulis",
+      "lai": 8.10,
+      "category": "Bamboo",
+      "surface_types": ["ground"],
+      "source": "Literature (indicative)"
+    }
+  ]
+}

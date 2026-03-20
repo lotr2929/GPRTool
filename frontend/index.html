@@ -57,6 +57,159 @@
       position: absolute;
       pointer-events: none;
     }
+
+    /* ── Plant Library Modal ── */
+    #plant-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.50);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    #plant-modal-overlay.open { display: flex; }
+    #plant-modal {
+      background: var(--chrome-bg, #2c2c2c);
+      border: 1px solid var(--chrome-border, #444);
+      border-radius: 6px;
+      width: 520px;
+      max-width: 95vw;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.55);
+      color: var(--text-primary, #e8e8e8);
+      font-family: var(--font-ui, 'Outfit', sans-serif);
+    }
+    #plant-modal-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--chrome-border, #444);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #plant-modal-header h3 { margin: 0; font-size: 13px; font-weight: 600; flex: 1; }
+    #plant-modal-close {
+      background: none; border: none;
+      color: var(--text-secondary, #888); cursor: pointer;
+      font-size: 18px; line-height: 1; padding: 2px 6px;
+    }
+    #plant-modal-close:hover { color: var(--text-primary, #e8e8e8); }
+    #plant-modal-toolbar {
+      padding: 8px 12px;
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--chrome-border, #444);
+    }
+    #plant-search {
+      flex: 1;
+      background: var(--chrome-input, #1a1a1a);
+      border: 1px solid var(--chrome-border, #444);
+      border-radius: 4px;
+      color: var(--text-primary, #e8e8e8);
+      font-size: 12px;
+      padding: 5px 8px;
+      outline: none;
+    }
+    #plant-search:focus { border-color: var(--accent-mid, #4a8a4a); }
+    #plant-filter {
+      background: var(--chrome-input, #1a1a1a);
+      border: 1px solid var(--chrome-border, #444);
+      border-radius: 4px;
+      color: var(--text-primary, #e8e8e8);
+      font-size: 12px;
+      padding: 5px 8px;
+      outline: none;
+      cursor: pointer;
+    }
+    #plant-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 8px;
+      min-height: 200px;
+    }
+    .plant-item {
+      display: flex;
+      align-items: center;
+      padding: 7px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      gap: 10px;
+      border: 1px solid transparent;
+    }
+    .plant-item:hover { background: var(--chrome-hover, #383838); }
+    .plant-item.selected-plant {
+      background: var(--accent-dark, #1e3d1e);
+      border-color: var(--accent-mid, #4a8a4a);
+    }
+    .plant-lai-badge {
+      background: var(--accent-dark, #1e3d1e);
+      color: var(--accent-light, #7fc47f);
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      min-width: 36px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .plant-names { flex: 1; min-width: 0; }
+    .plant-common  { font-size: 12px; font-weight: 500; }
+    .plant-sci     { font-size: 11px; color: var(--text-secondary, #888); font-style: italic; }
+    .plant-cat     { font-size: 10px; color: var(--text-secondary, #999); }
+    .plant-src-badge {
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .plant-src-badge.field { background:#1a3d1a; color:#7fc47f; border:1px solid #2e6b2e; }
+    .plant-src-badge.ornl  { background:#2a2a1a; color:#c4b47f; border:1px solid #5a5010; }
+    .plant-src-badge.lit   { background:#1a1a2a; color:#7f9fc4; border:1px solid #2a3a5a; }
+    #plant-modal-footer {
+      padding: 10px 12px;
+      border-top: 1px solid var(--chrome-border, #444);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #plant-modal-status { flex: 1; font-size: 11px; color: var(--text-secondary, #888); }
+    #plant-assign-btn {
+      background: var(--accent-mid, #4a8a4a);
+      color: #fff; border: none; border-radius: 4px;
+      font-size: 12px; padding: 6px 14px; cursor: pointer;
+    }
+    #plant-assign-btn:hover { background: var(--accent-light, #5aaa5a); }
+    #plant-assign-btn:disabled { background: var(--chrome-border, #444); cursor: default; }
+    #plant-remove-btn {
+      background: none;
+      color: var(--text-secondary, #888);
+      border: 1px solid var(--chrome-border, #444);
+      border-radius: 4px; font-size: 12px; padding: 6px 12px; cursor: pointer;
+    }
+    #plant-remove-btn:hover { border-color: #cc4444; color: #cc4444; }
+    #plant-remove-btn:disabled { opacity: 0.4; cursor: default; }
+
+    /* GPR value display */
+    .gpr-result .info-value {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--accent-light, #7fc47f);
+    }
+    .gpr-result.over-target  .info-value { color: #7fc47f; }
+    .gpr-result.under-target .info-value { color: #e8a040; }
+
+    /* Surface plant tag in surface list */
+    .surface-plant-tag {
+      font-size: 10px;
+      background: var(--accent-dark, #1e3d1e);
+      color: var(--accent-light, #7fc47f);
+      border-radius: 2px;
+      padding: 1px 4px;
+      margin-left: 2px;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 
@@ -335,7 +488,7 @@
     }, { passive: false });
 
     function update2DCamera() {
-      // If in surface canvas mode, the camera is managed by fitSurfaceCamera — don't override it
+      // If in surface canvas mode, the camera is managed by fitSurfaceCamera -- don't override it
       if (currentMode === '2d' && selectedSurface) return;
       camera2D.zoom = zoom2D;
       camera2D.position.set(pan2D.x, 10000, pan2D.z);
@@ -440,19 +593,11 @@
 
     /* ============================================================
        SURFACE DETECTION
-       Classify every mesh face by its world-space normal:
-         Y >  0.7  → ground (facing up, low elevation) or roof (facing up, higher)
-         Y < -0.5  → underside — skip
-         |Y| < 0.3 → wall (mostly vertical)
-         else      → sloped
-       We split the model into per-face submeshes so each face is
-       individually selectable. For MVP we group by object/submesh
-       and classify by the average normal of that submesh.
     ============================================================ */
     function classifyNormal(normal) {
       const y = Math.abs(normal.y);
-      if (normal.y < -0.5) return 'underside';  // skip floor undersides
-      if (normal.y >  0.7) return 'horizontal'; // ground or roof — distinguish by elevation later
+      if (normal.y < -0.5) return 'underside';
+      if (normal.y >  0.7) return 'horizontal';
       if (y          < 0.3) return 'wall';
       return 'sloped';
     }
@@ -467,9 +612,6 @@
         const posAttr = child.geometry.attributes.position;
         if (!posAttr || posAttr.count < 3) return;
 
-        // ── Compute face normal from vertex positions (cross product of first two edges)
-        // This is reliable regardless of whether the OBJ had vn normals or not.
-        // We use the first triangle (indices 0,1,2) which is always present.
         child.updateMatrixWorld(true);
 
         const idxAttr = child.geometry.index;
@@ -480,28 +622,22 @@
         const pB = new THREE.Vector3().fromBufferAttribute(posAttr, iB);
         const pC = new THREE.Vector3().fromBufferAttribute(posAttr, iC);
 
-        // Local-space face normal
         const edge1 = new THREE.Vector3().subVectors(pB, pA);
         const edge2 = new THREE.Vector3().subVectors(pC, pA);
         const localNormal = new THREE.Vector3().crossVectors(edge1, edge2).normalize();
 
-        // Transform to world space (rotation only, no translation/scale)
         const worldNormal = localNormal.clone().transformDirection(child.matrixWorld).normalize();
 
-        // Ensure normal points outward/upward (not into the ground)
-        // For horizontal faces we want the upward-facing normal
         if (worldNormal.y < -0.1) worldNormal.negate();
 
         const classification = classifyNormal(worldNormal);
         if (classification === 'underside') return;
 
-        // Bounding box for area and elevation
         child.geometry.computeBoundingBox();
         const box = new THREE.Box3().copy(child.geometry.boundingBox).applyMatrix4(child.matrixWorld);
         const size = new THREE.Vector3();
         box.getSize(size);
 
-        // Area estimate
         let area;
         if (classification === 'horizontal') {
           area = size.x * size.z;
@@ -510,13 +646,10 @@
           area = dims[0] * dims[1];
         }
 
-        // Elevation = min Y of bounding box
         const elevation = box.min.y;
 
-        // Surface type
         let type;
         if (classification === 'horizontal') {
-          // Ground if base is within 0.5m of Y=0, otherwise roof
           type = elevation < 0.5 ? 'ground' : 'roof';
         } else if (classification === 'wall') {
           type = 'wall';
@@ -537,7 +670,6 @@
           originalMaterial: child.material,
         });
 
-        // Apply colour-coded material
         child.material = MAT[type] ? MAT[type].clone() : MAT.model.clone();
         child.material.polygonOffset      = true;
         child.material.polygonOffsetFactor = 1;
@@ -548,7 +680,7 @@
     }
 
     /* ============================================================
-       SURFACE PANEL — populate left panel list
+       SURFACE PANEL
     ============================================================ */
     function populateSurfacePanel() {
       const section = document.getElementById('section-surfaces');
@@ -576,7 +708,7 @@
           item.innerHTML = `
             <span class="surface-dot ${type}"></span>
             <span class="surface-label">${labels[type]} ${s.id + 1}</span>
-            <span class="surface-area">${s.area} m²</span>`;
+            <span class="surface-area">${s.area} m&sup2;</span>`;
 
           item.addEventListener('mouseenter', () => hoverSurface(s));
           item.addEventListener('mouseleave', () => unhoverSurface(s));
@@ -587,7 +719,6 @@
 
       section.style.display = 'block';
 
-      // Summary in right panel
       const groundCount = groups.ground.length;
       const roofCount   = groups.roof.length;
       const wallCount   = groups.wall.length;
@@ -637,21 +768,26 @@
       sm.polygonOffset = true; sm.polygonOffsetFactor = -2; sm.polygonOffsetUnits = -2;
       s.mesh.material = sm;
 
-      // Highlight list item
       document.querySelectorAll('.surface-item').forEach(el => {
         el.classList.toggle('selected', parseInt(el.dataset.surfaceId) === s.id);
       });
 
-      // Update right panel
       const typeLabels = { ground: 'Ground plane', roof: 'Roof plane', wall: 'Wall plane', sloped: 'Sloped surface' };
       document.getElementById('surface-section').style.display = 'block';
       document.getElementById('surf-type').textContent      = typeLabels[s.type] || s.type;
-      document.getElementById('surf-area').textContent      = s.area + ' m²';
+      document.getElementById('surf-area').textContent      = s.area + ' m\u00b2';
       document.getElementById('surf-elevation').textContent = s.elevation + ' m';
-      document.getElementById('surf-normal').textContent    = s.normalAngle + '° from vertical';
+      document.getElementById('surf-normal').textContent    = s.normalAngle + '\u00b0 from vertical';
 
       document.getElementById('gpr-section').style.display = 'block';
-      showFeedback(`${typeLabels[s.type]} selected — ${s.area} m²`);
+
+      // Update plant schedule for this surface
+      renderSurfacePlantSchedule(s);
+
+      // Update modal if open
+      if (plantModalOpen) refreshModalStatus();
+
+      showFeedback(`${typeLabels[s.type]} selected \u2014 ${s.area} m\u00b2`);
     }
 
     function deselectSurface() {
@@ -661,12 +797,11 @@
       }
       document.querySelectorAll('.surface-item').forEach(el => el.classList.remove('selected'));
       document.getElementById('surface-section').style.display = 'none';
-      // Always return to 3D model view so user can select the next surface
       if (currentMode === '2d') switchMode('3d');
     }
 
     /* ============================================================
-       RAYCASTER — hover and click surfaces in 3D viewport
+       RAYCASTER
     ============================================================ */
     const raycaster  = new THREE.Raycaster();
     const pointerNDC = new THREE.Vector2();
@@ -709,7 +844,7 @@
        MODEL LOADING — OBJ
     ============================================================ */
     function loadOBJ(file) {
-      showFeedback('Loading OBJ model…', 0);
+      showFeedback('Loading OBJ model\u2026', 0);
       const url    = URL.createObjectURL(file);
       const loader = new OBJLoader();
       loader.load(
@@ -719,7 +854,7 @@
           onModelLoaded(group, file.name, 'OBJ');
         },
         xhr => {
-          if (xhr.total) showFeedback(`Loading… ${Math.round(xhr.loaded / xhr.total * 100)}%`, 0);
+          if (xhr.total) showFeedback(`Loading\u2026 ${Math.round(xhr.loaded / xhr.total * 100)}%`, 0);
         },
         err => {
           URL.revokeObjectURL(url);
@@ -733,7 +868,7 @@
        MODEL LOADING — glTF / GLB
     ============================================================ */
     function loadGLTF(file) {
-      showFeedback('Loading glTF model…', 0);
+      showFeedback('Loading glTF model\u2026', 0);
       const url    = URL.createObjectURL(file);
       const loader = new GLTFLoader();
       loader.load(
@@ -743,7 +878,7 @@
           onModelLoaded(gltf.scene, file.name, file.name.toLowerCase().endsWith('.glb') ? 'GLB' : 'glTF');
         },
         xhr => {
-          if (xhr.total) showFeedback(`Loading… ${Math.round(xhr.loaded / xhr.total * 100)}%`, 0);
+          if (xhr.total) showFeedback(`Loading\u2026 ${Math.round(xhr.loaded / xhr.total * 100)}%`, 0);
         },
         err => {
           URL.revokeObjectURL(url);
@@ -754,22 +889,18 @@
     }
 
     /* ============================================================
-       MODEL LOADING — IFC (stub — full implementation V1.1)
+       MODEL LOADING — IFC (stub)
     ============================================================ */
     function loadIFC(file) {
-      showFeedback('IFC import — coming in next build');
+      showFeedback('IFC import \u2014 coming in next build');
     }
 
     /* ============================================================
        EDGE OVERLAY
-       Merges all mesh geometries into world space, runs EdgesGeometry
-       once across the whole model, and draws a single LineSegments.
-       This correctly draws every edge including shared edges between
-       surfaces (site-to-podium, podium-to-tower, etc.) exactly once.
     ============================================================ */
     const edgeMat   = new THREE.LineBasicMaterial({ color: 0x444444, linewidth: 1 });
     const edgeGroup = new THREE.Group();
-    let   edgeLines = null; // single LineSegments for the whole model
+    let   edgeLines = null;
 
     function addEdgeOverlay(modelGroup) {
       while (edgeGroup.children.length) {
@@ -780,13 +911,9 @@
       edgeLines = null;
       modelGroup.updateMatrixWorld(true);
 
-      // Round a world-space vector to nearest mm for reliable hashing
       const vKey = v =>
         `${Math.round(v.x*1000)},${Math.round(v.y*1000)},${Math.round(v.z*1000)}`;
 
-      // One pass: collect per-mesh face outlines AND build junction edge map
-      // edgeMap: edgeKey -> { a, b, meshIds: Set }
-      // An edge that appears in 2+ different meshes is a junction edge.
       const edgeMap = new Map();
 
       modelGroup.traverse(child => {
@@ -800,7 +927,6 @@
           .fromBufferAttribute(pos, i)
           .applyMatrix4(child.matrixWorld);
 
-        // ── Face outline: collect unique verts in appearance order ──
         const seen  = new Map();
         const verts = [];
         const total = idx ? idx.count : pos.count;
@@ -817,7 +943,6 @@
           edgeGroup.add(loop);
         }
 
-        // ── Junction map: register every triangle edge with its mesh ──
         for (let i = 0; i < total; i += 3) {
           const ia = idx ? idx.getX(i)   : i;
           const ib = idx ? idx.getX(i+1) : i+1;
@@ -832,22 +957,14 @@
         }
       });
 
-      // ── Shared-vertex junction edges (e.g. podium walls ↔ podium roof) ──
       const jPts = [];
       edgeMap.forEach(({ a, b, meshIds }) => {
         if (meshIds.size >= 2) jPts.push(a.clone(), b.clone());
       });
 
-      // ── Raycast junction edges (e.g. podium base onto site surface) ──
-      // For every boundary edge (belongs to exactly 1 mesh), cast a ray
-      // from each endpoint along +Y and -Y and test against all other meshes.
-      // If a hit is found, record that intersection point. When both endpoints
-      // of an edge hit the same target mesh, draw the line between the two
-      // projected points on that mesh surface.
       const meshList = [];
       modelGroup.traverse(c => { if (c.isMesh) meshList.push(c); });
 
-      // Collect boundary edges — edges that belong to exactly 1 mesh
       const boundaryEdges = [];
       edgeMap.forEach(({ a, b, meshIds }) => {
         if (meshIds.size === 1) boundaryEdges.push({ a, b, meshId: [...meshIds][0] });
@@ -858,20 +975,15 @@
       const caster  = new THREE.Raycaster();
 
       boundaryEdges.forEach(({ a, b, meshId }) => {
-        // Only cast for edges that are not at the very top of their mesh
-        // (i.e. base edges that might intersect the surface below)
         meshList.forEach(targetMesh => {
-          if (targetMesh.uuid === meshId) return; // skip self
+          if (targetMesh.uuid === meshId) return;
 
-          // Cast ray downward from point a
           caster.set(a.clone().setY(a.y + 0.1), rayDown);
           const hitsA = caster.intersectObject(targetMesh, false);
 
-          // Cast ray downward from point b
           caster.set(b.clone().setY(b.y + 0.1), rayDown);
           const hitsB = caster.intersectObject(targetMesh, false);
 
-          // Also try upward in case the target is above
           const hitsAup = hitsA.length ? hitsA :
             (() => { caster.set(a.clone().setY(a.y - 0.1), rayUp); return caster.intersectObject(targetMesh, false); })();
           const hitsBup = hitsB.length ? hitsB :
@@ -881,7 +993,6 @@
           const hitB = hitsBup[0];
 
           if (hitA && hitB) {
-            // Both endpoints project onto this target mesh — draw the junction line
             jPts.push(hitA.point.clone(), hitB.point.clone());
           }
         });
@@ -907,10 +1018,9 @@
     }
 
     /* ============================================================
-       ON MODEL LOADED — common handler for all formats
+       ON MODEL LOADED
     ============================================================ */
     function onModelLoaded(group, filename, format) {
-      // Remove previous model
       if (importedModel) {
         scene.remove(importedModel);
         scene.remove(edgeGroup);
@@ -920,24 +1030,18 @@
 
       importedModel = group;
 
-      // Centre model at origin
       const box    = new THREE.Box3().setFromObject(group);
       const centre = new THREE.Vector3();
       box.getCenter(centre);
       group.position.sub(centre);
-      // Sit on Y=0 plane
-      box.setFromObject(group); // recompute after position change
+      box.setFromObject(group);
       group.position.y -= box.min.y;
 
       scene.add(group);
 
-      // Detect and colour surfaces
       detectSurfaces(group);
-
-      // Add edge outlines
       addEdgeOverlay(group);
 
-      // Compute span for helpers and camera
       const finalBox  = new THREE.Box3().setFromObject(group);
       const finalSize = new THREE.Vector3();
       finalBox.getSize(finalSize);
@@ -947,8 +1051,8 @@
       fit3DCamera(finalBox);
       switchMode('3d');
 
-      // Update UI
       populateSurfacePanel();
+      recalcGPR();
 
       document.getElementById('empty-props').style.display        = 'none';
       document.getElementById('model-info-section').style.display = 'block';
@@ -958,11 +1062,11 @@
       document.getElementById('clearSiteBtn').style.display        = 'block';
       document.getElementById('left-panel').classList.add('site-imported');
 
-      showFeedback(`${format} model loaded — ${surfaces.length} surfaces detected`);
+      showFeedback(`${format} model loaded \u2014 ${surfaces.length} surfaces detected`);
     }
 
     /* ============================================================
-       FILE PICKER — model import
+       FILE PICKER
     ============================================================ */
     document.getElementById('import3DModelBtn').addEventListener('click', () =>
       document.getElementById('modelFileInput').click());
@@ -979,7 +1083,7 @@
     });
 
     /* ============================================================
-       SITE BOUNDARY DRAWING (GeoJSON — unchanged)
+       SITE BOUNDARY DRAWING (GeoJSON)
     ============================================================ */
     function drawSiteBoundary(coords) {
       suppressResize = true;
@@ -1024,14 +1128,20 @@
 
       const area      = computePolygonArea(coords);
       const perimeter = computePolygonPerimeter(coords);
+
+      // Capture site area for GPR denominator
+      siteAreaM2 = area;
+
       document.getElementById('empty-props').style.display        = 'none';
       document.getElementById('site-info-section').style.display  = 'block';
       document.getElementById('gpr-section').style.display        = 'block';
-      document.getElementById('site-area').textContent            = area.toFixed(0) + ' m²';
+      document.getElementById('site-area').textContent            = area.toFixed(0) + ' m\u00b2';
       document.getElementById('site-perimeter').textContent       = perimeter.toFixed(0) + ' m';
       document.getElementById('site-points').textContent          = coords.length - 1;
       document.getElementById('clearSiteBtn').style.display       = 'block';
       document.getElementById('left-panel').classList.add('site-imported');
+
+      recalcGPR();
 
       suppressResize = false;
       requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -1044,7 +1154,7 @@
           fit2DCamera(new THREE.Box3().setFromObject(siteBoundaryLine));
         }
       }));
-      showFeedback(`Site loaded — ${coords.length - 1} points, ${area.toFixed(0)} m²`);
+      showFeedback(`Site loaded \u2014 ${coords.length - 1} points, ${area.toFixed(0)} m\u00b2`);
     }
 
     /* ============================================================
@@ -1090,19 +1200,17 @@
     }
 
     /* ============================================================
-       SURFACE CANVAS — outline drawn when a surface is active in 2D
+       SURFACE CANVAS OUTLINE
     ============================================================ */
     let surfaceCanvasOutline = null;
 
     function drawSurfaceCanvasOutline(surface) {
-      // Remove previous outline
       if (surfaceCanvasOutline) {
         scene.remove(surfaceCanvasOutline);
         surfaceCanvasOutline.geometry.dispose();
         surfaceCanvasOutline = null;
       }
 
-      // Build world-space bounding box of the surface mesh
       surface.mesh.geometry.computeBoundingBox();
       const box = new THREE.Box3()
         .copy(surface.mesh.geometry.boundingBox)
@@ -1111,24 +1219,20 @@
       const min = box.min;
       const max = box.max;
 
-      // For horizontal surfaces: draw rectangle in XZ plane at surface elevation
-      // For walls: draw rectangle using the two widest dimensions
       let pts;
       const n = surface.worldNormal;
       const isHorizontal = Math.abs(n.y) > 0.7;
 
       if (isHorizontal) {
-        const y = (min.y + max.y) / 2 + 0.05; // slightly above surface
+        const y = (min.y + max.y) / 2 + 0.05;
         pts = [
           new THREE.Vector3(min.x, y, min.z),
           new THREE.Vector3(max.x, y, min.z),
           new THREE.Vector3(max.x, y, max.z),
           new THREE.Vector3(min.x, y, max.z),
-          new THREE.Vector3(min.x, y, min.z), // close
+          new THREE.Vector3(min.x, y, min.z),
         ];
       } else {
-        // Wall: draw outline in world space using bounding box corners
-        // Determine which axis the wall faces along
         const facingX = Math.abs(n.x) > Math.abs(n.z);
         const offset  = 0.05;
         if (facingX) {
@@ -1170,7 +1274,7 @@
     }
 
     /* ============================================================
-       SURFACE CAMERA — fit orthographic camera to a selected surface
+       SURFACE CAMERA
     ============================================================ */
     function fitSurfaceCamera(surface) {
       surface.mesh.geometry.computeBoundingBox();
@@ -1191,7 +1295,6 @@
       let halfW, halfH, camPos, up, camNormal;
 
       if (canvasMode === 'surface') {
-        // Surface mode: camera aligns exactly to the surface normal
         const camDist = Math.max(size.x, size.y, size.z) * 3;
         camPos    = centre.clone().addScaledVector(n, camDist);
         up        = isHorizontal ? new THREE.Vector3(0, 0, -1) : new THREE.Vector3(0, 1, 0);
@@ -1199,9 +1302,7 @@
         halfW = isHorizontal ? (size.x / 2) * 1.3 : (Math.abs(n.x) > Math.abs(n.z) ? size.z : size.x) / 2 * 1.3;
         halfH = isHorizontal ? (size.z / 2) * 1.3 : size.y / 2 * 1.3;
       } else {
-        // Ortho mode: use standard architectural viewpoints
         if (isHorizontal) {
-          // Ground / roof: pure vertical top-down — camera exactly above, no angle
           const camDist = Math.max(size.x, size.z) * 3;
           camPos    = new THREE.Vector3(centre.x, centre.y + camDist, centre.z);
           up        = new THREE.Vector3(0, 0, -1);
@@ -1209,10 +1310,8 @@
           halfW = (size.x / 2) * 1.3;
           halfH = (size.z / 2) * 1.3;
         } else {
-          // Wall: snap to nearest cardinal elevation view (N/S/E/W)
           const camDist = Math.max(size.x, size.y, size.z) * 3;
           const facingX = Math.abs(n.x) > Math.abs(n.z);
-          // Snap normal to nearest axis
           const snapped = facingX
             ? new THREE.Vector3(Math.sign(n.x), 0, 0)
             : new THREE.Vector3(0, 0, Math.sign(n.z));
@@ -1224,7 +1323,6 @@
         }
       }
 
-      // Fit frustum to viewport aspect ratio
       if (halfW / halfH < aspect) halfW = halfH * aspect;
       else halfH = halfW / aspect;
 
@@ -1250,7 +1348,7 @@
     }
 
     /* ============================================================
-       MODE SWITCHING (2D <-> 3D)
+       MODE SWITCHING
     ============================================================ */
     function switchMode(mode) {
       currentMode = mode;
@@ -1263,7 +1361,6 @@
         controls = controls2D;
 
         if (selectedSurface) {
-          // Surface-aligned 2D canvas
           fitSurfaceCamera(selectedSurface);
           drawSurfaceCanvasOutline(selectedSurface);
           if (gridHelper) gridHelper.visible = false;
@@ -1271,9 +1368,8 @@
           const typeLabels = { ground: 'Ground plane', roof: 'Roof plane', wall: 'Wall plane', sloped: 'Sloped surface' };
           document.getElementById('status-mode').textContent = '2D';
           const modeLabel = canvasMode === 'ortho' ? 'Ortho' : 'Surface';
-          showFeedback(`2D canvas [${modeLabel}] — ${typeLabels[selectedSurface.type] || selectedSurface.type} — ${selectedSurface.area} m²`, 0);
+          showFeedback(`2D canvas [${modeLabel}] \u2014 ${typeLabels[selectedSurface.type] || selectedSurface.type} \u2014 ${selectedSurface.area} m\u00b2`, 0);
         } else {
-          // Default top-down plan view
           clearSurfaceCanvasOutline();
           if (gridHelper) gridHelper.visible = true;
           if (siteBoundaryLine) fit2DCamera(new THREE.Box3().setFromObject(siteBoundaryLine));
@@ -1292,14 +1388,13 @@
           : (siteBoundaryLine ? new THREE.Box3().setFromObject(siteBoundaryLine) : null);
         if (target) fit3DCamera(target);
         document.getElementById('status-mode').textContent = '3D';
-        showFeedback('3D View — click a surface to select it');
+        showFeedback('3D View \u2014 click a surface to select it');
       }
     }
 
     document.querySelectorAll('.mode-btn').forEach(btn =>
       btn.addEventListener('click', () => switchMode(btn.dataset.mode)));
 
-    // Right-click on 2D button shows canvas mode menu
     const menu2D   = document.getElementById('mode-2d-menu');
     const btn2D    = document.querySelector('.mode-btn[data-mode="2d"]');
 
@@ -1311,17 +1406,14 @@
     document.querySelectorAll('.mode-context-item').forEach(item => {
       item.addEventListener('click', () => {
         canvasMode = item.dataset.canvas;
-        // Update active state
         document.querySelectorAll('.mode-context-item').forEach(i =>
           i.classList.toggle('active', i.dataset.canvas === canvasMode));
         menu2D.style.display = 'none';
-        // Re-enter 2D with new mode if already in 2D with a surface
         if (currentMode === '2d' && selectedSurface) switchMode('2d');
         showFeedback(`2D mode: ${canvasMode === 'ortho' ? 'Ortho (standard viewpoints)' : 'Surface (normal-aligned)'}`);
       });
     });
 
-    // Close menu when clicking anywhere else
     document.addEventListener('click', e => {
       if (!btn2D.contains(e.target) && !menu2D.contains(e.target)) {
         menu2D.style.display = 'none';
@@ -1380,8 +1472,8 @@
         const panel   = document.getElementById(`${panelId}-panel`);
         panel.classList.toggle('collapsed');
         btn.textContent = panel.classList.contains('collapsed')
-          ? (panelId === 'left' ? '►' : '◄')
-          : (panelId === 'left' ? '◄' : '►');
+          ? (panelId === 'left' ? '\u25ba' : '\u25c4')
+          : (panelId === 'left' ? '\u25c4' : '\u25ba');
       });
     });
 
@@ -1454,6 +1546,7 @@
       surfaces        = [];
       hoveredSurface  = null;
       selectedSurface = null;
+      siteAreaM2      = 0;
       clearSurfaceCanvasOutline();
 
       document.getElementById('left-panel').classList.remove('site-imported');
@@ -1461,10 +1554,12 @@
       document.getElementById('site-info-section').style.display     = 'none';
       document.getElementById('model-info-section').style.display    = 'none';
       document.getElementById('surface-section').style.display       = 'none';
-      document.getElementById('gpr-section').style.display           = 'none';
-      document.getElementById('empty-props').style.display           = 'block';
+      document.getElementById('gpr-section').style.display              = 'none';
+      document.getElementById('plant-schedule-section').style.display   = 'none';
+      document.getElementById('empty-props').style.display              = 'block';
       document.getElementById('section-surfaces').style.display      = 'none';
       document.getElementById('surfaces-list').innerHTML              = '';
+      document.getElementById('gpr-value').textContent               = '\u2014';
       showFeedback('Site cleared');
     });
 
@@ -1502,16 +1597,348 @@
     /* ============================================================
        PLACEHOLDER BUTTONS
     ============================================================ */
-    document.getElementById('importImageBtn')?.addEventListener('click',      () => showFeedback('Image underlay — coming soon'));
-    document.getElementById('setScaleBtn')?.addEventListener('click',         () => showFeedback('Set Scale — coming soon'));
-    document.getElementById('setNorthBtn')?.addEventListener('click',         () => showFeedback('Set North — coming soon'));
-    document.getElementById('plantLibraryBtn')?.addEventListener('click',     () => showFeedback('Plant Library — coming soon'));
-    document.getElementById('clearPlantsBtn')?.addEventListener('click',      () => showFeedback('No plants to clear'));
-    document.getElementById('componentLibraryBtn')?.addEventListener('click', () => showFeedback('Component Library — coming soon'));
-    document.getElementById('generateReportBtn')?.addEventListener('click',   () => showFeedback('GPR Report — coming soon'));
+    document.getElementById('importImageBtn')?.addEventListener('click',      () => showFeedback('Image underlay \u2014 coming soon'));
+    document.getElementById('setScaleBtn')?.addEventListener('click',         () => showFeedback('Set Scale \u2014 coming soon'));
+    document.getElementById('setNorthBtn')?.addEventListener('click',         () => showFeedback('Set North \u2014 coming soon'));
+    document.getElementById('componentLibraryBtn')?.addEventListener('click', () => showFeedback('Component Library \u2014 coming soon'));
+    document.getElementById('generateReportBtn')?.addEventListener('click',   () => showFeedback('GPR Report \u2014 coming soon'));
 
     document.querySelectorAll('.tool-btn').forEach(btn =>
-      btn.addEventListener('click', () => showFeedback(`Tool: ${btn.dataset.action} — coming soon`)));
+      btn.addEventListener('click', () => showFeedback(`Tool: ${btn.dataset.action} \u2014 coming soon`)));
+
+    /* ============================================================
+       PLANT LIBRARY + GPR ENGINE  (v2 — multi-instance per surface)
+    ============================================================ */
+
+    // ── State ──────────────────────────────────────────────────
+    // Each surface has: surface.plants = [{ instanceId, speciesId, canopyArea }]
+    // GPR = Σ(instance.canopyArea × species.lai) / site_area
+
+    let plantDb          = [];  // loaded from plants_free.json
+    let plantModalOpen   = false;
+    let selectedPlant    = null;  // species highlighted in modal
+    let siteAreaM2       = 0;
+    let _instanceCounter = 0;     // monotonically increasing instance ID
+
+    // ── Load plant database ────────────────────────────────────
+    fetch('./plants_free.json')
+      .then(r => r.json())
+      .then(db => {
+        plantDb = db.species || [];
+        console.log(`GPRTool: loaded ${plantDb.length} species`);
+      })
+      .catch(err => console.warn('Plant library not loaded:', err));
+
+    // ── GPR: Σ(canopyArea × LAI) / site_area ────────────────────
+    function recalcGPR() {
+      const gprEl     = document.getElementById('gpr-value');
+      const numEl     = document.getElementById('gpr-numerator');
+      const breakRow  = document.getElementById('gpr-breakdown-row');
+      const targetEl  = document.getElementById('gpr-target');
+      const resultRow = document.querySelector('.gpr-result');
+      if (!gprEl) return;
+
+      let numerator = 0;
+      surfaces.forEach(s => {
+        (s.plants || []).forEach(inst => {
+          const sp = plantDb.find(p => p.id === inst.speciesId);
+          if (sp && inst.canopyArea > 0) numerator += inst.canopyArea * sp.lai;
+        });
+      });
+
+      let denom = siteAreaM2;
+      if (!denom) {
+        denom = surfaces.filter(s => s.type === 'ground').reduce((acc, s) => acc + s.area, 0);
+      }
+
+      if (denom <= 0 || numerator === 0) {
+        gprEl.textContent = '\u2014';
+        if (numEl)    numEl.textContent = '\u2014';
+        if (breakRow) breakRow.style.display = 'none';
+        if (resultRow) resultRow.classList.remove('over-target', 'under-target');
+        updateClearBtn();
+        return;
+      }
+
+      const gpr = numerator / denom;
+      gprEl.textContent = gpr.toFixed(2);
+      if (numEl)    numEl.textContent = numerator.toFixed(1) + ' m\u00b2';
+      if (breakRow) breakRow.style.display = '';
+
+      const target = parseFloat(targetEl?.value);
+      if (!isNaN(target) && target > 0 && resultRow) {
+        resultRow.classList.toggle('over-target',  gpr >= target);
+        resultRow.classList.toggle('under-target', gpr < target);
+      }
+      updateClearBtn();
+    }
+
+    function updateClearBtn() {
+      const anyPlanted = surfaces.some(s => (s.plants || []).length > 0);
+      const clearBtn = document.getElementById('clearPlantsBtn');
+      if (clearBtn) clearBtn.disabled = !anyPlanted;
+    }
+
+    // ── Add / remove plant instances ───────────────────────────
+    function addPlantInstance(surface, species, canopyArea) {
+      if (!surface.plants) surface.plants = [];
+      const inst = { instanceId: ++_instanceCounter, speciesId: species.id, canopyArea };
+      surface.plants.push(inst);
+      updateSurfaceListTag(surface);
+      renderSurfacePlantSchedule(surface);
+      recalcGPR();
+      showFeedback(`Added ${species.common} \u2014 ${canopyArea} m\u00b2, LAI ${species.lai}`);
+    }
+
+    function removePlantInstance(surface, instanceId) {
+      if (!surface.plants) return;
+      surface.plants = surface.plants.filter(i => i.instanceId !== instanceId);
+      updateSurfaceListTag(surface);
+      renderSurfacePlantSchedule(surface);
+      recalcGPR();
+      showFeedback('Plant instance removed');
+    }
+
+    function updateInstanceCanopyArea(surface, instanceId, newArea) {
+      const inst = (surface.plants || []).find(i => i.instanceId === instanceId);
+      if (inst) { inst.canopyArea = newArea; recalcGPR(); }
+    }
+
+    // ── Surface list badge: shows plant count ────────────────────
+    function updateSurfaceListTag(surface) {
+      const item = document.querySelector(`.surface-item[data-surface-id="${surface.id}"]`);
+      if (!item) return;
+      item.querySelector('.surface-plant-tag')?.remove();
+      const count = (surface.plants || []).length;
+      if (count > 0) {
+        const tag = document.createElement('span');
+        tag.className   = 'surface-plant-tag';
+        tag.textContent = count + (count === 1 ? ' plant' : ' plants');
+        item.appendChild(tag);
+      }
+    }
+
+    // ── Plant schedule table in right panel ────────────────────
+    function renderSurfacePlantSchedule(surface) {
+      const schedSection = document.getElementById('plant-schedule-section');
+      const listEl       = document.getElementById('surf-plant-list');
+      const countEl      = document.getElementById('surf-plant-count');
+      if (!schedSection || !listEl) return;
+
+      if (!surface) { schedSection.style.display = 'none'; return; }
+
+      schedSection.style.display = 'block';
+      const plants = surface.plants || [];
+      if (countEl) countEl.textContent = plants.length ? `(${plants.length})` : '';
+
+      listEl.innerHTML = '';
+
+      if (!plants.length) {
+        listEl.innerHTML = '<p style="font-size:11px;color:var(--text-secondary,#888);padding:4px 0">No plants on this surface. Click \u201cAdd Plant\u2026\u201d below.</p>';
+        return;
+      }
+
+      plants.forEach(inst => {
+        const sp = plantDb.find(p => p.id === inst.speciesId);
+        if (!sp) return;
+
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--chrome-border,#3a3a3a)';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.style.cssText = 'flex:1;min-width:0;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+        nameSpan.title = sp.scientific;
+        nameSpan.textContent = sp.common;
+
+        const laiSpan = document.createElement('span');
+        laiSpan.style.cssText = 'font-size:10px;color:var(--accent-light,#7fc47f);flex-shrink:0';
+        laiSpan.textContent = `LAI ${sp.lai}`;
+
+        const areaInput = document.createElement('input');
+        areaInput.type  = 'number';
+        areaInput.value = inst.canopyArea;
+        areaInput.min   = '0';
+        areaInput.step  = '0.1';
+        areaInput.title = 'Canopy area (m\u00b2)';
+        areaInput.style.cssText = 'width:52px;font-size:11px;background:var(--chrome-input,#1a1a1a);border:1px solid var(--chrome-border,#444);border-radius:3px;color:var(--text-primary,#e8e8e8);padding:2px 4px;text-align:right';
+        areaInput.addEventListener('change', () => {
+          const v = parseFloat(areaInput.value);
+          if (!isNaN(v) && v >= 0) updateInstanceCanopyArea(surface, inst.instanceId, v);
+        });
+
+        const m2Label = document.createElement('span');
+        m2Label.style.cssText = 'font-size:10px;color:var(--text-secondary,#888);flex-shrink:0';
+        m2Label.textContent = 'm\u00b2';
+
+        const removeBtn = document.createElement('button');
+        removeBtn.title = 'Remove';
+        removeBtn.style.cssText = 'background:none;border:none;color:var(--text-secondary,#888);cursor:pointer;font-size:14px;line-height:1;padding:0 2px;flex-shrink:0';
+        removeBtn.textContent = '\u00d7';
+        removeBtn.addEventListener('click', () => removePlantInstance(surface, inst.instanceId));
+        removeBtn.addEventListener('mouseenter', () => removeBtn.style.color = '#cc4444');
+        removeBtn.addEventListener('mouseleave', () => removeBtn.style.color = '');
+
+        row.append(nameSpan, laiSpan, areaInput, m2Label, removeBtn);
+        listEl.appendChild(row);
+      });
+    }
+
+    // ── Build plant list in modal ──────────────────────────────
+    function renderPlantList() {
+      const listEl   = document.getElementById('plant-list');
+      const query    = (document.getElementById('plant-search')?.value || '').toLowerCase();
+      const filter   = document.getElementById('plant-filter')?.value || 'all';
+      const surfType = selectedSurface?.type || null;
+
+      const matches = plantDb.filter(p => {
+        const typeOk = filter === 'all'    ? true
+                     : filter === 'bamboo' ? p.category === 'Bamboo'
+                     : p.surface_types.includes(filter);
+        const searchOk = !query
+          || p.common.toLowerCase().includes(query)
+          || p.scientific.toLowerCase().includes(query)
+          || p.category.toLowerCase().includes(query);
+        return typeOk && searchOk;
+      });
+
+      if (surfType) {
+        matches.sort((a, b) => {
+          const aOk = a.surface_types.includes(surfType) ? 0 : 1;
+          const bOk = b.surface_types.includes(surfType) ? 0 : 1;
+          if (aOk !== bOk) return aOk - bOk;
+          return b.lai - a.lai;
+        });
+      } else {
+        matches.sort((a, b) => b.lai - a.lai);
+      }
+
+      listEl.innerHTML = '';
+
+      if (!matches.length) {
+        listEl.innerHTML = '<p style="text-align:center;color:var(--text-secondary,#888);padding:20px;font-size:12px">No species found</p>';
+        refreshModalStatus();
+        return;
+      }
+
+      matches.forEach(p => {
+        const compatible = surfType ? p.surface_types.includes(surfType) : true;
+        const srcClass   = p.source.includes('Singapore') ? 'field'
+                         : p.source.includes('ORNL')      ? 'ornl' : 'lit';
+        const srcLabel   = p.source.includes('Singapore') ? 'Field'
+                         : p.source.includes('ORNL')      ? 'ORNL' : 'Lit';
+        const isSelected = selectedPlant && selectedPlant.id === p.id;
+
+        const div = document.createElement('div');
+        div.className = 'plant-item' + (isSelected ? ' selected-plant' : '');
+        div.style.opacity = (!surfType || compatible) ? '1' : '0.4';
+        div.innerHTML = `
+          <span class="plant-lai-badge">${p.lai.toFixed(1)}</span>
+          <span class="plant-names">
+            <div class="plant-common">${p.common}</div>
+            <div class="plant-sci">${p.scientific}</div>
+            <div class="plant-cat">${p.category}</div>
+          </span>
+          <span class="plant-src-badge ${srcClass}">${srcLabel}</span>`;
+
+        div.addEventListener('click', () => {
+          selectedPlant = p;
+          document.querySelectorAll('.plant-item').forEach(el => el.classList.remove('selected-plant'));
+          div.classList.add('selected-plant');
+          refreshModalStatus();
+        });
+        listEl.appendChild(div);
+      });
+
+      refreshModalStatus();
+    }
+
+    function refreshModalStatus() {
+      const statusEl  = document.getElementById('plant-modal-status');
+      const assignBtn = document.getElementById('plant-assign-btn');
+      if (!statusEl) return;
+
+      if (!selectedSurface) {
+        statusEl.textContent = 'Select a surface first.';
+        if (assignBtn) assignBtn.disabled = true;
+        return;
+      }
+
+      const surfType   = selectedSurface.type;
+      const compatible = selectedPlant ? selectedPlant.surface_types.includes(surfType) : false;
+
+      if (selectedPlant) {
+        statusEl.textContent = compatible
+          ? `Add ${selectedPlant.common} (LAI ${selectedPlant.lai}) to ${surfType} surface`
+          : `${selectedPlant.common} is not rated for ${surfType} surfaces`;
+        if (assignBtn) assignBtn.disabled = !compatible;
+      } else {
+        statusEl.textContent = `${surfType} surface \u2014 select a species above`;
+        if (assignBtn) assignBtn.disabled = true;
+      }
+    }
+
+    // ── Open / close modal ─────────────────────────────────────
+    function openPlantModal() {
+      if (!plantDb.length) {
+        showFeedback('Plant library not loaded \u2014 check browser console');
+        return;
+      }
+      if (!selectedSurface) {
+        showFeedback('Select a surface first, then click Add Plant');
+        return;
+      }
+      plantModalOpen = true;
+      selectedPlant  = null;
+      document.getElementById('plant-modal-overlay').classList.add('open');
+      document.getElementById('plant-search').value = '';
+      const filterEl = document.getElementById('plant-filter');
+      if (filterEl) filterEl.value = selectedSurface.type;
+      renderPlantList();
+      document.getElementById('plant-search').focus();
+      showFeedback('Plant Library \u2014 select a species to add', 0);
+    }
+
+    function closePlantModal() {
+      plantModalOpen = false;
+      selectedPlant  = null;
+      document.getElementById('plant-modal-overlay').classList.remove('open');
+    }
+
+    // ── Modal bindings ─────────────────────────────────────────
+    document.getElementById('plant-modal-close').addEventListener('click', closePlantModal);
+    document.getElementById('plant-modal-overlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('plant-modal-overlay')) closePlantModal();
+    });
+    document.getElementById('plant-search').addEventListener('input', renderPlantList);
+    document.getElementById('plant-filter').addEventListener('change', renderPlantList);
+
+    document.getElementById('plant-assign-btn').addEventListener('click', () => {
+      if (selectedSurface && selectedPlant) {
+        // Default canopy area = full surface area; user edits in schedule
+        addPlantInstance(selectedSurface, selectedPlant, selectedSurface.area);
+        closePlantModal();
+      }
+    });
+
+    // Escape closes modal (capture phase)
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && plantModalOpen) { e.stopPropagation(); closePlantModal(); }
+    }, true);
+
+    // ── Wire buttons ───────────────────────────────────────────
+    document.getElementById('plantLibraryBtn')?.addEventListener('click', openPlantModal);
+    document.getElementById('addPlantBtn')?.addEventListener('click', openPlantModal);
+
+    document.getElementById('clearPlantsBtn')?.addEventListener('click', () => {
+      const total = surfaces.reduce((acc, s) => acc + (s.plants || []).length, 0);
+      if (!total) { showFeedback('No plants assigned'); return; }
+      surfaces.forEach(s => { s.plants = []; updateSurfaceListTag(s); });
+      if (selectedSurface) renderSurfacePlantSchedule(selectedSurface);
+      recalcGPR();
+      showFeedback(`Cleared ${total} plant instance${total > 1 ? 's' : ''}`);
+    });
+
+    document.getElementById('gpr-target')?.addEventListener('input', recalcGPR);
 
     /* ============================================================
        MENU BAR
@@ -1525,10 +1952,37 @@
         else if (action === 'import-model')        document.getElementById('import3DModelBtn')?.click();
         else if (action === 'import-geojson-menu') document.getElementById('importGeoJSONBtn')?.click();
         else if (action === 'import-image')        document.getElementById('importImageBtn')?.click();
-        else    showFeedback(`${action} — coming soon`);
+        else    showFeedback(`${action} \u2014 coming soon`);
       }));
 
     showFeedback('GPRTool ready', 2000);
   </script>
+
+  <!-- Plant Library Modal -->
+  <div id="plant-modal-overlay">
+    <div id="plant-modal">
+      <div id="plant-modal-header">
+        <h3>Plant Library &mdash; Free Tier (56 species)</h3>
+        <button id="plant-modal-close" title="Close">&#x2715;</button>
+      </div>
+      <div id="plant-modal-toolbar">
+        <input type="text" id="plant-search" placeholder="Search by name or species&hellip;" autocomplete="off">
+        <select id="plant-filter">
+          <option value="all">All types</option>
+          <option value="ground">Ground</option>
+          <option value="roof">Roof</option>
+          <option value="wall">Wall</option>
+          <option value="sloped">Sloped</option>
+          <option value="bamboo">Bamboo</option>
+        </select>
+      </div>
+      <div id="plant-list"></div>
+      <div id="plant-modal-footer">
+        <span id="plant-modal-status">Select a surface, then choose a species.</span>
+        <button id="plant-assign-btn" disabled>Add to Surface</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

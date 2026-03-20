@@ -19,6 +19,85 @@
 
 ## Session Log
 
+### 2026-03-20 (Session 4 — Phase 2a: Plant Library + GPR Calculation Engine)
+
+#### What was done
+
+**`plants_free.json` — created** (`frontend/plants_free.json`)
+- 56 species free-tier plant library, bundled as static JSON (no backend required)
+- 24 species from Singapore field measurements (Boon & Tan 2009) — primary source, urban-measured
+- 12 species from ORNL/TRY with explicit urban calibration warning in source field
+- 14 common urban species from literature (turf, sedum, ivy, buxus, bamboos etc.)
+- Each entry: `{ id, common, scientific, lai, category, surface_types[], source }`
+- `surface_types[]` field controls which surface types the species is compatible with
+- **Bamboo group**: 6 species — *B. multiplex*, *B. vulgaris*, *B. oldhamii*, *B. textilis var. gracilis*, *Phyllostachys aurea*, *P. edulis* (Moso) — LAI range 5.50–8.10
+
+**Plant Library modal — built** (in `index.html`)
+- Triggered by "Plant Library…" button (left panel) or "Add Plant…" button (surface schedule)
+- Search by common name, scientific name, or category
+- Surface type filter: All / Ground / Roof / Wall / Sloped / **Bamboo** (category filter)
+- Species sorted: compatible species first (by LAI desc), then incompatible (dimmed to 40%)
+- Source badges: Field (green) / ORNL (amber) / Lit (blue) — provenance visible at a glance
+- LAI badge displayed prominently for every species
+- "Add to Surface" button — adds species instance to selected surface's plant schedule
+
+**Data model refactored — multi-instance per surface**
+- Old model: `surface.plantId` — one species per surface
+- New model: `surface.plants = [{ instanceId, speciesId, canopyArea }]`
+- Each surface can have any number of plant instances of any species
+- Each instance has its own canopy area (m²), editable in the schedule
+- `_instanceCounter` — monotonically increasing ID, no collisions on remove/re-add
+
+**GPR formula corrected**
+- Old (wrong): `Σ(surface.area × LAI) / site_area`
+- New (correct): `Σ(instance.canopyArea × species.LAI) / site_area`
+- Canopy area is the plan area of each individual plant's canopy, not the whole surface
+- Default canopy area on add = full surface area (user trims down in schedule)
+- Numerator `Σ(canopy×LAI)` shown as a breakdown row below GPR value
+
+**Plant schedule panel — built** (right panel, surface section)
+- Appears below surface properties when a surface is selected
+- Lists all plant instances on the surface: species name | LAI badge | canopy area input | m² | × remove
+- Canopy area is an editable number input — changing it triggers immediate GPR recalc
+- × remove button removes that instance only
+- Empty state message prompts user to click "Add Plant…"
+- "Add Plant…" button at bottom of schedule opens modal pre-filtered to surface type
+
+**Surface list badges**
+- Left panel surface list items now show a green badge: "1 plant" / "N plants" per surface
+
+**`body.html` updated**
+- Removed old `selection-section` (`sel-plant`, `sel-lai` fields)
+- Added `plant-schedule-section` with `surf-plant-list` div and `addPlantBtn`
+- Added `gpr-breakdown-row` to GPR panel (shows numerator)
+- Removed `Plant Schedule` toggle (replaced by always-visible schedule panel)
+
+#### Architecture note — module split deferred to Phase 3
+- `index.html` is ~80KB and growing
+- Recommended split at Phase 3 start: `js/state.js`, `js/plants.js`, `js/gpr.js`, `js/scene.js`, `js/surfaces.js`, `js/geo.js`
+- Rationale: mid-build refactor carries risk; shared state wiring is a half-day job
+- Do this before terrain/Phase 3 work begins — not during Phase 2
+
+#### Phase 2a status: ✅ Complete
+- Plant library loaded from JSON ✅
+- Multi-instance plant model ✅
+- Correct GPR formula ✅
+- Editable canopy area per instance ✅
+- Plant schedule in right panel ✅
+- Bamboo group (6 species) ✅
+- Bamboo filter in modal ✅
+
+#### Pending — Phase 2b onwards
+- [ ] Deploy to Vercel (run `deploy.bat` with message "Phase 2a: plant library + GPR engine")
+- [ ] LAI database merge — Singapore CSV → `LAI_categorised.csv` (duplicates unresolved)
+- [ ] Terrain layer — OpenTopography SRTM or Mapbox elevation mesh
+- [ ] Image underlay with scale calibration
+- [ ] DXF import per surface canvas
+- [ ] GPR report (PDF export)
+- [ ] Module split (`js/state.js` etc.) — do before Phase 3
+
+---
+
 ### 2026-03-19 (Session 3 — Design paradigm + MVP Phase 1 build)
 
 #### What was done

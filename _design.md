@@ -858,6 +858,52 @@ taskkill /PID <pid> /F
 - Urban Redevelopment Authority, Singapore. *Landscaping for Urban Spaces and High-Rises (LUSH)* guidelines.
 - Building and Construction Authority, Singapore. *Green Mark* scheme technical guidelines.
 
+## Phase 2 — Plant Placement and GPR Calculation
+
+### Core workflow
+1. User selects a surface → enters 2D canvas
+2. Picks a plant category from the toolbar (Tree / Shrub / Ground cover / Climber / Green roof)
+3. Places symbol on canvas using the appropriate tool
+4. Optionally assigns a species from the LAI database (or uses category default LAI)
+5. GPR calculated and updated automatically
+
+### Plant categories and symbols
+
+| Category | Symbol | Tool | LAI source |
+|---|---|---|---|
+| Tree | Circle (canopy radius) | Click to place | Species LAI × canopy area |
+| Shrub | Small filled circle | Click to place | Species LAI × canopy area |
+| Ground cover / Grass | Hatch polygon | Draw closed polygon | Category default LAI × bed area |
+| Climber | Vertical line pattern | Surface fill toggle | Species LAI × surface area |
+| Green roof / Lawn | Flat hatch | Surface fill toggle | Category default LAI × surface area |
+
+### Database linkage philosophy
+- User selects species from the LAI database — LAI is already known, never entered manually
+- Plant symbol type (category) determines how area is calculated for GPR
+- Species assignment is optional — category default LAI used if no species selected
+- Database is an ongoing enrichment task, separate from the tool
+- Singapore field CSV (37 species, Boon + Dr Tan) is the primary source and highest priority for merge
+- ORNL/TRY values require urban calibration before use — flagged as future research
+
+### GPR calculation per element
+- **Tree**: LAI × projected canopy area (circle area from radius)
+- **Shrub**: LAI × projected canopy area
+- **Ground cover**: LAI × bed polygon area
+- **Climber / Vertical green**: LAI × wall surface area (user-defined coverage %)
+- **Green roof**: LAI × surface area
+- **Total GPR** = sum of all green element LAI×area / site area
+
+### Phase 2 build order
+1. Plant toolbar in left panel (category buttons)
+2. Tree placement tool — click on canvas, draw canopy circle
+3. Ground cover tool — draw closed polygon on canvas
+4. Surface fill tool — assign LAI to entire surface
+5. GPR live calculation and display in right panel
+6. Species picker — dropdown linked to LAI database CSV
+7. Plant schedule — list of all placed elements with species, area, LAI, contribution
+
+---
+
 ## Curved and Complex Building Geometry
 
 **Status**: Deferred — V2+
