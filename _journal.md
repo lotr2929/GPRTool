@@ -19,6 +19,74 @@
 
 ## Session Log
 
+---
+
+### 2026-03-26 (Session 5 — Repo cleanup, site research, import format decisions)
+
+#### What was done
+
+**Repo cleanup**
+- Audited all files across root, `frontend/js/`, `backend/`, `test-data/`
+- Created `_archive/` and moved all dead/obsolete files there
+- Dead JS: `frontend/js/main.js`, `frontend/js/camera.js` — never imported by `index.html`; app logic is inline in `index.html`
+- Dead backend: `backend/app.py`, `backend/exporters.py`, `backend/geometry.py` — Render-era FastAPI, replaced by Vercel browser-only in Session 2
+- Completed scripts: `accdb_export.py` (Session 1 job done), `lai_count.py` (superseded by `lai_explorer.py`)
+- Wrong repo: `Modelfile` — Ollama config, belongs in Mobius not GPRTool
+- Superseded: `requirements.txt`, `GPRTool_Development_Plan.docx`, `SketchUp layout.png`, `close.bat`, old `start.bat`
+- Credentials: `Linux Login.txt` → `_archive/` ⚠️ **scrub from git history if repo ever goes public**
+- Scratch: `test-data/test_site_scratch.geojson`
+- Rewrote `start.bat` — now just starts `python server.py` on port 8000, no backend
+- Created `_map.md` — full repo structure, data flow, key files reference, architecture overview
+- Created `_session.md` — current status snapshot, updated each session
+- Created `_archive/README.md` — documents every archived file and reason
+
+**Site research: 30 Beaufort Street, Northbridge**
+- Confirmed as primary GPRTool demo site: ~9,579 m², entire city block (Beaufort/James/Stirling/Roe Sts)
+- Planning framework: CPS2 Precinct 1 Northbridge; draft LPS3 (16+ storeys, ~100,000 m² GFA STCA); Amendment 41 (Northbridge Special Entertainment Precinct, gazetted Feb 2026 — restricts residential in Core area)
+- R-code: none applicable (City Centre zone, not residential)
+- Sustainability obligations: NCC Section J, NatHERS 7-star (apartments, WA from May 2025), NABERS Energy (5-star office target, mandatory disclosure ≥1,000 m²), Green Star Buildings v1
+- NCC 2025 note: WA adoption date unconfirmed; mandatory rooftop PV (J9D5) changes Green Star energy credit strategy
+- Produced two documents in `test-data/`:
+  - `30_Beaufort_Street_Site_Analysis.docx` — 12-page planning/sustainability/GPR report
+  - `30_Beaufort_Street_GPR_Recommendations.docx` — GPR targets with Kings Park baseline; corrects Gemini AI attribution error
+
+**GPR recommendations — key conclusions**
+- GPR metric: Ong, B.L. (2003) Landscape and Urban Planning 63(4) 197–211. NOT Wong et al. 2003.
+- Kings Park (Banksia/Jarrah woodland, Swan Coastal Plain): average LAI ~2.0 → Ecological Parity threshold = GPR 2.0
+- UHI penalty in Northbridge requires surplus above parity → GPR 4.0 recommended as primary target
+- Three tiers: Minimum 1.5 (sub-parity), Optimum 3.5–4.5 (regenerative), Maximum 6.0+ (biophilic)
+- Perth native LAI coefficients documented: large canopy trees 2.5, heath shrubs 1.8, intensive roof garden 2.5–3.0
+
+**Import format research and decisions**
+- Workflow 1 (full model import): OBJ first, IFC later
+- Workflow 2 (site boundary): GeoJSON already done; DXF next priority
+- Third-party services: CADmapper, TopoExport, Equator Studios — all paid, output DXF/OBJ
+- OSM and Overture Maps: NOT suitable for survey-accurate GPR boundaries
+- Landgate SLIP: best WA source — survey-accurate cadastral, free for personal use
+- Downloaded 30 Beaufort Street parcel → `test-data/30_beaufort_street_parcel.geojson`
+  - land_id: 1818174, locality: PERTH, 19 vertices
+
+#### Session 5 status
+- ✅ Repo cleaned and archived
+- ✅ `_map.md` created
+- ✅ `_session.md` created
+- ✅ `_archive/README.md` created
+- ✅ `start.bat` rewritten
+- ✅ Site documents created
+- ✅ Parcel GeoJSON downloaded and saved
+- ⏳ GeoJSON import not yet tested with the new parcel (session ended before testing)
+- ⏳ No deploy this session
+
+#### Pending from Session 5
+- [ ] Test GeoJSON import with `30_beaufort_street_parcel.geojson` — confirm area ~9,579 m², perimeter ~390 m
+- [ ] Agree on GeoJSON visual style (Boon was previously unhappy with the appearance)
+- [ ] Implement DXF import
+- [ ] Singapore LAI CSV merge into `LAI_categorised.csv`
+- [ ] Landgate SLIP address lookup (WA convenience feature)
+- [ ] Deploy to Vercel
+
+---
+
 ### 2026-03-20 (Session 4 — Phase 2a: Plant Library + GPR Calculation Engine)
 
 #### What was done
@@ -79,16 +147,9 @@
 - Do this before terrain/Phase 3 work begins — not during Phase 2
 
 #### Phase 2a status: ✅ Complete
-- Plant library loaded from JSON ✅
-- Multi-instance plant model ✅
-- Correct GPR formula ✅
-- Editable canopy area per instance ✅
-- Plant schedule in right panel ✅
-- Bamboo group (6 species) ✅
-- Bamboo filter in modal ✅
 
 #### Pending — Phase 2b onwards
-- [ ] Deploy to Vercel (run `deploy.bat` with message "Phase 2a: plant library + GPR engine")
+- [ ] Deploy to Vercel
 - [ ] LAI database merge — Singapore CSV → `LAI_categorised.csv` (duplicates unresolved)
 - [ ] Terrain layer — OpenTopography SRTM or Mapbox elevation mesh
 - [ ] Image underlay with scale calibration
@@ -112,208 +173,45 @@
 - Consolidated all documentation into `_design.md` and `_journal.md`
 - Retired: `_devguide.md`, `_devguide-summary.md`, `_devstartup.md`, `GPR_Documentation.md`, `Next Steps.md`
 
-**MVP Phase 1 — built**
-
-*`index.html`*
-- Added `three/addons/` CDN importmap entry (jsdelivr, three@0.160)
-- Imported `OBJLoader` and `GLTFLoader` from CDN
-- `loadOBJ(file)` — OBJLoader, progress feedback, error handling
-- `loadGLTF(file)` — GLTFLoader, handles both .gltf and .glb
-- `loadIFC(file)` — stub, shows "coming in next build"
-- `onModelLoaded(group, filename, format)` — common handler: centres model at origin, sits it on Y=0, adds to scene, runs surface detection, fits 3D camera, switches to 3D mode, populates UI
-- `detectSurfaces(group)` — traverses all mesh children, computes world-space average normal per submesh, classifies as ground/roof/wall/sloped by normal direction and elevation, estimates area and elevation, assigns colour-coded material
-- `populateSurfacePanel()` — builds surface list in left panel grouped by type with dot indicators and area labels; populates right panel model summary (surface count, ground/roof/wall counts)
-- `hoverSurface(s)` / `unhoverSurface(s)` — yellow highlight material on hover, list item highlight
-- `selectSurface(s)` — green highlight material on click, list item selected state, right panel surface details (type, area, elevation, normal angle)
-- `deselectSurface()` — clears selection on Esc or click-empty
-- Raycaster on `pointermove` — hover detection in 3D mode
-- Raycaster on `click` — surface selection in 3D mode
-- `modelFileInput` file picker — routes to correct loader by extension
-- `import3DModelBtn` wires to file picker
-- `clearSiteBtn` — now also removes imported model and clears surfaces array
-- `fitSiteBtn` — now uses importedModel if present, falls back to siteBoundaryLine
-- Menu `import-model` action wired to button
-- Surfaces panel (`section-surfaces`) shown/hidden by model load/clear
-- `switchMode('3d')` — status bar now says "click a surface to select it"
-- `MAT` object — colour-coded materials: model (grey), ground (green), roof (amber), wall (blue), sloped (grey), hover (yellow), selected (bright green)
-
-*`body.html`*
-- Added `import3DModelBtn` and `modelFileInput` to Site panel
-- Renamed `importGeoJSONBtn` label to "Import Site Boundary…"
-- Added `section-surfaces` collapsible section (hidden until model loads)
-- `surfaces-list` div for dynamically injected surface items
-- Added note to Building panel: "Surface creation tools — not full architectural CAD"
-- Right panel: added `model-info-section` (filename, format, surface count breakdown)
-- Right panel: added `surface-section` (type, area, elevation, normal angle)
-- Empty state message updated to "Import a 3D model or site boundary to begin"
-- Status bar message updated
-
-*`header.html`*
-- File menu: replaced generic Import/Export with specific items:
-  - Import 3D Model…
-  - Import Site Boundary…
-  - Import Site Image…
-  - Import Landscape DXF… (stub)
-  - Export GPR Annotations… (stub)
-  - Export GPR Report… (stub)
-
-*`styles.css`*
-- Added `--chrome-hover` and `--accent-mid` CSS variables
-- Added `.surface-item`, `.surface-dot`, `.surface-label`, `.surface-area` rules
-- Added `.tool-group-note` rule
-- Surface dot colours: ground #7ab648, roof #e8a020, wall #5b9bd5, sloped #a0a0a0
-
-#### Surface classification logic
-- Face normal Y > 0.7 → horizontal → ground if elevation < 0.5m, else roof
-- Face normal |Y| < 0.3 → wall
-- Face normal Y < -0.5 → underside → skipped
-- Otherwise → sloped
-- Area: horizontal surfaces use XZ footprint; wall/sloped use two largest dimensions
-
-#### Known limitations (to address in next session)
-- Surface detection is per submesh (OBJ group/object), not per face — a single submesh with mixed faces gets classified by average normal. This is sufficient for typical massing models but may misclassify complex geometry.
-- IFC import is a stub — no geometry loaded yet
-- No UV unwrapping yet — that is Phase 2
-
-#### Pending
-- [ ] Push to GitHub / Vercel
-- [ ] IFC import (web-ifc WASM) — deferred to after Phase 2
-- [ ] Phase 2: per-surface landscape design tools
-
----
-
-### 2026-03-19 (Session 3 continued — Phase 1 polish + Phase 2 prep)
-
-#### What was done
-
-**Surface 2D canvas — built (Phase 1 completion)**
-- `drawSurfaceCanvasOutline(surface)` — draws green boundary rectangle on selected surface in 2D view; horizontal surfaces get XZ rectangle, walls get vertical rectangle facing their normal
-- `clearSurfaceCanvasOutline()` — removes outline, called on deselect, mode switch to 3D, and Clear Site
-- `fitSurfaceCamera(surface)` — configures orthographic camera to look directly at selected surface; horizontal → top-down at surface elevation; wall → front-on elevation; frustum sized to surface bounding box; stores surfaceCentre/surfaceNormal/surfaceUp on camera.userData for pan
-- `switchMode('2d')` — now branches on `selectedSurface`: if selected → surface canvas; if not → top-down plan view
-- Status bar shows surface type and area when in canvas mode (persistent, no timeout)
-
-**Four pre-Phase-2 fixes applied**
-- Pan in surface canvas mode: moves along surface U/V axes (cross product of up × normal) not world X/Z
-- Zoom in surface canvas mode: scales orthographic frustum directly, not via zoom2D
-- `deselectSurface()`: if in 2D surface canvas, switches to 3D model view so user can select the next surface
-- `clearSiteBtn`: calls `clearSurfaceCanvasOutline()` so outline is never orphaned
-
-**Visual refinements**
-- All surfaces render as flat white (`MeshBasicMaterial`) — professional massing model style
-- Edge overlay: dark grey (`#444444`) lines via `EdgesGeometry`, `renderOrder=1`, faces pushed back with `polygonOffset`
-- Viewport background: light grey (`#e8e8e8`) so white model is readable
-- Hover: neutral grey (`#d8d8d8`); Selected: pale sage green (`#c8e8c8`)
+**MVP Phase 1 — built** (in `index.html`)
+- OBJLoader + GLTFLoader from CDN
+- `onModelLoaded()` — centres model, sits on Y=0, surface detection, fits camera, populates UI
+- `detectSurfaces()` — coplanar patch extraction, normal classification, area calculation
+- Surface hover + selection (raycaster + panel list)
+- `body.html`, `header.html`, `styles.css` — full UI built
+- Edge overlay, surface canvas outline, pan/zoom in 2D canvas mode
 
 #### Phase 1 status: ✅ Complete
-All Phase 1 deliverables met:
-- OBJ import ✅
-- glTF/GLB import ✅
-- Surface detection from face normals ✅
-- Surface selection (click + panel list) ✅
-- 2D surface canvas with correct camera orientation ✅
-- Surface canvas outline ✅
-- Pan/zoom in surface canvas mode ✅
-
-#### Pending
-- [ ] Push all changes to GitHub / Vercel
-- [ ] IFC import (deferred — after Phase 2)
-- [ ] Begin Phase 2: landscape design on surface canvas
-
----
-
-### 2026-03-19 (Session 3 continued — edge overlay + 2D canvas polish)
-
-#### What was done
-
-**Edge overlay — resolved**
-- Root cause: OBJ has separate mesh objects per face with no shared vertices, so `EdgesGeometry` across merged geometry could not find shared edges
-- Solution: two-part approach:
-  1. Per-mesh `LineLoop` from unique vertices — draws each face perimeter
-  2. OBJ `l` directives — explicit junction lines added to test model at every surface meeting point (podium base, podium top, tower base, tower top)
-- Junction lines styled dark grey `0x444444` at `renderOrder 2` in `onModelLoaded`
-- For real-world models (not test OBJ), code-based junction detection via edge hash map is in place
-
-**2D canvas mode — right-click menu**
-- Right-click 2D button → context menu with Ortho / Surface options
-- Ortho: pure vertical top-down for ground/roof; snapped cardinal elevation for walls
-- Surface: camera aligns exactly to surface normal
-- Status bar shows `[Ortho]` or `[Surface]` label
-- `canvasMode` state persists across surface selections
-
-**Camera fixes**
-- Ortho mode for horizontal surfaces: camera always placed exactly above at `(centre.x, centre.y + dist, centre.z)` — never follows surface normal slope
-- This eliminates the double-line artefact caused by a 3° off-axis camera making wall edges appear to have thickness in plan view
-- Wall ortho mode: camera snapped to nearest cardinal direction (N/S/E/W)
-- Pan in surface canvas: moves along surface U/V axes, not world X/Z
-- Zoom in surface canvas: scales orthographic frustum directly
-
-**Deselect behaviour**
-- `deselectSurface()` → always switches to 3D so user can select next surface
-
-**Site outline fix**
-- Edge overlay draws actual mesh vertices (not bounding box) so sloped/non-rectangular sites display correct outline shape
 
 ---
 
 ### 2026-03-18 (Session 2 — UI redesign + Vercel migration)
 
-**Duration**: Full day session
-**Boon's status**: Post knee surgery day 1 — working from home
-
 #### What was done
 
-**Vercel migration — completed**
-- Renamed project from GPRToolDemo → GPRTool-Demo (GitHub, Vercel, local folder, all code references)
-- Deleted Render service
-- Deployed to Vercel: https://gprtool-demo.vercel.app ✅
-- Git remote updated to new repo name
-- Root directory set to `frontend/` in Vercel
-- Auto-deploy from GitHub main confirmed working
+**Vercel migration** — Render → Vercel. Project renamed GPRToolDemo → GPRTool-Demo.
+Live at https://gprtool-demo.vercel.app ✅
 
-**GeoJSON site import — working**
-- Import GeoJSON button → file picker → draws orange site boundary in 2D view
-- Equirectangular projection: lat/lon → local metres (accurate to ~1% at site scale)
-- Site area (Shoelace formula) and perimeter calculated and displayed
-- Camera fits to site boundary on import
-- Grid and axes scale dynamically to match site dimensions
-- Clear Site button removes boundary and resets properties panel
+**GeoJSON site import** — working. Orange boundary, area/perimeter, 2D camera fit.
 
-**UI redesign — complete**
-- Design reference: SketchUp + PD:Site Designer (Andrew Marsh)
-- Font: Outfit (Google Fonts)
-- Header: dark forest green #1e3d1e, 68px
-- Panels: warm neutral grey #f0efed, 220px wide, collapsible
-- Dropdown menus: light green #e8ece4 with dark green text
-- Tool buttons: SketchUp-style left accent border on hover/active
-- SVG line icons throughout
-- 2D/3D toggle: hardcoded in body.html, z-index 500
-- Status bar: dark green, mode badge, message
-- GPR result block: dark green #2d5a24 with large white number
+**Full UI redesign** — SketchUp + PD:Site Designer reference. Outfit font, forest green header,
+warm grey panels, SVG icons, 2D/3D toggle, status bar.
 
-**Menu architecture — finalised** (see `_design.md` section 8)
-
-**Keyboard shortcuts wired**: Ctrl+F, Ctrl+G, Ctrl+Z, Ctrl+Shift+Z, Esc
-
-#### Decisions made
-- No Vite/bundler — importmap resolves `"three"` to local file
-- No Bézier/Spline in MVP
-- Ctrl+A = Select All; Ctrl+Shift+S = Save As; Ctrl+Shift+Z = Redo
-- `.gpr` = native session format (JSON, schema TBD)
+#### Decisions
+- No Vite/bundler — importmap
+- `.gpr` = native session format
+- Keyboard shortcuts: Ctrl+F, Ctrl+G, Ctrl+Z, Ctrl+Shift+Z, Esc
 
 ---
 
 ### 2026-03-17 (Session 1 — ~90 mins before surgery)
 
-- First joint review of codebase and all dev guide files
-- Reviewed entire GPR - LAI Values folder; confirmed Access DB is empty
-- Built full LAI processing pipeline; 760 species processed and categorised
-- Clarified core vision: GPR is the point, database is the IP, CAD is scaffolding
-- Identified urban context as the key scientific gap in all existing databases
-- Identified Mobius Factory as mechanism for Urban Greenery Knowledge Layer
+- Joint codebase review
+- LAI processing pipeline built; 760 species processed and categorised
+- Core vision clarified: GPR is the point, database is the IP, CAD is scaffolding
 - Boon entered surgery — development paused
 
-#### LAI Database — Final Category Counts
+#### LAI Database — Category Counts
 | Category | Count |
 |---|---|
 | Tree | 248 |
