@@ -202,10 +202,11 @@
 
     /* North Point */
     #north-point {
-      position: fixed; width: 56px; height: 56px;
+      position: fixed; width: 64px; height: 72px;
       cursor: grab; z-index: 500; user-select: none;
       filter: drop-shadow(0 2px 5px rgba(0,0,0,0.28));
       touch-action: none;
+      pointer-events: all;
     }
     #north-point:active { cursor: grabbing; }
     #north-ctx-menu {
@@ -3059,16 +3060,16 @@
        NORTH POINT
     ============================================================ */
     const NP_KEY  = 'gprtool-north-pos';
-    const NP_SIZE = 56, NP_MARGIN = 16;
+    const NP_W = 64, NP_H = 72, NP_MARGIN = 16;
     const northEl  = document.getElementById('north-point');
     const northCtx = document.getElementById('north-ctx-menu');
 
     function northDefaultPos() {
-      return { left: window.innerWidth - NP_MARGIN - NP_SIZE, top: window.innerHeight - NP_MARGIN - NP_SIZE };
+      return { left: window.innerWidth - NP_MARGIN - NP_W, top: window.innerHeight - NP_MARGIN - NP_H };
     }
     function applyNorthPos(left, top) {
-      left = Math.max(0, Math.min(window.innerWidth  - NP_SIZE, left));
-      top  = Math.max(0, Math.min(window.innerHeight - NP_SIZE, top));
+      left = Math.max(0, Math.min(window.innerWidth  - NP_W, left));
+      top  = Math.max(0, Math.min(window.innerHeight - NP_H, top));
       northEl.style.left = left + 'px';
       northEl.style.top  = top  + 'px';
       try { localStorage.setItem(NP_KEY, JSON.stringify({ left, top })); } catch {}
@@ -3139,6 +3140,28 @@
 
     showFeedback('GPRTool ready', 2000);
   </script>
+
+  <!-- North Point — direct child of body so position:fixed works correctly -->
+  <svg id="north-point" viewBox="0 0 64 72" xmlns="http://www.w3.org/2000/svg" title="North Point — drag to move, right-click for options">
+    <!-- N label -->
+    <text x="32" y="11" text-anchor="middle" font-size="13" font-family="Outfit, Georgia, serif" font-weight="700" fill="#1a1a1a">N</text>
+    <!-- Circle -->
+    <circle cx="32" cy="40" r="22" fill="white" fill-opacity="0.90" stroke="#555" stroke-width="1.5"/>
+    <!-- Crosshair ticks -->
+    <line x1="32" y1="15" x2="32" y2="20" stroke="#555" stroke-width="1.5"/>
+    <line x1="32" y1="60" x2="32" y2="65" stroke="#555" stroke-width="1.5"/>
+    <line x1="7"  y1="40" x2="12" y2="40" stroke="#555" stroke-width="1.5"/>
+    <line x1="52" y1="40" x2="57" y2="40" stroke="#555" stroke-width="1.5"/>
+    <!-- Needle: filled north half (black), open south half (outline only) -->
+    <polygon points="32,20 38,40 32,35" fill="#1a1a1a"/>
+    <polygon points="32,60 26,40 32,45" fill="none" stroke="#555" stroke-width="1.2"/>
+  </svg>
+
+  <!-- North Point context menu -->
+  <div id="north-ctx-menu" style="display:none">
+    <div id="north-ctx-reset">Reset to Default Position</div>
+    <div id="north-ctx-hide">Hide North Point</div>
+  </div>
 
   <!-- Plant Library Modal -->
   <div id="plant-modal-overlay">
