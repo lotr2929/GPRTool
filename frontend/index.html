@@ -3059,7 +3059,7 @@
     /* ============================================================
        NORTH POINT
     ============================================================ */
-    const NP_KEY  = 'gprtool-north-pos';
+    const NP_KEY  = 'gprtool-north-pos-v2';  // v2 busts stale localStorage
     const NP_W = 64, NP_H = 72, NP_MARGIN = 16;
     const northEl  = document.getElementById('north-point');
     const northCtx = document.getElementById('north-ctx-menu');
@@ -3083,7 +3083,7 @@
     if (northEl) {
       try {
         const saved = JSON.parse(localStorage.getItem(NP_KEY));
-        if (saved?.left != null) { northEl.style.left = saved.left + 'px'; northEl.style.top = saved.top + 'px'; }
+        if (saved?.left > 0 && saved?.top > 0) { applyNorthPos(saved.left, saved.top); }
         else resetNorthPos();
       } catch { resetNorthPos(); }
 
