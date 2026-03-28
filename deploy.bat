@@ -1,25 +1,45 @@
 @echo off
-REM deploy.bat - Commit to GitHub and deploy to Vercel
-REM Usage: deploy.bat
-REM Prompts for a commit message, pushes to GitHub, then deploys to Vercel.
-
+cd /d "%~dp0"
 echo ========================================
 echo  GPRTool Deploy
 echo ========================================
+echo.
+
+REM -----------------------------------------
+REM 0. Check deploy.env exists
+REM -----------------------------------------
+if not exist deploy.env (
+    echo ERROR: deploy.env not found.
+    echo Create it with VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID.
+    pause
+    exit /b 1
+)
+
+REM Load Vercel credentials
+for /f "usebackq tokens=1,* delims==" %%A in ("deploy.env") do (
+    if "%%A"=="VERCEL_TOKEN"      set VERCEL_TOKEN=%%B
+    if "%%A"=="VERCEL_PROJECT_ID" set VERCEL_PROJECT_ID=%%B
+    if "%%A"=="VERCEL_TEAM_ID"    set VERCEL_TEAM_ID=%%B
+)
+
+if "%VERCEL_TOKEN%"=="PASTE_YOUR_TOKEN_HERE" (
+    echo ERROR: VERCEL_TOKEN not set in deploy.env.
+    echo Copy your personal access token from Mobius\Mobius_Vercel\deploy.env.
+    pause
+    exit /b 1
+)
 
 REM -----------------------------------------
 REM 1. Stage all changes
 REM -----------------------------------------
-echo.
 echo Staging all changes...
 git add -A
 
 REM Check if there is anything to commit
 git diff-index --quiet HEAD
 if %errorlevel% equ 0 (
-    echo.
-    echo No changes to commit. Deploying current HEAD to Vercel anyway...
-    goto :deploy
+    echo No changes to commit. Deploying current HEAD to Vercel...
+    goto :push
 )
 
 REM -----------------------------------------
@@ -40,7 +60,6 @@ REM -----------------------------------------
 echo.
 echo Committing...
 git commit -m "%commit_msg%"
-
 if %errorlevel% neq 0 (
     echo ERROR: git commit failed.
     pause
@@ -48,22 +67,27 @@ if %errorlevel% neq 0 (
 )
 
 REM -----------------------------------------
-REM 4. Pull then push to GitHub
+REM 4. Pull then push
 REM -----------------------------------------
+:push
 echo.
 echo Pulling latest from GitHub...
 git pull origin main --rebase
-
 if %errorlevel% neq 0 (
     echo ERROR: git pull failed. Resolve conflicts and try again.
     pause
     exit /b 1
 )
 
+REM Capture baseline deployment UID BEFORE push
+echo.
+echo Capturing baseline deployment UID...
+for /f "usebackq" %%U in (`powershell -NoProfile -Command "(Invoke-RestMethod 'https://api.vercel.com/v6/deployments?projectId=%VERCEL_PROJECT_ID%&teamId=%VERCEL_TEAM_ID%&limit=1' -Headers @{Authorization='Bearer %VERCEL_TOKEN%'}).deployments[0].uid"`) do set BASELINE_UID=%%U
+echo Baseline: %BASELINE_UID%
+
 echo.
 echo Pushing to GitHub...
 git push origin main
-
 if %errorlevel% neq 0 (
     echo ERROR: git push failed.
     pause
@@ -71,38 +95,23 @@ if %errorlevel% neq 0 (
 )
 
 echo.
-echo GitHub: OK
-
-REM -----------------------------------------
-REM 5. Deploy to Vercel
-REM -----------------------------------------
-:deploy
+echo ========================================
+echo  Pushed. Polling Vercel for deployment...
+echo ========================================
 echo.
-echo Deploying to Vercel...
 
-REM Check if Vercel CLI is available
-where vercel >nul 2>&1
-if %errorlevel% neq 0 (
-    echo.
-    echo NOTE: Vercel CLI not found.
-    echo Vercel will auto-deploy via GitHub integration.
-    echo Live URL: https://gprtool-demo.vercel.app
-    echo.
-    goto :done
-)
-
-vercel --prod
+powershell -NoProfile -File poll_vercel.ps1 -BaselineUid "%BASELINE_UID%"
 
 if %errorlevel% neq 0 (
-    echo ERROR: Vercel deploy failed.
+    echo.
+    echo ========================================
+    echo  Deployment failed or timed out.
+    echo  Check: https://vercel.com/lotr2929-7612s-projects/gpr-tool-demo
+    echo ========================================
     pause
     exit /b 1
 )
 
-REM -----------------------------------------
-REM 6. Done
-REM -----------------------------------------
-:done
 echo.
 echo ========================================
 echo  Deploy complete!
