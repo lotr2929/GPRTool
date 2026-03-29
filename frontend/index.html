@@ -1885,6 +1885,7 @@
     const northEl  = document.getElementById('north-point');
     const northCtx = document.getElementById('north-ctx-menu');
     const northVP  = document.getElementById('viewport');
+    const _npO = new THREE.Vector3(), _npN = new THREE.Vector3();
 
     (function animate() {
       controls.update();
@@ -3348,7 +3349,6 @@
     }
 
     // Compass rotation — called each animation frame
-    const _npO = new THREE.Vector3(), _npN = new THREE.Vector3();
     function updateNorthRotation() {
       if (!northEl || northEl.style.display === 'none') return;
       const cam    = (currentMode === '3d') ? camera3D : camera2D;
