@@ -49,6 +49,11 @@
   --fs-base: 13px;
   --fs-sm:   11px;
   --fs-xs:   10px;
+
+  /* North Point scaling */
+  --north-scale: 1;
+  --north-base-width: 77px;
+  --north-base-height: 86px;
 }
 
 /* ============================================================
@@ -1007,12 +1012,6 @@ body {
 /* ============================================================
    NORTH POINT - SCALABLE WITH RESIZE HANDLES
    ============================================================ */
-:root {
-  --north-scale: 1;
-  --north-base-width: 77px;
-  --north-base-height: 86px;
-}
-
 #north-point {
   position: absolute;
   width: calc(var(--north-base-width) * var(--north-scale));
