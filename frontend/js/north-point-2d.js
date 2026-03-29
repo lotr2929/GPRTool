@@ -180,7 +180,7 @@ function applyDesignNorth(deg) {
       // E (positive) → left-aligned,  anchor right of centre → text flows right (away from N)
       const isWest = deg < 0;
       const lx = isWest ? SVG_CX - 2 : SVG_CX + 2;
-      const ly = SVG_CY - 26;  // just outside circle edge
+      const ly = SVG_CY - 24;  // just outside circle edge, closer in
       dnLabelEl.setAttribute('x', lx);
       dnLabelEl.setAttribute('y', ly);
       dnLabelEl.setAttribute('text-anchor', isWest ? 'end' : 'start');
@@ -281,18 +281,18 @@ function injectDNGroup(svg) {
   g.id = 'np-dn-group';
   g.style.display = 'none';
 
-  // Arrow shaft
+  // Arrow shaft — from arrowhead base (y=26) to circle centre (y=40)
   const shaft = document.createElementNS('http://www.w3.org/2000/svg', 'line');
   shaft.setAttribute('x1', SVG_CX);
-  shaft.setAttribute('y1', '28');
+  shaft.setAttribute('y1', '26');
   shaft.setAttribute('x2', SVG_CX);
-  shaft.setAttribute('y2', '37');
+  shaft.setAttribute('y2', '40');
   shaft.setAttribute('stroke', '#4a8a4a');
   shaft.setAttribute('stroke-width', '1.5');
 
-  // Arrowhead — small filled triangle
+  // Arrowhead tip at circle edge (y=18), base at y=26
   const head = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-  head.setAttribute('points', '32,21 29,28 35,28');
+  head.setAttribute('points', '32,18 29,26 35,26');
   head.setAttribute('fill', '#4a8a4a');
 
   // Label — outside circle at arrow tip; position/anchor set in applyDesignNorth()

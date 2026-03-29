@@ -42,23 +42,18 @@ if %errorlevel% equ 0 (
 )
 
 REM -----------------------------------------
-REM 2. Auto-generate commit message via PowerShell
-REM    Written to temp file to avoid cmd quoting issues
-REM    Format: 2026-03-29 14:32 - 3 files: a.js b.css c.html
+REM 2. Auto-generate commit message
+REM    Format: 2026-03-29 14:32 - north-point-2d.js styles.css body.html
 REM -----------------------------------------
-powershell -NoProfile -Command ^
-  "$ts = Get-Date -Format 'yyyy-MM-dd HH:mm';" ^
-  "$files = git diff --cached --name-only | ForEach-Object { Split-Path $_ -Leaf };" ^
-  "$count = $files.Count;" ^
-  "$names = ($files | Select-Object -First 4) -join ' ';" ^
-  "$msg = \"$ts - $count file(s): $names\";" ^
-  "Set-Content -Path '%TEMP%\gpr_commit_msg.txt' -Value $msg -Encoding UTF8"
+powershell -NoProfile -Command "$ts=(Get-Date -Format 'yyyy-MM-dd HH:mm'); $names=(git diff --cached --name-only | ForEach-Object { Split-Path $_ -Leaf } | Select-Object -First 4) -join ' '; Set-Content '%TEMP%\gpr_msg.txt' \"$ts - $names\""
 
-set /p commit_msg=<"%TEMP%\gpr_commit_msg.txt"
-del "%TEMP%\gpr_commit_msg.txt" 2>nul
+set /p commit_msg=<"%TEMP%\gpr_msg.txt"
+del "%TEMP%\gpr_msg.txt" 2>nul
+
+if "%commit_msg%"=="" set commit_msg=update
 
 echo.
-echo Commit message: %commit_msg%
+echo Commit: %commit_msg%
 echo.
 
 REM -----------------------------------------
