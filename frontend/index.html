@@ -3082,27 +3082,24 @@
       };
     }
 
-    function applyNorthPos(left, top) {
-      const vw = northVP ? northVP.clientWidth  : window.innerWidth;
-      const vh = northVP ? northVP.clientHeight : window.innerHeight;
-      const { width, height } = getNorthDimensions();
+    function applyNorthPos(right, bottom) {
+      // Apply CSS positioning from edges
+      northEl.style.right  = right + 'px';
+      northEl.style.bottom = bottom + 'px';
+      northEl.style.left   = '';
+      northEl.style.top    = '';
       
-      left = Math.max(0, Math.min(vw - width, left));
-      top  = Math.max(0, Math.min(vh - height, top));
-      
-      northEl.style.left   = left + 'px';
-      northEl.style.top    = top  + 'px';
-      northEl.style.right  = '';
-      northEl.style.bottom = '';
-      
-      try { localStorage.setItem(NP_KEY, JSON.stringify({ left, top })); } catch {}
+      try { 
+        localStorage.setItem(NP_KEY, JSON.stringify({ right, bottom })); 
+      } catch {}
     }
 
     function resetNorthPos() {
-      northEl.style.left   = '';
-      northEl.style.top    = '';
+      // Original default position
       northEl.style.right  = NP_MARGIN + 'px';
       northEl.style.bottom = NP_MARGIN + 'px';
+      northEl.style.left   = '';
+      northEl.style.top    = '';
       try { localStorage.removeItem(NP_KEY); } catch {}
     }
 
@@ -3267,9 +3264,16 @@
       
       isDragging = true;
       const rect = northEl.getBoundingClientRect();
+      const viewportRect = northVP ? northVP.getBoundingClientRect() : { left: 0, top: 0 };
+      const vw = northVP ? northVP.clientWidth : window.innerWidth;
+      const vh = northVP ? northVP.clientHeight : window.innerHeight;
+      
+      // Calculate offset from right/bottom edges
+      const mouseX = e.clientX - viewportRect.left;
+      const mouseY = e.clientY - viewportRect.top;
       dragOffset = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
+        x: (vw - rect.right) + mouseX,
+        y: (vh - rect.bottom) + mouseY
       };
       
       northEl.setPointerCapture(e.pointerId);
@@ -3282,10 +3286,16 @@
       if (!isDragging) return;
       
       const viewportRect = northVP ? northVP.getBoundingClientRect() : { left: 0, top: 0 };
-      const newLeft = e.clientX - dragOffset.x - viewportRect.left;
-      const newTop = e.clientY - dragOffset.y - viewportRect.top;
+      const vw = northVP ? northVP.clientWidth : window.innerWidth;
+      const vh = northVP ? northVP.clientHeight : window.innerHeight;
       
-      applyNorthPos(newLeft, newTop);
+      // Calculate right/bottom from mouse position
+      const mouseX = e.clientX - viewportRect.left;
+      const mouseY = e.clientY - viewportRect.top;
+      const right = vw - mouseX - dragOffset.x;
+      const bottom = vh - mouseY - dragOffset.y;
+      
+      applyNorthPos(right, bottom);
     }
 
     function stopDrag() {
@@ -3338,8 +3348,15 @@
     if (northEl) {
       try {
         const saved = JSON.parse(localStorage.getItem(NP_KEY));
-        if (saved?.left > 0 && saved?.top > 0) { 
-          applyNorthPos(saved.left, saved.top); 
+        if (saved?.right !== undefined && saved?.bottom !== undefined) { 
+          applyNorthPos(saved.right, saved.bottom); 
+        } else if (saved?.left > 0 && saved?.top > 0) { 
+          // Handle old left/top format - convert to right/bottom
+          const vw = northVP ? northVP.clientWidth : window.innerWidth;
+          const vh = northVP ? northVP.clientHeight : window.innerHeight;
+          const right = vw - saved.left - NP_BASE_W;
+          const bottom = vh - saved.top - NP_BASE_H;
+          applyNorthPos(right, bottom);
         } else { 
           resetNorthPos(); 
         }
