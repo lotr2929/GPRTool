@@ -3126,6 +3126,9 @@
 
     // Selection and interaction states
     let isDragging = false;
+    let dragPending = false;  // pointerdown received, waiting for threshold
+    let dragStartClient = { x: 0, y: 0 };  // client coords at pointerdown
+    const DRAG_THRESHOLD = 5;  // px — must move this far before drag starts
     let isResizing = false;
     let dragOffset = { x: 0, y: 0 };
     let resizeHandle = null;
@@ -3268,7 +3271,10 @@
       if (e.target.classList.contains('resize-handle') || isResizing) return;
       if (e.button !== 0) return;
 
-      isDragging = true;
+      // Record start position — actual drag starts only after DRAG_THRESHOLD is exceeded
+      dragPending = true;
+      dragStartClient = { x: e.clientX, y: e.clientY };
+
       const rect = northEl.getBoundingClientRect();
       const viewportRect = northVP ? northVP.getBoundingClientRect() : { left: 0, top: 0 };
 
@@ -3283,13 +3289,19 @@
       };
 
       northEl.setPointerCapture(e.pointerId);
-      northEl.style.cursor = 'grabbing';
       e.stopPropagation();
-      e.preventDefault();
     });
 
     function handleDrag(e) {
-      if (!isDragging) return;
+      if (!dragPending && !isDragging) return;
+
+      // Activate drag only after threshold is exceeded — this prevents clicks from triggering drag
+      if (!isDragging) {
+        const dist = Math.hypot(e.clientX - dragStartClient.x, e.clientY - dragStartClient.y);
+        if (dist < DRAG_THRESHOLD) return;
+        isDragging = true;
+        northEl.style.cursor = 'grabbing';
+      }
 
       const viewportRect = northVP ? northVP.getBoundingClientRect() : { left: 0, top: 0 };
       const vw = northVP ? northVP.clientWidth  : window.innerWidth;
@@ -3305,8 +3317,8 @@
     }
 
     function stopDrag() {
+      dragPending = false;
       if (!isDragging) return;
-      
       isDragging = false;
       northEl.style.cursor = 'grab';
     }
