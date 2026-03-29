@@ -1881,6 +1881,11 @@
     /* ============================================================
        ANIMATION LOOP
     ============================================================ */
+    // North Point elements - declared early to avoid ReferenceError
+    const northEl  = document.getElementById('north-point');
+    const northCtx = document.getElementById('north-ctx-menu');
+    const northVP  = document.getElementById('viewport');
+
     (function animate() {
       controls.update();
       updateNorthRotation();
@@ -3061,9 +3066,6 @@
     const NP_KEY  = 'gprtool-north-pos-v3';  // v3: absolute inside viewport
     const NP_SCALE_KEY = 'gprtool-north-scale-v1';
     const NP_BASE_W = 77, NP_BASE_H = 86, NP_MARGIN = 16;
-    const northEl  = document.getElementById('north-point');
-    const northCtx = document.getElementById('north-ctx-menu');
-    const northVP  = document.getElementById('viewport'); // containing block
 
     // Get current scale and dimensions
     function getNorthScale() {
