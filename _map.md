@@ -1,6 +1,6 @@
 # GPRTool-Demo — Repository Map
 
-**Last updated:** 2026-03-26 (Session 5)
+**Last updated:** 2026-03-30 (Session 6)
 **Live URL:** https://gprtool-demo.vercel.app
 **Local path:** `C:\Users\263350F\_myProjects\GPRTool-Demo`
 **GitHub:** https://github.com/lotr2929/GPRTool-Demo.git
@@ -20,6 +20,8 @@ User browser
     └── frontend/index.html      ← entire app (HTML + inline <script type="module">)
             ├── fetches header.html, body.html at runtime
             ├── imports three.module.js, OrbitControls.js (local)
+            ├── imports north-point-2d.js (local)
+            ├── imports north-point-3d.js (local)
             ├── imports OBJLoader, GLTFLoader from CDN (jsdelivr)
             └── fetches plants_free.json at runtime
 ```

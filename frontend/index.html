@@ -232,6 +232,12 @@
       getDesignNorthDeg,
       setNorthPointMode,
     } from './js/north-point-2d.js';
+    import {
+      initNorthPoint3D,
+      updateGizmoOverlay,
+      renderCompassGizmo,
+      toggleGizmo3D,
+    } from './js/north-point-3d.js';
 
     /* ============================================================
        LOAD HEADER + BODY
@@ -595,304 +601,8 @@
     updateSceneHelpers(100);
 
     /* ============================================================
-       COMPASS GIZMO -- 3D inset scene (shown in 3D mode only)
+       COMPASS GIZMO -- extracted to js/north-point-3d.js
     ============================================================ */
-    const gizmoScene  = new THREE.Scene();
-    const gizmoCamera = new THREE.OrthographicCamera(-1.5, 1.5, 1.5, -1.5, 0.1, 20);
-
-    // Compass face -- dynamic canvas texture (redrawn each frame when DN changes)
-    // Transparent background (no white disc), south polygon stays white.
-    // DN angle text is baked into the XZ plane mesh so it tilts with the camera.
-    let gizmoCompassMesh = null;
-    let _gizmoCanvasTex  = null;
-    let _gizmoCtx        = null;
-    let _gizmoMx, _gizmoMy;  // coord helpers
-    let _lastDrawnDnDeg  = undefined; // sentinel
-
-    (function() {
-      const S  = 256;
-      const sc = 3;
-      const ox = 128 - 32 * sc;   // = 32
-      const oy = 128 - 40 * sc;   // = 8
-      _gizmoMx = x => x * sc + ox;
-      _gizmoMy = y => y * sc + oy;
-
-      const cv = document.createElement('canvas');
-      cv.width = cv.height = S;
-      _gizmoCtx = cv.getContext('2d');
-      _gizmoCanvasTex = new THREE.CanvasTexture(cv);
-
-      const compassMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(3.0, 3.0),
-        new THREE.MeshBasicMaterial({ map: _gizmoCanvasTex, transparent: true, depthWrite: false, side: THREE.DoubleSide })
-      );
-      compassMesh.rotation.x = -Math.PI / 2;
-      gizmoCompassMesh = compassMesh;
-      gizmoScene.add(compassMesh);
-    })();
-
-    function redrawGizmoCanvas(dnDeg) {
-      const ctx = _gizmoCtx;
-      const mx  = _gizmoMx;
-      const my  = _gizmoMy;
-      const S   = 256;
-      ctx.clearRect(0, 0, S, S); // fully transparent background
-
-      // Outer ring
-      ctx.beginPath();
-      ctx.arc(mx(32), my(40), 22 * 3, 0, Math.PI * 2);
-      ctx.strokeStyle = '#333'; ctx.lineWidth = 2.5; ctx.stroke();
-
-      // Cardinal ticks: N, S, W, E
-      ctx.strokeStyle = '#333'; ctx.lineWidth = 2.5;
-      [[32,15,32,20],[32,60,32,65],[7,40,12,40],[52,40,57,40]].forEach(([x1,y1,x2,y2]) => {
-        ctx.beginPath(); ctx.moveTo(mx(x1),my(y1)); ctx.lineTo(mx(x2),my(y2)); ctx.stroke();
-      });
-
-      // North (dark) polygon
-      ctx.beginPath();
-      ctx.moveTo(mx(32),my(20)); ctx.lineTo(mx(32),my(40)); ctx.lineTo(mx(42),my(43));
-      ctx.closePath(); ctx.fillStyle = '#1a1a1a'; ctx.fill();
-
-      // South (white) polygon -- keep white so it reads on any background
-      ctx.beginPath();
-      ctx.moveTo(mx(32),my(60)); ctx.lineTo(mx(32),my(40)); ctx.lineTo(mx(22),my(37));
-      ctx.closePath(); ctx.fillStyle = 'white'; ctx.fill();
-      ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5; ctx.stroke();
-
-      // N label
-      ctx.fillStyle = '#1a1a1a';
-      ctx.font = 'bold 36px Outfit, Georgia, serif';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('N', mx(32), my(11));
-
-      _gizmoCanvasTex.needsUpdate = true;
-    }
-
-    // Design-north group (green line + dot + text label, rotated around Y by designNorthDeg)
-    // Circle radius in world units: 66 canvas px * (3 world / 256 px) ≈ 0.773
-    const _gizmoCR     = 66 * (3 / 256);  // ≈ 0.773 -- exact match to compass ring
-    const _gizmoDNMat  = new THREE.LineBasicMaterial({ color: 0x4a8a4a });
-    const _gizmoDNFill = new THREE.MeshBasicMaterial({ color: 0x4a8a4a, side: THREE.DoubleSide, depthWrite: false });
-
-    const gizmoDNGroup = new THREE.Group();
-    gizmoDNGroup.visible = false;
-
-    // Line: south rim → north rim (touching circle at both ends)
-    gizmoDNGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(0, 0, _gizmoCR), new THREE.Vector3(0, 0, -_gizmoCR)
-      ]),
-      _gizmoDNMat
-    ));
-
-    // Dot at north tip (filled circle in XZ plane)
-    const _dnDotGeom = new THREE.CircleGeometry(0.07, 14);
-    _dnDotGeom.rotateX(-Math.PI / 2);  // lay flat in XZ
-    const _dnDotMesh = new THREE.Mesh(_dnDotGeom, _gizmoDNFill);
-    _dnDotMesh.position.set(0, 0, -(_gizmoCR - 0.08));  // slightly inside circle
-    gizmoDNGroup.add(_dnDotMesh);
-
-    // DN angle text -- flat plane in XZ, just outside circle at north
-    const _dnTextCv  = document.createElement('canvas');
-    _dnTextCv.width  = 320; _dnTextCv.height = 96;
-    const _dnTextCtx = _dnTextCv.getContext('2d');
-    const _dnTextTex = new THREE.CanvasTexture(_dnTextCv);
-    const _dnTextMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.10, 0.30),
-      new THREE.MeshBasicMaterial({ map: _dnTextTex, transparent: true, depthWrite: false, side: THREE.DoubleSide })
-    );
-    _dnTextMesh.rotation.x = -Math.PI / 2;
-    _dnTextMesh.position.set(0, 0, -(_gizmoCR + 0.18));  // just outside circle, north side
-    gizmoDNGroup.add(_dnTextMesh);
-
-    function updateDNTextMesh(dnDeg) {
-      _dnTextCtx.clearRect(0, 0, 320, 96);
-      if (dnDeg !== null && dnDeg !== undefined) {
-        _dnTextCtx.fillStyle = '#2a7a2a';
-        _dnTextCtx.font = 'bold 75px Outfit, Georgia, sans-serif';
-        _dnTextCtx.textAlign = 'center';
-        _dnTextCtx.textBaseline = 'middle';
-        _dnTextCtx.fillText('DN ' + Math.round(dnDeg) + '\u00b0', 160, 48);
-      }
-      _dnTextTex.needsUpdate = true;
-    }
-
-    gizmoScene.add(gizmoDNGroup);
-
-    // Gizmo 3D state -- frame size drives everything, camera frustum NEVER changes
-    let gizmo3DSize    = 160;   // pixel frame size (variable)
-    let gizmo3DRight   = 16;
-    let gizmo3DBottom  = 16;
-    let gizmo3DVisible = true;  // toggled ONLY via View menu
-    let _gzDragging    = false;
-    let _gzDragPending = false;
-    let _gzDragStart   = { x: 0, y: 0, r: 0, b: 0 };
-    let _gzSelected    = false;
-    let _gzResizing    = false;
-    let _gzResizeHandle = '';
-    let _gzResizeStart  = { x: 0, y: 0, size: 0, r: 0, b: 0 };
-
-    // gizmoCamera frustum is fixed at ±1.5 and NEVER changes.
-    // PlaneGeometry(3,3) exactly fills this frustum.
-    // Making the pixel frame bigger makes the icon appear bigger -- no mesh scale, no camera change.
-
-    // DOM overlay div
-    const gizmoOverlay = document.createElement('div');
-    gizmoOverlay.id = 'gizmo3d-overlay';
-    gizmoOverlay.style.cssText = [
-      'position:absolute', 'cursor:grab', 'display:none',
-      'z-index:10', 'box-sizing:border-box', 'border-radius:4px',
-    ].join(';');
-    container.style.position = 'relative';
-    container.appendChild(gizmoOverlay);
-
-    // 4 corner resize handles
-    const _gzHandles = {};
-    // [id, top, right, bottom, left] -- empty string = not set
-    [
-      ['nw', '-5', '',   '',   '-5'],
-      ['ne', '-5', '-5', '',   ''  ],
-      ['sw', '',   '',   '-5', '-5'],
-      ['se', '',   '-5', '-5', ''  ],
-    ].forEach(([id, t, r, b, l]) => {
-      const h = document.createElement('div');
-      h.dataset.handle = id;
-      const cursor = (id === 'nw' || id === 'se') ? 'nwse-resize' : 'nesw-resize';
-      h.style.cssText = [
-        'position:absolute', 'width:10px', 'height:10px',
-        'background:#4a8a4a', 'border:1.5px solid #fff', 'border-radius:2px',
-        'display:none', `z-index:12`, `cursor:${cursor}`,
-        t ? `top:${t}px`    : '', r ? `right:${r}px`   : '',
-        b ? `bottom:${b}px` : '', l ? `left:${l}px`    : '',
-      ].filter(Boolean).join(';');
-      gizmoOverlay.appendChild(h);
-      _gzHandles[id] = h;
-    });
-
-    function setGizmoSelected(sel) {
-      _gzSelected = sel;
-      const show = sel ? 'block' : 'none';
-      Object.values(_gzHandles).forEach(h => h.style.display = show);
-      gizmoOverlay.style.outline = sel ? '1.5px solid #4a8a4a' : 'none';
-    }
-
-    function updateGizmoOverlay() {
-      const show = gizmo3DVisible && currentMode === '3d';
-      gizmoOverlay.style.display  = show ? 'block' : 'none';
-      gizmoOverlay.style.width    = gizmo3DSize + 'px';
-      gizmoOverlay.style.height   = gizmo3DSize + 'px';
-      gizmoOverlay.style.right    = gizmo3DRight  + 'px';
-      gizmoOverlay.style.bottom   = gizmo3DBottom + 'px';
-    }
-
-    gizmoOverlay.addEventListener('pointerdown', e => {
-      if (e.button !== 0) return;
-      const handle = e.target.dataset?.handle;
-      if (handle) {
-        // Resize: record starting state
-        _gzResizing    = true;
-        _gzResizeHandle = handle;
-        _gzResizeStart  = {
-          x: e.clientX, y: e.clientY,
-          size: gizmo3DSize,
-          r: gizmo3DRight, b: gizmo3DBottom
-        };
-        gizmoOverlay.setPointerCapture(e.pointerId);
-        e.stopPropagation();
-        return;
-      }
-      // Body: potential drag
-      _gzDragPending = true;
-      _gzDragging    = false;
-      _gzDragStart   = { x: e.clientX, y: e.clientY, r: gizmo3DRight, b: gizmo3DBottom };
-      gizmoOverlay.setPointerCapture(e.pointerId);
-      e.stopPropagation();
-    });
-
-    gizmoOverlay.addEventListener('pointermove', e => {
-      if (_gzResizing) {
-        const dx = e.clientX - _gzResizeStart.x;
-        const dy = e.clientY - _gzResizeStart.y;
-        const cw = container.clientWidth;
-        const ch = container.clientHeight;
-        const h  = _gzResizeHandle;
-
-        // Each handle's drag direction that makes the frame bigger:
-        //   se: right (+dx) or down (+dy)  → delta = (dx + dy) / 2
-        //   nw: left (-dx) or up  (-dy)    → delta = (-dx - dy) / 2
-        //   ne: right (+dx) or up  (-dy)   → delta = (dx - dy) / 2
-        //   sw: left (-dx) or down (+dy)   → delta = (-dx + dy) / 2
-        let delta;
-        if      (h === 'se') delta = ( dx + dy) / 2;
-        else if (h === 'nw') delta = (-dx - dy) / 2;
-        else if (h === 'ne') delta = ( dx - dy) / 2;
-        else                 delta = (-dx + dy) / 2;  // sw
-
-        const newSize   = Math.round(Math.max(80, Math.min(300, _gzResizeStart.size + delta)));
-        const sizeDelta = newSize - _gzResizeStart.size;
-        gizmo3DSize = newSize;
-
-        // Keep the opposite (anchor) corner fixed by adjusting right/bottom
-        if (h === 'se') {
-          // Anchor = NW corner. SE moving out → right/bottom edges move, so right/bottom decrease
-          gizmo3DRight  = Math.max(0, _gzResizeStart.r - sizeDelta);
-          gizmo3DBottom = Math.max(0, _gzResizeStart.b - sizeDelta);
-        } else if (h === 'nw') {
-          // Anchor = SE corner. NW moving out → right/bottom increase
-          gizmo3DRight  = Math.min(cw - newSize, _gzResizeStart.r + sizeDelta);
-          gizmo3DBottom = Math.min(ch - newSize, _gzResizeStart.b + sizeDelta);
-        } else if (h === 'ne') {
-          // Anchor = SW corner. Right stays tied via right decrease; bottom increases
-          gizmo3DRight  = Math.max(0, _gzResizeStart.r - sizeDelta);
-          gizmo3DBottom = Math.min(ch - newSize, _gzResizeStart.b + sizeDelta);
-        } else {
-          // sw — Anchor = NE corner. Right increases; bottom decreases
-          gizmo3DRight  = Math.min(cw - newSize, _gzResizeStart.r + sizeDelta);
-          gizmo3DBottom = Math.max(0, _gzResizeStart.b - sizeDelta);
-        }
-        updateGizmoOverlay();
-        return;
-      }
-      if (!_gzDragPending) return;
-      const dx = e.clientX - _gzDragStart.x;
-      const dy = e.clientY - _gzDragStart.y;
-      if (!_gzDragging && Math.hypot(dx, dy) > 4) _gzDragging = true;
-      if (_gzDragging) {
-        const cw = container.clientWidth;
-        const ch = container.clientHeight;
-        gizmo3DRight  = Math.max(0, Math.min(cw - gizmo3DSize, _gzDragStart.r - dx));
-        gizmo3DBottom = Math.max(0, Math.min(ch - gizmo3DSize, _gzDragStart.b - dy));
-        updateGizmoOverlay();
-      }
-    });
-
-    gizmoOverlay.addEventListener('pointerup', e => {
-      const wasDrag   = _gzDragging;
-      const wasResize = _gzResizing;
-      _gzDragPending  = false;
-      _gzDragging     = false;
-      _gzResizing     = false;
-      _gzResizeHandle = '';
-      gizmoOverlay.style.cursor = 'grab';
-      if (!wasDrag && !wasResize && !e.target.dataset?.handle) {
-        setGizmoSelected(!_gzSelected);
-      }
-    });
-
-    // Click outside deselects
-    document.addEventListener('click', e => {
-      if (_gzSelected && !gizmoOverlay.contains(e.target)) setGizmoSelected(false);
-    });
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && _gzSelected) setGizmoSelected(false);
-    });
-
-    function toggleGizmo3D() {
-      gizmo3DVisible = !gizmo3DVisible;
-      updateGizmoOverlay();
-      showFeedback('North Point ' + (gizmo3DVisible ? 'visible' : 'hidden'));
-    }
 
     /* ============================================================
        GEO UTILITIES
@@ -2131,7 +1841,7 @@
         camera   = camera3D;
         controls = controls3D;
         clearSurfaceCanvasOutline();
-        if (gridHelper) gridHelper.visible = false;
+        if (gridHelper) gridHelper.visible = true;  // grid visible in 3D, aligned to DN
         if (axesHelper) axesHelper.visible = true;
         if (axesYLine)  axesYLine.visible  = true;
         const target = importedModel
@@ -2228,52 +1938,7 @@
     new ResizeObserver(resizeToContainer).observe(container);
     requestAnimationFrame(() => requestAnimationFrame(resizeToContainer));
 
-    /* ============================================================
-       COMPASS GIZMO -- render function
-    ============================================================ */
-    // Initial canvas draw (no DN yet)
-    redrawGizmoCanvas(null);
-
-    function renderCompassGizmo() {
-      const size = gizmo3DSize;  // variable frame size -- camera frustum stays fixed at ±1.5
-      const cw   = container.clientWidth;
-      const ch   = container.clientHeight;
-      const x    = Math.round(cw - gizmo3DRight - size);
-      const y    = Math.round(gizmo3DBottom);
-
-      // Mirror camera3D orientation exactly -- icon lies in XZ plane and tilts with camera
-      gizmoCamera.quaternion.copy(camera3D.quaternion);
-      const _gbwd = new THREE.Vector3(0, 0, 1).applyQuaternion(gizmoCamera.quaternion);
-      gizmoCamera.position.copy(_gbwd).multiplyScalar(5);
-
-      // DN arrow + canvas text -- redraw canvas only when DN value changes
-      const _dnDeg = getDesignNorthDeg();
-      if (_dnDeg !== _lastDrawnDnDeg) {
-        redrawGizmoCanvas(_dnDeg);
-        updateDNTextMesh(_dnDeg);
-        _lastDrawnDnDeg = _dnDeg;
-      }
-      if (_dnDeg !== null) {
-        gizmoDNGroup.visible    = true;
-        gizmoDNGroup.rotation.y = -_dnDeg * Math.PI / 180;
-      } else {
-        gizmoDNGroup.visible = false;
-      }
-
-      renderer.setScissorTest(true);
-      renderer.setScissor(x, y, size, size);
-      renderer.setViewport(x, y, size, size);
-
-      // Render without clearing colour -- main scene shows through (transparent background)
-      const savedAutoClear = renderer.autoClear;
-      renderer.autoClear = false;
-      renderer.clear(false, true, false); // depth-only clear so gizmo draws on top
-      renderer.render(gizmoScene, gizmoCamera);
-      renderer.autoClear = savedAutoClear;
-
-      renderer.setScissorTest(false);
-      renderer.setViewport(0, 0, cw, ch);
-    }
+    /* renderCompassGizmo — defined in js/north-point-3d.js, imported above */
 
     /* ============================================================
        ANIMATION LOOP
@@ -2281,6 +1946,15 @@
     (function animate() {
       controls.update();
       updateNorthRotation();
+
+      // Grid and axes follow Design North so building lines stay
+      // vertical/horizontal on screen. dnDeg +ve = East = clockwise.
+      // Three.js rotation.y +ve = counterclockwise, so we negate.
+      const _dn    = getDesignNorthDeg();
+      const _dnRad = (_dn ?? 0) * Math.PI / 180;
+      if (gridHelper)  gridHelper.rotation.y  = -_dnRad;
+      if (axesHelper)  axesHelper.rotation.y  = -_dnRad;
+
       renderer.render(scene, camera);
       if (currentMode === '3d' && gizmo3DVisible) renderCompassGizmo();
       requestAnimationFrame(animate);
@@ -3455,9 +3129,10 @@
     }
 
     /* ============================================================
-       NORTH POINT 2D — initialise module
+       NORTH POINT 2D + 3D — initialise modules
     ============================================================ */
     initNorthPoint2D(() => ({ currentMode, camera2D, camera3D, controls3D, pan2D, rotate2D }));
+    initNorthPoint3D(() => ({ renderer, camera3D, container, currentMode, showFeedback }));
 
     showFeedback('GPRTool ready', 2000);
   </script>
