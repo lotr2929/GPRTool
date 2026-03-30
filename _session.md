@@ -1,67 +1,71 @@
-# GPRTool-Demo — Session Status
+# GPRTool — Session Status
 
-> **Update this file at the end of every session.**
-> Keep it short — just enough for Claude or Boon to resume without re-reading the whole journal.
-
----
-
-## Session 6 — 2026-03-28 ✅ COMPLETE
-
-### Summary
-Site alignment fix, map tile overlay, axes overhaul, north point compass, deploy.bat polling.
-
-### What was done
-- **Site boundary alignment** — fixed `shapeGeom.rotateX(-π/2)` → `+π/2` (fill was mirrored from outline)
-- **Map tile overlay** — CARTO Light tiles load on GeoJSON import; Mercator Y projection fix applied so tiles align with site boundary; "Map Overlay" toggle in right panel
-- **Axes overhaul** — replaced custom 2-line helper with 3-axis system: X (red), Z (blue), Y green vertical; Y hidden in 2D plan, shown in 3D; Toggle Axes (Ctrl+T) and View menu item wired
-- **North Point** — floating SVG compass inside `#viewport` (position:absolute); needle design iterated with Boon to final shape (points: 32,20 32,40 42,43 / 32,60 32,40 22,37); draggable within viewport; position saved to localStorage (key: gprtool-north-pos-v3); right-click context menu (Reset / Hide); View menu toggle + reset wired; rotates dynamically each animation frame to track true north in both 2D and 3D; size 77×86px
-- **deploy.bat** — rewritten with Vercel polling (poll_vercel.ps1); captures baseline UID before push, waits for READY/ERROR with live timer; deploy.env created with correct GPRTool credentials; deploy.env added to .gitignore
-
-### App state at end of session
-**Works:**
-- ✅ All Session 5 features still working
-- ✅ GeoJSON site boundary: fill and outline now aligned
-- ✅ Map tile overlay (CARTO Light, zoom 18, Mercator-correct placement)
-- ✅ Map Overlay toggle in right panel
-- ✅ Axes: X/Z in 2D plan, X/Y/Z in 3D, Toggle Axes wired (Ctrl+T)
-- ✅ North Point: correct position (bottom-right of viewport), correct icon, draggable, rotates with camera
-- ✅ deploy.bat polls Vercel and reports READY with elapsed time
-
-**Stubbed (not yet built):**
-- ❌ IFC import
-- ❌ DXF import
-- ❌ Image underlay + scale calibration
-- ❌ All Building panel drawing tools
-- ❌ Landscape panel tools
-- ❌ GPR Report PDF export
-- ❌ Terrain layer
-- ❌ Landgate SLIP address lookup
-- ❌ .gpr session save/load
-- ❌ Module split (index.html ~130KB monolith)
+**Last updated:** 2026-03-29 (Session 6)
+**Live:** https://gprtool-demo.vercel.app
 
 ---
 
-## Next Session — Where to Start
+## What was done this session
 
-1. **Verify** north point rotates correctly on import of 30 Beaufort Street GeoJSON
-2. **Pending issues from this session:**
-   - Map tile / site boundary alignment still needs visual verification — tiles may still be slightly off
-   - Axes in 2D surface canvas mode (when a surface is selected) — check Y is hidden
-3. **Next feature** — DXF import (was the priority before this session)
+### Infrastructure
+- Created `_dev_guide.md` — developer rules for AI and human contributors covering module structure, tool architecture, CSS/DOM/Three.js conventions, localStorage registry, extraction procedure
+- `_map.md` updated to reference `_dev_guide.md`
+- `_dev_guide.md` Section 2 clarified: defers to `_map.md` for current state, defines target structure only
+
+### North Point 2D — extracted to module
+- `frontend/js/north-point-2d.js` created — self-contained ES module
+- `body.html` updated: `#north-point` → `#np-container` + `#np-rotator` split (container/rotator pattern)
+- `styles.css` updated: NP CSS replaced with clean container/rotator rules, CSS variables removed, `#np-ctx-menu` moved here
+- `index.html` updated: inline NP CSS removed, import added, old element declarations removed, ~330 lines of NP JS replaced with single `initNorthPoint2D(...)` call
+
+### Design North feature
+- Right-click NP → "Set Design North…" → inline input field
+- Accepts: `7`, `-7`, `7W`, `7E`, `7.4`, `7°22'`, `7°22'W` etc.
+- Green arrow inside circle points to design north angle
+- Angle text outside circle, dark green, aligned away from N letter (right-aligned for W, left-aligned for E)
+- "Clear Design North" menu item (visible only when DN is set)
+- State persisted in localStorage `gprtool-np2d-state` with `dn` field
+- Invalid input shakes red, stays open
+
+### deploy.bat
+- Commit message now auto-generated — no prompt
+- Format: `2026-03-29 14:32 - north-point-2d.js, styles.css, body.html`
+- Uses PowerShell temp file approach to avoid cmd quoting issues
 
 ---
 
-## Key Reference
+## Current state
 
-| Item | Value |
-|---|---|
-| Live URL | https://gprtool-demo.vercel.app |
-| Local dev | `start.bat` → http://localhost:8000 |
-| Demo site | 30 Beaufort Street, Perth WA 6000 |
-| Site GeoJSON | `test-data/30_beaufort_street_parcel.geojson` |
-| Landgate land_id | 1818174 |
-| GitHub | https://github.com/lotr2929/GPRTool-Demo.git |
-| Three.js | r160 (local copy in `frontend/js/`) |
-| Deploy | run `deploy.bat` from project root |
-| Vercel project ID | prj_oioZB5jSKFHb99IZcSxZutIcjufi |
-| North Point key | gprtool-north-pos-v3 |
+- All changes deployed to Vercel
+- North point: drag, resize, rotate, Design North all working
+- 2D viewport rotation (middle mouse) and N key: **coded but NOT yet deployed** — was discussed and coded during session but deployment was skipped pending further discussion on True North / Design North architecture
+
+---
+
+## Pending — next session
+
+### 2D viewport rotation (already coded in index.html, needs deploy + test)
+- Middle mouse drag = rotate 2D view
+- N key = snap back to north-up
+- Pan is rotation-aware
+- `rotate2D` passed to `initNorthPoint2D` via getState callback
+
+### True North architecture (agreed design, not yet coded)
+Three angles:
+1. `trueNorthAngle` — geographic north vs world -Z. Auto = 0 for GeoJSON. User-set for OBJ/GLB.
+2. `designNorthAngle` — site orientation reference, independent of true north (already implemented as DN arrow)
+3. `rotate2D` — viewport rotation, independent of both
+
+NP icon shows: `trueNorthAngle - rotate2D` (currently assumes trueNorthAngle = 0)
+
+Setting methods:
+- Method A: Enter degrees (primary)
+- Method B: Pick two points on screen (future)
+
+"Set True North" to be added to NP context menu (same UX as Set Design North)
+
+### lib/ subfolder
+- `frontend/js/lib/` subfolder for Three.js files not yet created (target structure in `_dev_guide.md`)
+
+### localStorage key cleanup
+- Old keys `gprtool-north-pos-v3` and `gprtool-north-scale-v1` no longer used — can be cleaned up

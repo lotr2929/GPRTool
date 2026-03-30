@@ -281,18 +281,20 @@ function injectDNGroup(svg) {
   g.id = 'np-dn-group';
   g.style.display = 'none';
 
-  // Arrow shaft — from arrowhead base (y=26) to circle centre (y=40)
+  // Shaft — full diameter, top circle edge (y=18) to bottom circle edge (y=62)
   const shaft = document.createElementNS('http://www.w3.org/2000/svg', 'line');
   shaft.setAttribute('x1', SVG_CX);
-  shaft.setAttribute('y1', '26');
+  shaft.setAttribute('y1', '18');
   shaft.setAttribute('x2', SVG_CX);
-  shaft.setAttribute('y2', '40');
+  shaft.setAttribute('y2', '62');
   shaft.setAttribute('stroke', '#4a8a4a');
   shaft.setAttribute('stroke-width', '1.5');
 
-  // Arrowhead tip at circle edge (y=18), base at y=26
-  const head = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-  head.setAttribute('points', '32,18 29,26 35,26');
+  // Dot — slightly before the top edge (cy=22)
+  const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  head.setAttribute('cx', SVG_CX);
+  head.setAttribute('cy', '22');
+  head.setAttribute('r', '3');
   head.setAttribute('fill', '#4a8a4a');
 
   // Label — outside circle at arrow tip; position/anchor set in applyDesignNorth()
