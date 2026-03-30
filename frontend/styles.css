@@ -1033,6 +1033,12 @@ body {
   /* JS writes transform: rotate() here only */
 }
 
+#np-container.np-rotating {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
+  cursor: crosshair !important;
+}
+
 #np-container.np-selected,
 #np-container.np-resizing {
   outline: 2px solid var(--accent);

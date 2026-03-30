@@ -45,6 +45,11 @@ let dragPending     = false;
 let dragStartClient = { x: 0, y: 0 };
 let dragOffset      = { x: 0, y: 0 };
 
+let rotateMode      = false;
+let isRotating      = false;
+let rotateStartAngle = 0;
+let rotateStartDN    = 0;
+
 let isResizing   = false;
 let resizeHandle = null;
 let resizeStart  = { w: NP_BASE_W, anchor: { x: 0, y: 0 } };
@@ -189,6 +194,26 @@ function applyDesignNorth(deg) {
 
 // ── Design North input field ──────────────────────────────────
 
+function angleFromNPCenter(clientX, clientY) {
+  const rect = npEl.getBoundingClientRect();
+  const cx   = rect.left + rect.width  * 0.5;
+  const cy   = rect.top  + rect.height * 0.555;
+  return Math.atan2(clientX - cx, cy - clientY) * 180 / Math.PI;
+}
+
+function enterRotateMode() {
+  rotateMode = true;
+  npEl.style.cursor = 'crosshair';
+  npEl.classList.add('np-rotating');
+}
+
+function exitRotateMode() {
+  rotateMode = false;
+  isRotating = false;
+  npEl.style.cursor = 'grab';
+  npEl.classList.remove('np-rotating');
+}
+
 function showDNInput(autoFocus = true) {
   // Create on first use
   let inp = document.getElementById('np-dn-input');
@@ -239,7 +264,8 @@ function showDNInput(autoFocus = true) {
   field.classList.remove('np-dn-invalid');
   if (autoFocus) requestAnimationFrame(() => field.focus());
 
-  // Close on outside click
+  // Close on outside click — remove first to prevent duplicate listeners
+  document.removeEventListener('click', onClickOutsideDNInput);
   setTimeout(() => {
     document.addEventListener('click', onClickOutsideDNInput);
   }, 50);
@@ -249,11 +275,13 @@ function hideDNInput() {
   const inp = document.getElementById('np-dn-input');
   if (inp) inp.style.display = 'none';
   document.removeEventListener('click', onClickOutsideDNInput);
+  exitRotateMode();
 }
 
 function onClickOutsideDNInput(e) {
+  if (rotateMode) return; // panel stays open while rotating
   const inp = document.getElementById('np-dn-input');
-  if (inp && !inp.contains(e.target)) hideDNInput();
+  if (inp && !inp.contains(e.target) && !npEl.contains(e.target)) hideDNInput();
 }
 
 // ── SVG injection ─────────────────────────────────────────────
@@ -432,7 +460,8 @@ export function initNorthPoint2D(getStateCallback) {
   });
   document.getElementById('np-ctx-rotate-np')?.addEventListener('click', () => {
     if (npCtxEl) npCtxEl.style.display = 'none';
-    showDNInput();
+    enterRotateMode();
+    showDNInput(false);
   });
   document.getElementById('np-ctx-set-dn')?.addEventListener('click', () => {
     if (npCtxEl) npCtxEl.style.display = 'none';
@@ -519,7 +548,16 @@ function stopResize() {
 function onDragDown(e) {
   if (e.target.classList.contains('resize-handle') || isResizing) return;
   if (e.button !== 0) return;
-  if (e.target.id === 'np-n-label') return;
+
+  if (rotateMode) {
+    // In rotate mode: drag rotates the icon instead of moving it
+    isRotating       = true;
+    rotateStartAngle = angleFromNPCenter(e.clientX, e.clientY);
+    rotateStartDN    = designNorthDeg !== null ? designNorthDeg : 0;
+    npEl.setPointerCapture(e.pointerId);
+    e.stopPropagation();
+    return;
+  }
 
   dragPending     = true;
   dragStartClient = { x: e.clientX, y: e.clientY };
@@ -537,6 +575,14 @@ function onDragDown(e) {
 }
 
 function handleDrag(e) {
+  if (isRotating) {
+    const cur   = angleFromNPCenter(e.clientX, e.clientY);
+    const newDN = rotateStartDN + (cur - rotateStartAngle);
+    applyDesignNorth(newDN);
+    const field = document.getElementById('np-dn-field');
+    if (field) field.value = formatNorthAngle(newDN);
+    return;
+  }
   if (!dragPending && !isDragging) return;
   if (!isDragging) {
     const dist = Math.hypot(e.clientX - dragStartClient.x, e.clientY - dragStartClient.y);
@@ -553,10 +599,14 @@ function handleDrag(e) {
 }
 
 function stopDrag() {
+  if (isRotating) {
+    isRotating = false;
+    return;
+  }
   dragPending = false;
   if (!isDragging) return;
   isDragging        = false;
-  npEl.style.cursor = 'grab';
+  npEl.style.cursor = rotateMode ? 'crosshair' : 'grab';
 }
 
 // ── Combined pointer handlers ─────────────────────────────────
