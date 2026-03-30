@@ -1841,7 +1841,29 @@
     }
 
     document.querySelectorAll('.mode-btn').forEach(btn =>
-      btn.addEventListener('click', () => switchMode(btn.dataset.mode)));
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.mode;
+        if (mode === currentMode) {
+          // Reset current view to default
+          if (mode === '2d') {
+            rotate2D = 0;
+            pan2D.x  = 0;
+            pan2D.z  = 0;
+            zoom2D   = 1;
+            const target = siteBoundaryLine || importedModel;
+            if (target) fit2DCamera(new THREE.Box3().setFromObject(target));
+            else update2DCamera();
+            showFeedback('2D view reset');
+          } else {
+            const target = importedModel || siteBoundaryLine;
+            if (target) fit3DCamera(new THREE.Box3().setFromObject(target));
+            else { camera3D.position.set(100, 100, 100); controls3D.target.set(0,0,0); controls3D.update(); }
+            showFeedback('3D view reset');
+          }
+        } else {
+          switchMode(mode);
+        }
+      }));
 
     const menu2D   = document.getElementById('mode-2d-menu');
     const btn2D    = document.querySelector('.mode-btn[data-mode="2d"]');
