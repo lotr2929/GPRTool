@@ -387,9 +387,14 @@ export function initNorthPoint2D(getStateCallback) {
   // Drag
   npEl.addEventListener('pointerdown', onDragDown);
 
-  // N-label: click to open DN panel, drag to rotate
+  // N-label: self-contained pointer handling — click to open DN panel, drag to rotate
   const nLabel = document.getElementById('np-n-label');
-  if (nLabel) nLabel.addEventListener('pointerdown', onNDown);
+  if (nLabel) {
+    nLabel.addEventListener('pointerdown', onNDown);
+    nLabel.addEventListener('pointermove', onNMove);
+    nLabel.addEventListener('pointerup',   onNUp);
+    nLabel.addEventListener('pointercancel', onNUp);
+  }
 
   // Global pointer handlers
   document.addEventListener('pointermove', onPointerMove);
@@ -559,17 +564,19 @@ function onNDown(e) {
   isNDragging     = false;
   nDragStartAngle = angleFromNPCenter(e.clientX, e.clientY);
   nDragStartDN    = designNorthDeg !== null ? designNorthDeg : 0;
-  npEl.setPointerCapture(e.pointerId);
+  // Capture to the N label itself — keeps N handling self-contained
+  e.currentTarget.setPointerCapture(e.pointerId);
 }
 
-function handleNDrag(e) {
+function onNMove(e) {
   if (!nPointerDown) return;
+  e.stopPropagation();
   const cur   = angleFromNPCenter(e.clientX, e.clientY);
   const delta = cur - nDragStartAngle;
   if (!isNDragging) {
     if (Math.abs(delta) < 3) return;
     isNDragging = true;
-    showDNInput(false); // open panel without stealing focus during drag
+    showDNInput(false);
   }
   const newDN = nDragStartDN + delta;
   applyDesignNorth(newDN);
@@ -577,12 +584,13 @@ function handleNDrag(e) {
   if (field) field.value = formatNorthAngle(newDN);
 }
 
-function stopNDrag() {
+function onNUp(e) {
   if (!nPointerDown) return;
+  e.stopPropagation();
   const wasClick = !isNDragging;
   nPointerDown   = false;
   isNDragging    = false;
-  if (wasClick) showDNInput(true); // click on N opens panel with focus
+  if (wasClick) showDNInput(true);
 }
 
 // ── Combined pointer handlers ─────────────────────────────────
@@ -590,11 +598,9 @@ function stopNDrag() {
 function onPointerMove(e) {
   handleResize(e);
   handleDrag(e);
-  handleNDrag(e);
 }
 
 function onPointerUp() {
   stopResize();
   stopDrag();
-  stopNDrag();
 }
