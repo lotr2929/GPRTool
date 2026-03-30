@@ -288,12 +288,12 @@ function injectDNGroup(svg) {
   shaft.setAttribute('x2', SVG_CX);
   shaft.setAttribute('y2', '62');
   shaft.setAttribute('stroke', '#4a8a4a');
-  shaft.setAttribute('stroke-width', '1.5');
+  shaft.setAttribute('stroke-width', '0.75');
 
   // Dot — slightly before the top edge (cy=22)
   const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   head.setAttribute('cx', SVG_CX);
-  head.setAttribute('cy', '22');
+  head.setAttribute('cy', '26');
   head.setAttribute('r', '3');
   head.setAttribute('fill', '#4a8a4a');
 
