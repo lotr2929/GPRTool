@@ -293,7 +293,7 @@ function injectDNGroup(svg) {
   // Dot — slightly before the top edge (cy=22)
   const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   head.setAttribute('cx', SVG_CX);
-  head.setAttribute('cy', '26');
+  head.setAttribute('cy', '24');
   head.setAttribute('r', '3');
   head.setAttribute('fill', '#4a8a4a');
 
