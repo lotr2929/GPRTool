@@ -666,35 +666,58 @@
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText('N', mx(32), my(11));
 
-      // DN angle text -- below the circle, part of the XZ plane mesh
-      if (dnDeg !== null && dnDeg !== undefined) {
-        ctx.fillStyle = '#2a6a2a';
-        ctx.font = 'bold 24px Outfit, Georgia, sans-serif';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText('DN ' + Math.round(dnDeg) + '\u00b0', mx(32), my(76));
-      }
-
       _gizmoCanvasTex.needsUpdate = true;
     }
 
-    // Design-north arrow group (green, rotated around Y by designNorthDeg)
-    // Sized to match the circle in the icon (circle r = 22/32 * 1.5 = 1.03 world units)
+    // Design-north group (green line + dot + text label, rotated around Y by designNorthDeg)
+    // Circle radius in world units: 66 canvas px * (3 world / 256 px) ≈ 0.773
+    const _gizmoCR     = 66 * (3 / 256);  // ≈ 0.773 -- exact match to compass ring
+    const _gizmoDNMat  = new THREE.LineBasicMaterial({ color: 0x4a8a4a });
+    const _gizmoDNFill = new THREE.MeshBasicMaterial({ color: 0x4a8a4a, side: THREE.DoubleSide, depthWrite: false });
+
     const gizmoDNGroup = new THREE.Group();
     gizmoDNGroup.visible = false;
-    const _gizmoDNMat = new THREE.LineBasicMaterial({ color: 0x4a8a4a });
+
+    // Line: south rim → north rim (touching circle at both ends)
     gizmoDNGroup.add(new THREE.Line(
       new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(0, 0, -0.68), new THREE.Vector3(0, 0, 0.68)
+        new THREE.Vector3(0, 0, _gizmoCR), new THREE.Vector3(0, 0, -_gizmoCR)
       ]),
       _gizmoDNMat
     ));
-    // Arrowhead at north tip
-    gizmoDNGroup.add(new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(-0.07, 0, -0.54), new THREE.Vector3(0, 0, -0.72), new THREE.Vector3(0.07, 0, -0.54)
-      ]),
-      _gizmoDNMat
-    ));
+
+    // Dot at north tip (filled circle in XZ plane)
+    const _dnDotGeom = new THREE.CircleGeometry(0.07, 14);
+    _dnDotGeom.rotateX(-Math.PI / 2);  // lay flat in XZ
+    const _dnDotMesh = new THREE.Mesh(_dnDotGeom, _gizmoDNFill);
+    _dnDotMesh.position.set(0, 0, -_gizmoCR);  // north tip
+    gizmoDNGroup.add(_dnDotMesh);
+
+    // DN angle text -- flat plane in XZ, just outside circle at north
+    const _dnTextCv  = document.createElement('canvas');
+    _dnTextCv.width  = 128; _dnTextCv.height = 32;
+    const _dnTextCtx = _dnTextCv.getContext('2d');
+    const _dnTextTex = new THREE.CanvasTexture(_dnTextCv);
+    const _dnTextMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.55, 0.14),
+      new THREE.MeshBasicMaterial({ map: _dnTextTex, transparent: true, depthWrite: false, side: THREE.DoubleSide })
+    );
+    _dnTextMesh.rotation.x = -Math.PI / 2;
+    _dnTextMesh.position.set(0, 0, -(_gizmoCR + 0.25));  // just outside circle, north side
+    gizmoDNGroup.add(_dnTextMesh);
+
+    function updateDNTextMesh(dnDeg) {
+      _dnTextCtx.clearRect(0, 0, 128, 32);
+      if (dnDeg !== null && dnDeg !== undefined) {
+        _dnTextCtx.fillStyle = '#2a7a2a';
+        _dnTextCtx.font = 'bold 20px Outfit, Georgia, sans-serif';
+        _dnTextCtx.textAlign = 'center';
+        _dnTextCtx.textBaseline = 'middle';
+        _dnTextCtx.fillText('DN ' + Math.round(dnDeg) + '\u00b0', 64, 16);
+      }
+      _dnTextTex.needsUpdate = true;
+    }
+
     gizmoScene.add(gizmoDNGroup);
 
     // Gizmo 3D state -- frame size drives everything, camera frustum NEVER changes
@@ -2227,6 +2250,7 @@
       const _dnDeg = getDesignNorthDeg();
       if (_dnDeg !== _lastDrawnDnDeg) {
         redrawGizmoCanvas(_dnDeg);
+        updateDNTextMesh(_dnDeg);
         _lastDrawnDnDeg = _dnDeg;
       }
       if (_dnDeg !== null) {
