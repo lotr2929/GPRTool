@@ -502,6 +502,7 @@ function stopResize() {
 function onDragDown(e) {
   if (e.target.classList.contains('resize-handle') || isResizing) return;
   if (e.button !== 0) return;
+  if (e.target.id === 'np-n-label') return;
 
   dragPending     = true;
   dragStartClient = { x: e.clientX, y: e.clientY };
