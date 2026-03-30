@@ -229,6 +229,8 @@
       updateNorthRotation,
       toggleNorthPoint,
       resetNorthPos,
+      getDesignNorthDeg,
+      setNorthPointMode,
     } from './js/north-point-2d.js';
 
     /* ============================================================
@@ -591,6 +593,105 @@
       scene.add(axesHelper);
     }
     updateSceneHelpers(100);
+
+    /* ============================================================
+       COMPASS GIZMO -- 3D inset scene (shown in 3D mode only)
+    ============================================================ */
+    const gizmoScene  = new THREE.Scene();
+    const gizmoCamera = new THREE.OrthographicCamera(-1.5, 1.5, 1.5, -1.5, 0.1, 20);
+
+    // Subtle background disc
+    const _gizmoBgDisc = new THREE.Mesh(
+      new THREE.CircleGeometry(1.3, 48),
+      new THREE.MeshBasicMaterial({ color: 0x111111, transparent: true, opacity: 0.45, side: THREE.DoubleSide })
+    );
+    _gizmoBgDisc.rotation.x = -Math.PI / 2;
+    gizmoScene.add(_gizmoBgDisc);
+
+    // Outer ring
+    (function() {
+      const pts = [];
+      for (let i = 0; i <= 64; i++) {
+        const a = (i / 64) * Math.PI * 2;
+        pts.push(new THREE.Vector3(Math.sin(a), 0, Math.cos(a)));
+      }
+      gizmoScene.add(new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(pts),
+        new THREE.LineBasicMaterial({ color: 0x888888 })
+      ));
+    })();
+
+    // N arrow -- red, pointing -Z (world north)
+    gizmoScene.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -0.78)
+      ]),
+      new THREE.LineBasicMaterial({ color: 0xcc3333 })
+    ));
+    gizmoScene.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-0.09, 0, -0.62),
+        new THREE.Vector3(0, 0, -0.82),
+        new THREE.Vector3(0.09, 0, -0.62)
+      ]),
+      new THREE.LineBasicMaterial({ color: 0xcc3333 })
+    ));
+
+    // S tick -- grey
+    gizmoScene.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0.62)
+      ]),
+      new THREE.LineBasicMaterial({ color: 0x888888 })
+    ));
+
+    // E / W ticks -- grey
+    const _gizmoTickMat = new THREE.LineBasicMaterial({ color: 0x888888 });
+    [1, -1].forEach(sign => {
+      gizmoScene.add(new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(sign * 0.58, 0, 0), new THREE.Vector3(sign * 0.82, 0, 0)
+        ]),
+        _gizmoTickMat
+      ));
+    });
+
+    // "N" sprite label
+    (function() {
+      const c = document.createElement('canvas');
+      c.width = c.height = 64;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#cc3333';
+      ctx.font = 'bold 42px Outfit, Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('N', 32, 32);
+      const sprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true })
+      );
+      sprite.scale.set(0.32, 0.32, 1);
+      sprite.position.set(0, 0.18, -1.08);
+      gizmoScene.add(sprite);
+    })();
+
+    // Design-north arrow group (green, rotated around Y by designNorthDeg)
+    const gizmoDNGroup = new THREE.Group();
+    gizmoDNGroup.visible = false;
+    const _gizmoDNMat = new THREE.LineBasicMaterial({ color: 0x4a8a4a });
+    gizmoDNGroup.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0, -0.8), new THREE.Vector3(0, 0, 0.8)
+      ]),
+      _gizmoDNMat
+    ));
+    // Dot approximation at tip (short cross)
+    gizmoDNGroup.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-0.05, 0, -0.76), new THREE.Vector3(0.05, 0, -0.76)
+      ]),
+      _gizmoDNMat
+    ));
+    gizmoScene.add(gizmoDNGroup);
 
     /* ============================================================
        GEO UTILITIES
@@ -1797,6 +1898,7 @@
     ============================================================ */
     function switchMode(mode) {
       currentMode = mode;
+      setNorthPointMode(mode);
 
       document.querySelectorAll('.mode-btn').forEach(btn =>
         btn.classList.toggle('active', btn.dataset.mode === mode));
@@ -1925,12 +2027,50 @@
     requestAnimationFrame(() => requestAnimationFrame(resizeToContainer));
 
     /* ============================================================
+       COMPASS GIZMO -- render function
+    ============================================================ */
+    function renderCompassGizmo() {
+      const npContainer = document.getElementById('np-container');
+      if (!npContainer) return;
+
+      const size   = npContainer.offsetWidth || 77;
+      const right  = parseFloat(npContainer.style.right)  || 16;
+      const bottom = parseFloat(npContainer.style.bottom) || 16;
+      const cw     = container.clientWidth;
+      const ch     = container.clientHeight;
+      const x      = Math.round(cw - right - size);
+      const y      = Math.round(bottom);
+
+      // Sync gizmo camera orientation with camera3D
+      gizmoCamera.quaternion.copy(camera3D.quaternion);
+      const _gbwd = new THREE.Vector3(0, 0, 1).applyQuaternion(gizmoCamera.quaternion);
+      gizmoCamera.position.copy(_gbwd).multiplyScalar(5);
+
+      // Sync DN arrow
+      const _dnDeg = getDesignNorthDeg();
+      if (_dnDeg !== null) {
+        gizmoDNGroup.visible    = true;
+        gizmoDNGroup.rotation.y = -_dnDeg * Math.PI / 180;
+      } else {
+        gizmoDNGroup.visible = false;
+      }
+
+      renderer.setScissorTest(true);
+      renderer.setScissor(x, y, size, size);
+      renderer.setViewport(x, y, size, size);
+      renderer.render(gizmoScene, gizmoCamera);
+      renderer.setScissorTest(false);
+      renderer.setViewport(0, 0, cw, ch);
+    }
+
+    /* ============================================================
        ANIMATION LOOP
     ============================================================ */
     (function animate() {
       controls.update();
       updateNorthRotation();
       renderer.render(scene, camera);
+      if (currentMode === '3d') renderCompassGizmo();
       requestAnimationFrame(animate);
     })();
 

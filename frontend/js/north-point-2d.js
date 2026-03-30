@@ -383,13 +383,22 @@ export function resetNorthPos() {
 export function updateNorthRotation() {
   if (!npRotEl || !npEl || npEl.style.display === 'none') return;
   const { currentMode, camera2D, camera3D, controls3D, pan2D } = getState();
-  const cam    = currentMode === '3d' ? camera3D : camera2D;
-  const target = currentMode === '3d'
-    ? controls3D.target
-    : new THREE.Vector3(pan2D.x, 0, pan2D.z);
-  _npO.copy(target).project(cam);
-  _npN.copy(target).add(new THREE.Vector3(0, 0, -500)).project(cam);
-  const camDeg = Math.atan2(_npN.x - _npO.x, _npN.y - _npO.y) * 180 / Math.PI;
+
+  let camDeg;
+  if (currentMode === '3d') {
+    // Horizontal azimuth only — ignore camera elevation
+    // Vector from camera to target, flattened to XZ plane
+    const dx = controls3D.target.x - camera3D.position.x;
+    const dz = controls3D.target.z - camera3D.position.z;
+    // atan2(-dx, dz): camera looking north (dz<0) → 0°, looking east (dx>0) → -90°
+    camDeg = Math.atan2(-dx, dz) * 180 / Math.PI;
+  } else {
+    const cam    = camera2D;
+    const target = new THREE.Vector3(pan2D.x, 0, pan2D.z);
+    _npO.copy(target).project(cam);
+    _npN.copy(target).add(new THREE.Vector3(0, 0, -500)).project(cam);
+    camDeg = Math.atan2(_npN.x - _npO.x, _npN.y - _npO.y) * 180 / Math.PI;
+  }
 
   // Icon rotates by camera angle + design north offset
   const iconRot = camDeg + (designNorthDeg !== null ? designNorthDeg : 0);
@@ -425,6 +434,22 @@ export function updateNorthRotation() {
       dnLabelEl.setAttribute('text-anchor', 'middle');
     }
     dnLabelEl.setAttribute('y', LABEL_Y);
+  }
+}
+
+export function getDesignNorthDeg() { return designNorthDeg; }
+
+export function setNorthPointMode(mode) {
+  // '3d': hide DOM widget — gizmo takes over; '2d': restore per saved preference
+  if (!npEl) return;
+  if (mode === '3d') {
+    npEl.style.display = 'none';
+  } else {
+    try {
+      const saved = JSON.parse(localStorage.getItem(NP_KEY));
+      if (saved && saved.visible === false) return; // user explicitly hid it
+    } catch {}
+    npEl.style.display = '';
   }
 }
 
