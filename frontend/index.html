@@ -600,34 +600,51 @@
     const gizmoScene  = new THREE.Scene();
     const gizmoCamera = new THREE.OrthographicCamera(-1.5, 1.5, 1.5, -1.5, 0.1, 20);
 
-    // Compass face -- canvas texture replicating the 2D SVG icon exactly
-    // SVG viewBox 0 0 64 72, circle at (32,40) r=22; scale=3, circle centred at canvas (128,128)
+    // Compass face -- dynamic canvas texture (redrawn each frame when DN changes)
+    // Transparent background (no white disc), south polygon stays white.
+    // DN angle text is baked into the XZ plane mesh so it tilts with the camera.
     let gizmoCompassMesh = null;
+    let _gizmoCanvasTex  = null;
+    let _gizmoCtx        = null;
+    let _gizmoMx, _gizmoMy;  // coord helpers
+    let _lastDrawnDnDeg  = undefined; // sentinel
+
     (function() {
       const S  = 256;
       const sc = 3;
       const ox = 128 - 32 * sc;   // = 32
       const oy = 128 - 40 * sc;   // = 8
-      function mx(x) { return x * sc + ox; }
-      function my(y) { return y * sc + oy; }
+      _gizmoMx = x => x * sc + ox;
+      _gizmoMy = y => y * sc + oy;
 
       const cv = document.createElement('canvas');
       cv.width = cv.height = S;
-      const ctx = cv.getContext('2d');
+      _gizmoCtx = cv.getContext('2d');
+      _gizmoCanvasTex = new THREE.CanvasTexture(cv);
 
-      // White background disc (slightly larger than ring)
-      ctx.beginPath();
-      ctx.arc(mx(32), my(40), 22 * sc * 1.08, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,0.93)';
-      ctx.fill();
+      const compassMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(3.0, 3.0),
+        new THREE.MeshBasicMaterial({ map: _gizmoCanvasTex, transparent: true, depthWrite: false, side: THREE.DoubleSide })
+      );
+      compassMesh.rotation.x = -Math.PI / 2;
+      gizmoCompassMesh = compassMesh;
+      gizmoScene.add(compassMesh);
+    })();
+
+    function redrawGizmoCanvas(dnDeg) {
+      const ctx = _gizmoCtx;
+      const mx  = _gizmoMx;
+      const my  = _gizmoMy;
+      const S   = 256;
+      ctx.clearRect(0, 0, S, S); // fully transparent background
 
       // Outer ring
       ctx.beginPath();
-      ctx.arc(mx(32), my(40), 22 * sc, 0, Math.PI * 2);
-      ctx.strokeStyle = '#555'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.arc(mx(32), my(40), 22 * 3, 0, Math.PI * 2);
+      ctx.strokeStyle = '#333'; ctx.lineWidth = 2.5; ctx.stroke();
 
       // Cardinal ticks: N, S, W, E
-      ctx.strokeStyle = '#555'; ctx.lineWidth = 2;
+      ctx.strokeStyle = '#333'; ctx.lineWidth = 2.5;
       [[32,15,32,20],[32,60,32,65],[7,40,12,40],[52,40,57,40]].forEach(([x1,y1,x2,y2]) => {
         ctx.beginPath(); ctx.moveTo(mx(x1),my(y1)); ctx.lineTo(mx(x2),my(y2)); ctx.stroke();
       });
@@ -637,11 +654,11 @@
       ctx.moveTo(mx(32),my(20)); ctx.lineTo(mx(32),my(40)); ctx.lineTo(mx(42),my(43));
       ctx.closePath(); ctx.fillStyle = '#1a1a1a'; ctx.fill();
 
-      // South (white) polygon
+      // South (white) polygon -- keep white so it reads on any background
       ctx.beginPath();
       ctx.moveTo(mx(32),my(60)); ctx.lineTo(mx(32),my(40)); ctx.lineTo(mx(22),my(37));
       ctx.closePath(); ctx.fillStyle = 'white'; ctx.fill();
-      ctx.strokeStyle = '#555'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5; ctx.stroke();
 
       // N label
       ctx.fillStyle = '#1a1a1a';
@@ -649,14 +666,16 @@
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText('N', mx(32), my(11));
 
-      const compassMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(3.0, 3.0),
-        new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, side: THREE.DoubleSide })
-      );
-      compassMesh.rotation.x = -Math.PI / 2;
-      gizmoCompassMesh = compassMesh;
-      gizmoScene.add(compassMesh);
-    })();
+      // DN angle text -- below the circle, part of the XZ plane mesh
+      if (dnDeg !== null && dnDeg !== undefined) {
+        ctx.fillStyle = '#2a6a2a';
+        ctx.font = 'bold 24px Outfit, Georgia, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('DN ' + Math.round(dnDeg) + '\u00b0', mx(32), my(76));
+      }
+
+      _gizmoCanvasTex.needsUpdate = true;
+    }
 
     // Design-north arrow group (green, rotated around Y by designNorthDeg)
     // Sized to match the circle in the icon (circle r = 22/32 * 1.5 = 1.03 world units)
@@ -2189,6 +2208,9 @@
     /* ============================================================
        COMPASS GIZMO -- render function
     ============================================================ */
+    // Initial canvas draw (no DN yet)
+    redrawGizmoCanvas(null);
+
     function renderCompassGizmo() {
       const size = gizmo3DSize;  // variable frame size -- camera frustum stays fixed at ±1.5
       const cw   = container.clientWidth;
@@ -2201,8 +2223,12 @@
       const _gbwd = new THREE.Vector3(0, 0, 1).applyQuaternion(gizmoCamera.quaternion);
       gizmoCamera.position.copy(_gbwd).multiplyScalar(5);
 
-      // DN arrow
+      // DN arrow + canvas text -- redraw canvas only when DN value changes
       const _dnDeg = getDesignNorthDeg();
+      if (_dnDeg !== _lastDrawnDnDeg) {
+        redrawGizmoCanvas(_dnDeg);
+        _lastDrawnDnDeg = _dnDeg;
+      }
       if (_dnDeg !== null) {
         gizmoDNGroup.visible    = true;
         gizmoDNGroup.rotation.y = -_dnDeg * Math.PI / 180;
@@ -2213,7 +2239,14 @@
       renderer.setScissorTest(true);
       renderer.setScissor(x, y, size, size);
       renderer.setViewport(x, y, size, size);
+
+      // Render without clearing colour -- main scene shows through (transparent background)
+      const savedAutoClear = renderer.autoClear;
+      renderer.autoClear = false;
+      renderer.clear(false, true, false); // depth-only clear so gizmo draws on top
       renderer.render(gizmoScene, gizmoCamera);
+      renderer.autoClear = savedAutoClear;
+
       renderer.setScissorTest(false);
       renderer.setViewport(0, 0, cw, ch);
     }
