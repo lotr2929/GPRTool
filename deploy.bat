@@ -43,9 +43,9 @@ if %errorlevel% equ 0 (
 
 REM -----------------------------------------
 REM 2. Auto-generate commit message
-REM    Format: 2026-03-29 14:32 - north-point-2d.js styles.css body.html
+REM    Format: 30MAR26 - north-point-2d.js styles.css body.html
 REM -----------------------------------------
-powershell -NoProfile -Command "$ts=(Get-Date -Format 'yyyy-MM-dd HH:mm'); $names=(git diff --cached --name-only | ForEach-Object { Split-Path $_ -Leaf } | Select-Object -First 4) -join ', '; Set-Content '%TEMP%\gpr_msg.txt' \"$ts - $names\""
+powershell -NoProfile -Command "$ts=(Get-Date -Format 'ddMMMyy').ToUpper(); $names=(git diff --cached --name-only | ForEach-Object { Split-Path $_ -Leaf } | Select-Object -First 4) -join ', '; $msg=\"$ts - $names\"; Set-Content '%TEMP%\gpr_msg.txt' $msg; Write-Host $msg -ForegroundColor Cyan"
 
 set /p commit_msg=<"%TEMP%\gpr_msg.txt"
 del "%TEMP%\gpr_msg.txt" 2>nul
