@@ -264,6 +264,10 @@ function showDNInput(autoFocus = true) {
   field.classList.remove('np-dn-invalid');
   if (autoFocus) requestAnimationFrame(() => field.focus());
 
+  // Intercept Escape + Enter at capture phase so global handlers don't fire
+  document.removeEventListener('keydown', onDNKeyCapture, true);
+  document.addEventListener('keydown', onDNKeyCapture, true);
+
   // Close on outside click — remove first to prevent duplicate listeners
   document.removeEventListener('click', onClickOutsideDNInput);
   setTimeout(() => {
@@ -275,11 +279,38 @@ function hideDNInput() {
   const inp = document.getElementById('np-dn-input');
   if (inp) inp.style.display = 'none';
   document.removeEventListener('click', onClickOutsideDNInput);
+  document.removeEventListener('keydown', onDNKeyCapture, true);
   exitRotateMode();
 }
 
+function onDNKeyCapture(e) {
+  const inp = document.getElementById('np-dn-input');
+  if (!inp || inp.style.display === 'none') return;
+
+  if (e.key === 'Escape') {
+    e.stopPropagation();
+    e.preventDefault();
+    hideDNInput();
+  }
+
+  if (e.key === 'Enter') {
+    e.stopPropagation();
+    e.preventDefault();
+    const field = document.getElementById('np-dn-field');
+    if (!field) return;
+    const val = field.value.trim();
+    const deg = parseNorthAngle(val);
+    if (deg !== null) {
+      applyDesignNorth(deg);
+      hideDNInput();
+    } else {
+      field.classList.add('np-dn-invalid');
+      setTimeout(() => field.classList.remove('np-dn-invalid'), 600);
+    }
+  }
+}
+
 function onClickOutsideDNInput(e) {
-  if (rotateMode) return; // panel stays open while rotating
   const inp = document.getElementById('np-dn-input');
   if (inp && !inp.contains(e.target) && !npEl.contains(e.target)) hideDNInput();
 }
@@ -461,7 +492,7 @@ export function initNorthPoint2D(getStateCallback) {
   document.getElementById('np-ctx-rotate-np')?.addEventListener('click', () => {
     if (npCtxEl) npCtxEl.style.display = 'none';
     enterRotateMode();
-    showDNInput(false);
+    showDNInput(true);
   });
   document.getElementById('np-ctx-set-dn')?.addEventListener('click', () => {
     if (npCtxEl) npCtxEl.style.display = 'none';
