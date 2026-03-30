@@ -45,11 +45,6 @@ let dragPending     = false;
 let dragStartClient = { x: 0, y: 0 };
 let dragOffset      = { x: 0, y: 0 };
 
-let nPointerDown    = false;
-let isNDragging     = false;
-let nDragStartAngle = 0;
-let nDragStartDN    = 0;
-
 let isResizing   = false;
 let resizeHandle = null;
 let resizeStart  = { w: NP_BASE_W, anchor: { x: 0, y: 0 } };
@@ -178,13 +173,8 @@ function applyDesignNorth(deg) {
   if (dnGroupEl && dnLabelEl) {
     if (deg !== null) {
       dnGroupEl.style.display = '';
-      // Group transform is handled per-frame in updateNorthRotation
+      // Group transform + label position handled per-frame in updateNorthRotation
       dnLabelEl.textContent = formatNorthAngle(deg);
-      // Label positioned right of centre, near the dot - stays readable via group counter-rotation
-      dnLabelEl.setAttribute('x', SVG_CX + 5);
-      dnLabelEl.setAttribute('y', SVG_CY - 18);
-      dnLabelEl.setAttribute('text-anchor', 'start');
-      dnLabelEl.removeAttribute('transform');
     } else {
       dnGroupEl.style.display = 'none';
     }
@@ -347,8 +337,35 @@ export function updateNorthRotation() {
   npRotEl.style.transform = `rotate(${iconRot}deg)`;
 
   // DN group counter-rotates every frame so the line always points screen-up
-  if (dnGroupEl && designNorthDeg !== null) {
+  if (dnGroupEl && dnLabelEl && designNorthDeg !== null) {
     dnGroupEl.setAttribute('transform', `rotate(${-iconRot}, ${SVG_CX}, ${SVG_CY})`);
+
+    // Label: centered just above circle top by default (y=14, above edge y=18)
+    // If N is within ±40° of the top, shift label sideways to avoid overlap
+    const LABEL_Y   = 14;
+    const CLASH_DEG = 40;
+    const SIDE_X    = 4; // gap from centre when shifted
+
+    let normRot = ((iconRot % 360) + 360) % 360;
+    if (normRot > 180) normRot -= 360; // [-180, 180]: sign = which side N is on
+
+    if (Math.abs(normRot) < CLASH_DEG) {
+      // N is near top — push label to opposite side
+      if (normRot >= 0) {
+        // N right of top → label left
+        dnLabelEl.setAttribute('x', SVG_CX - SIDE_X);
+        dnLabelEl.setAttribute('text-anchor', 'end');
+      } else {
+        // N left of top → label right
+        dnLabelEl.setAttribute('x', SVG_CX + SIDE_X);
+        dnLabelEl.setAttribute('text-anchor', 'start');
+      }
+    } else {
+      // N is clear — centre the label
+      dnLabelEl.setAttribute('x', SVG_CX);
+      dnLabelEl.setAttribute('text-anchor', 'middle');
+    }
+    dnLabelEl.setAttribute('y', LABEL_Y);
   }
 }
 
@@ -387,15 +404,6 @@ export function initNorthPoint2D(getStateCallback) {
   // Drag
   npEl.addEventListener('pointerdown', onDragDown);
 
-  // N-label: self-contained pointer handling — click to open DN panel, drag to rotate
-  const nLabel = document.getElementById('np-n-label');
-  if (nLabel) {
-    nLabel.addEventListener('pointerdown', onNDown);
-    nLabel.addEventListener('pointermove', onNMove);
-    nLabel.addEventListener('pointerup',   onNUp);
-    nLabel.addEventListener('pointercancel', onNUp);
-  }
-
   // Global pointer handlers
   document.addEventListener('pointermove', onPointerMove);
   document.addEventListener('pointerup',   onPointerUp);
@@ -421,6 +429,10 @@ export function initNorthPoint2D(getStateCallback) {
   document.getElementById('np-ctx-hide')?.addEventListener('click', () => {
     toggleNorthPoint();
     if (npCtxEl) npCtxEl.style.display = 'none';
+  });
+  document.getElementById('np-ctx-rotate-np')?.addEventListener('click', () => {
+    if (npCtxEl) npCtxEl.style.display = 'none';
+    showDNInput();
   });
   document.getElementById('np-ctx-set-dn')?.addEventListener('click', () => {
     if (npCtxEl) npCtxEl.style.display = 'none';
@@ -545,52 +557,6 @@ function stopDrag() {
   if (!isDragging) return;
   isDragging        = false;
   npEl.style.cursor = 'grab';
-}
-
-// ── N-label drag-to-rotate ───────────────────────────────────
-
-function angleFromNPCenter(clientX, clientY) {
-  const rect = npEl.getBoundingClientRect();
-  const cx   = rect.left + rect.width  * 0.5;
-  const cy   = rect.top  + rect.height * 0.555; // compass circle centre
-  return Math.atan2(clientX - cx, cy - clientY) * 180 / Math.PI;
-}
-
-function onNDown(e) {
-  if (e.button !== 0) return;
-  e.stopPropagation();
-  e.preventDefault();
-  nPointerDown    = true;
-  isNDragging     = false;
-  nDragStartAngle = angleFromNPCenter(e.clientX, e.clientY);
-  nDragStartDN    = designNorthDeg !== null ? designNorthDeg : 0;
-  // Capture to the N label itself — keeps N handling self-contained
-  e.currentTarget.setPointerCapture(e.pointerId);
-}
-
-function onNMove(e) {
-  if (!nPointerDown) return;
-  e.stopPropagation();
-  const cur   = angleFromNPCenter(e.clientX, e.clientY);
-  const delta = cur - nDragStartAngle;
-  if (!isNDragging) {
-    if (Math.abs(delta) < 3) return;
-    isNDragging = true;
-    showDNInput(false);
-  }
-  const newDN = nDragStartDN + delta;
-  applyDesignNorth(newDN);
-  const field = document.getElementById('np-dn-field');
-  if (field) field.value = formatNorthAngle(newDN);
-}
-
-function onNUp(e) {
-  if (!nPointerDown) return;
-  e.stopPropagation();
-  const wasClick = !isNDragging;
-  nPointerDown   = false;
-  isNDragging    = false;
-  if (wasClick) showDNInput(true);
 }
 
 // ── Combined pointer handlers ─────────────────────────────────
