@@ -237,6 +237,7 @@
       updateGizmoOverlay,
       renderCompassGizmo,
       toggleGizmo3D,
+      isGizmo3DVisible,
     } from './js/north-point-3d.js';
 
     /* ============================================================
@@ -1956,7 +1957,7 @@
       if (axesHelper)  axesHelper.rotation.y  = -_dnRad;
 
       renderer.render(scene, camera);
-      if (currentMode === '3d' && gizmo3DVisible) renderCompassGizmo();
+      if (currentMode === '3d' && isGizmo3DVisible()) renderCompassGizmo();
       requestAnimationFrame(animate);
     })();
 

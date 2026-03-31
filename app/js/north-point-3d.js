@@ -261,6 +261,8 @@ export function updateGizmoOverlay() {
   gizmoOverlay.style.bottom   = gizmo3DBottom + 'px';
 }
 
+export function isGizmo3DVisible() { return gizmo3DVisible; }
+
 export function toggleGizmo3D() {
   gizmo3DVisible = !gizmo3DVisible;
   updateGizmoOverlay();
