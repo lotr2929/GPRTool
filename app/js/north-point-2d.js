@@ -413,7 +413,7 @@ export function updateNorthRotation() {
 
   // Green arrow points Design North — rotates within compass by designNorthAngle
   if (dnGroupEl && dnLabelEl) {
-    const tnLocalAngle = designNorthAngle;
+    const tnLocalAngle = designNorthAngle - globalNorthAngle;
     dnGroupEl.setAttribute('transform', `rotate(${tnLocalAngle}, ${SVG_CX}, ${SVG_CY})`);
     // Show green DN arrow when TN ≠ DN (i.e. globalNorthAngle has been set)
     dnGroupEl.style.display = globalNorthAngle !== 0 ? '' : 'none';
