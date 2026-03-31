@@ -155,10 +155,10 @@ function restoreState() {
       if (saved.visible === false) npEl.style.display = 'none';
       if (saved.right !== undefined) applyPos(saved.right, saved.bottom);
       else                           resetPosInternal();
-      // DN always defaults to 0 on load — grid starts vertical/horizontal
+      // Both DN and TN reset to 0 on load — N points up, grid vertical/horizontal
+      // Will be restored from .gpr session file when session save is implemented
       applyDesignNorth(0);
-      // TN (globalNorthAngle) is a geographic fact — restore between sessions
-      if (saved.tn !== undefined) applyGlobalNorth(saved.tn);
+      applyGlobalNorth(0);
     } else {
       resetPosInternal();
     }
