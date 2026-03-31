@@ -272,7 +272,7 @@ function showDNInput(autoFocus = true) {
 
   // Pre-fill with current value if already set
   const field = document.getElementById('np-dn-field');
-  field.value = designNorthDeg !== null ? formatNorthAngle(designNorthDeg) : '';
+  field.value = designNorthAngle !== 0 ? formatNorthAngle(designNorthAngle) : '';
   field.classList.remove('np-dn-invalid');
   if (autoFocus) requestAnimationFrame(() => field.focus());
 
@@ -412,18 +412,18 @@ export function updateNorthRotation() {
     camDeg = Math.atan2(_npN.x - _npO.x, _npN.y - _npO.y) * 180 / Math.PI;
   }
 
-  // N arrow points True North: iconRot = camera angle + globalNorthAngle offset
+  // Compass body tracks True North — N always points to TN on screen
   const iconRot = camDeg + globalNorthAngle;
   npRotEl.style.transform = `rotate(${iconRot}deg)`;
 
-  // DN group rotates so its arrow always points Design North on screen
-  // groupRotation = designNorthDeg - iconRot
+  // Green arrow points Design North — rotates within compass by designNorthAngle
   if (dnGroupEl && dnLabelEl) {
-    const dnScreenAngle = designNorthAngle - iconRot;
-    dnGroupEl.setAttribute('transform', `rotate(${dnScreenAngle}, ${SVG_CX}, ${SVG_CY})`);
-    dnGroupEl.style.display = globalNorthAngle !== 0 ? '' : 'none';
+    const tnLocalAngle = designNorthAngle;
+    dnGroupEl.setAttribute('transform', `rotate(${tnLocalAngle}, ${SVG_CX}, ${SVG_CY})`);
+    // Show green DN arrow only when DN ≠ TN
+    dnGroupEl.style.display = designNorthAngle !== 0 ? '' : 'none';
 
-    // Shift label sideways if TN is within ±65° of DN (near compass top)
+    // Shift label sideways if TN arrow is near compass top (where D label sits)
     const LABEL_Y   = 14;
     const CLASH_DEG = 65;
     const SIDE_X    = 10;
