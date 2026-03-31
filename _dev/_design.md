@@ -923,6 +923,140 @@ taskkill /PID <pid> /F
 6. Species picker — dropdown linked to LAI database CSV
 7. Plant schedule — list of all placed elements with species, area, LAI, contribution
 
+
+
+---
+
+## COORDINATE SYSTEMS — Architecture and Conventions
+
+**Last updated:** 2026-03-31
+
+GPRTool operates with exactly **two coordinate contexts**. Keeping them clearly separated is critical to correctness. Confusing them is the root cause of most orientation and alignment bugs.
+
+---
+
+### 1. Global Coordinates (Real World)
+
+**Definition:** The fixed, immutable Three.js world coordinate system. Represents geographic reality. Never rotates. Never moves.
+
+**Axis convention (architectural Z-up, right-hand):**
+- **+X = East** (Red axis)
+- **-Z = True North** (Green axis)
+- **+Y = Up / Elevation** (Blue axis)
+
+Matches AutoCAD WCS, ArchiCAD, Revit, and Rhino world space. XZ plane = ground plane. Y = height.
+
+**What lives here:**
+- All imported geometry (OBJ, GLB, GeoJSON)
+- Map tile overlays (CARTO, Mapbox)
+- The Three.js scene graph
+- Surface normals and areas used in GPR calculation
+- The N compass (drawn on the ground plane — see Section 4)
+
+**True North:**
+- GeoJSON: geographic north auto-aligns to world -Z. `globalNorthAngle = 0`.
+- OBJ/GLB: model may not be north-aligned. User sets `globalNorthAngle` (rotation from world -Z to geographic north) after import.
+- `globalNorthAngle` is the only value that moves the N arrow on the compass.
+
+**Code convention:** no prefix, or `global` prefix when disambiguation needed.
+Examples: `globalNorthAngle`, `worldPos`, `scene`.
+
+---
+
+### 2. Design Coordinates (Design World)
+
+**Definition:** A working coordinate frame defined by the designer for a specific surface or design task. Overlaid on global space. Defined by two parameters per surface: a **design origin** and a **designNorthAngle**.
+
+**Why it exists:** A landscape architect working on a building oriented 15° west of north needs their grid, axes, and drawing tools aligned with the building — not with geographic north. Each surface or design task has its own frame.
+
+**Defined by (per surface):**
+- `design.origin` — the working origin point in global space. Default: centre of surface bounding box.
+- `design.northAngle` — clockwise rotation from True North to Design North, in degrees. Default: 0 (aligned to True North). Positive = east. Negative = west.
+
+**Multiple design contexts:** The user may define as many design contexts as they need. Each is tied to a surface. When the user selects a surface, GPRTool activates that surface's design context — the grid, axes, and origin update to match. All design tools then operate in that surface's design frame.
+
+**What lives here:**
+- The design grid (GridHelper) — rotated by `design.northAngle`
+- The design axes — origin at `design.origin`, rotated by `design.northAngle`
+- Drawing tool coordinates (rectangle, polygon, line — future)
+- Dimension readouts (future)
+- Plant placement positions (stored as design-frame coords, converted to global for Three.js)
+
+**Conversion between frames:**
+```
+Design → Global:  rotate point by -(globalNorthAngle + design.northAngle) around world Y, then add design.origin
+Global → Design:  subtract design.origin, then rotate by +(globalNorthAngle + design.northAngle) around world Y
+```
+Future helpers: `toGlobalCoords(designPt, surface)` and `toDesignCoords(worldPt, surface)`.
+
+**Code convention:** `design` prefix.
+Examples: `design.northAngle`, `design.origin`, `designCoords`.
+
+---
+
+### 3. The Design Origin — Per Surface, User-Relocatable
+
+Every surface has exactly one design origin. It is the point where the design axes are drawn and the coordinate readout reads (0, 0).
+
+- **Default:** centre of the surface bounding box in global space.
+- **User-relocatable (V2):** the user can pick any point — a survey marker, a column grid intersection, a site corner — and set it as the design origin for that surface.
+- **Stored with the surface:** the origin is part of the surface's design context, saved in the session file.
+
+**The global model origin (0, 0, 0) is separate and fixed.** It is where imported models and GeoJSON are centred on load. It never moves and is not exposed to the user.
+
+**GPR calculations always use global geometry** — areas, normals, and positions are computed in global space. Design origin and `design.northAngle` affect only the working canvas, coordinate readouts, and drawing tools. They never affect area calculations.
+
+---
+
+### 4. The North Point Compass — Global Infrastructure, Not Design
+
+The compass is drawn on the global ground plane (Y = 0). It is **not part of any surface's design context**. It is orientation infrastructure — it tells the designer where True North and Design North are relative to the camera. It has no effect on placed objects, areas, or GPR calculations.
+
+**Properties:**
+- Drawn at a fixed position on the grid, draggable by the user for convenience
+- Resizable by the user
+- Invisible to design tools — raycaster never hits it, snapping never references it
+- Objects placed by the designer are not aware of it
+
+**What each element shows:**
+
+| Element | Represents | Driven by |
+|---|---|---|
+| N arrow (black needle) | True North direction from camera viewpoint | `globalNorthAngle` + camera azimuth |
+| DN arrow (green line) | Design North direction from camera viewpoint | `globalNorthAngle + design.northAngle` + camera azimuth |
+| Tilt angle label | Angle between True North and Design North | `design.northAngle` |
+| Grid lines | Aligned to Design North of active surface | `design.northAngle` of active surface |
+| Axes (Red/Green/Blue) | Design frame of active surface | `design.northAngle` + `design.origin` |
+
+---
+
+### 5. Standard CAD Precedents
+
+This two-context architecture directly mirrors professional CAD tools:
+
+- **AutoCAD:** WCS (global, fixed) + UCS (User Coordinate System, per task, relocatable origin + rotation). GPRTool's design context is equivalent to AutoCAD's UCS. AutoCAD supports multiple named UCS definitions per drawing.
+- **Revit:** Survey Point (global, fixed) + Project Base Point (design origin, relocatable). Survey Point = global origin. Project Base Point = `design.origin`.
+- **ArchiCAD:** Project Location sets geographic north vs model north (`globalNorthAngle`). Story origins define per-floor design contexts.
+- **Rhino:** World space (global) + Construction Plane (CPlane, per viewport, relocatable origin + rotation). Each viewport has its own CPlane — exactly how GPRTool's per-surface design context works.
+
+**Key rule for GPRTool:** Design tools work in the active surface's design frame. GPR calculations work in global space. Never mix them.
+
+---
+
+### 6. Implementation Status (2026-03-31)
+
+| Feature | Status |
+|---|---|
+| Three.js world = global frame, -Z = True North | ✅ Done |
+| `globalNorthAngle` drives N arrow on compass | ⏳ Pending (currently `trueNorthDeg`) |
+| `design.northAngle` drives grid + axes rotation | ✅ Done (currently `designNorthAngle`) |
+| `design.northAngle` stored per surface | 🔮 V2 (currently global singleton) |
+| `design.origin` stored per surface | 🔮 V2 (currently always model origin) |
+| User-relocatable design origin | 🔮 V2 |
+| `toGlobalCoords()` / `toDesignCoords()` helpers | 🔮 V2 |
+| Compass drawn on ground plane, non-interactive | 🔮 V2 (currently DOM overlay) |
+| OBJ/GLB north alignment (`globalNorthAngle`) | ⏳ Pending |
+
 ---
 
 ## SketchUp Interoperability

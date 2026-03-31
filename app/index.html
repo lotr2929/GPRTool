@@ -229,7 +229,7 @@
       updateNorthRotation,
       toggleNorthPoint,
       resetNorthPos,
-      getDesignNorthDeg,
+      getDesignNorthAngle,
       setNorthPointMode,
     } from './js/north-point-2d.js';
     import {
@@ -1963,7 +1963,7 @@
       // Grid and axes follow Design North so building lines stay
       // vertical/horizontal on screen. dnDeg +ve = East = clockwise.
       // Three.js rotation.y +ve = counterclockwise, so we negate.
-      const _dn    = getDesignNorthDeg();
+      const _dn    = getDesignNorthAngle();
       const _dnRad = (_dn ?? 0) * Math.PI / 180;
       if (gridHelper)  gridHelper.rotation.y  = -_dnRad;
       if (axesHelper)  axesHelper.rotation.y  = -_dnRad;

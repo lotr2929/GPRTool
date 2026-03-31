@@ -36,7 +36,8 @@ let npEl, npRotEl, npCtxEl, npVP;
 let npW = NP_BASE_W;
 let getState;
 
-let designNorthDeg = 0;  // decimal degrees (+ve = E/clockwise); 0 = aligned to True North
+let designNorthAngle = 0;  // grid orientation — changed by "Set Design North"
+let globalNorthAngle = 0;  // TN offset from DN — changed by "Rotate N Point"
 let dnGroupEl = null;
 let dnLabelEl = null;
 
@@ -140,7 +141,8 @@ function saveState() {
     const visible = npEl.style.display !== 'none';
     localStorage.setItem(NP_KEY, JSON.stringify({
       right, bottom, w: npW, visible,
-      dn: designNorthDeg,
+      dn: designNorthAngle,
+      tn: globalNorthAngle,
     }));
   } catch {}
 }
@@ -154,6 +156,7 @@ function restoreState() {
       if (saved.right !== undefined) applyPos(saved.right, saved.bottom);
       else                           resetPosInternal();
       applyDesignNorth(saved.dn !== undefined && saved.dn !== null ? saved.dn : 0);
+      if (saved.tn !== undefined) applyGlobalNorth(saved.tn);
     } else {
       resetPosInternal();
     }
@@ -173,7 +176,7 @@ function resetPosInternal() {
 // ── Design North ──────────────────────────────────────────────
 
 function applyDesignNorth(deg) {
-  designNorthDeg = deg;
+  designNorthAngle = deg;
 
   if (dnGroupEl && dnLabelEl) {
     if (deg !== null) {
@@ -187,8 +190,15 @@ function applyDesignNorth(deg) {
 
   // Show / hide "Clear Design North" menu item
   const clearItem = document.getElementById('np-ctx-clear-dn');
-  if (clearItem) clearItem.style.display = deg !== null ? '' : 'none';
+  if (clearItem) clearItem.style.display = deg !== null && designNorthAngle !== 0 ? '' : 'none';
 
+  saveState();
+}
+
+function applyGlobalNorth(deg) {
+  globalNorthAngle = deg ?? 0;
+  // Update label text to show TN offset from DN
+  if (dnLabelEl) dnLabelEl.textContent = formatNorthAngle(globalNorthAngle);
   saveState();
 }
 
@@ -400,29 +410,27 @@ export function updateNorthRotation() {
     camDeg = Math.atan2(_npN.x - _npO.x, _npN.y - _npO.y) * 180 / Math.PI;
   }
 
-  // N arrow points True North: rotate icon by camera azimuth only
-  const iconRot = camDeg;
+  // N arrow points True North: iconRot = camera angle + globalNorthAngle offset
+  const iconRot = camDeg + globalNorthAngle;
   npRotEl.style.transform = `rotate(${iconRot}deg)`;
 
-  // DN group rotates so its arrow points Design North on screen
-  // Net screen angle of DN = iconRot + groupRotation = designNorthDeg
-  // → groupRotation = designNorthDeg - iconRot
-  if (dnGroupEl && dnLabelEl && designNorthDeg !== null) {
-    const dnScreenAngle = designNorthDeg - iconRot;
+  // DN group rotates so its arrow always points Design North on screen
+  // groupRotation = designNorthDeg - iconRot
+  if (dnGroupEl && dnLabelEl) {
+    const dnScreenAngle = designNorthAngle - iconRot;
     dnGroupEl.setAttribute('transform', `rotate(${dnScreenAngle}, ${SVG_CX}, ${SVG_CY})`);
+    dnGroupEl.style.display = globalNorthAngle !== 0 ? '' : 'none';
 
-    // Label: centered just above circle top by default (y=14, above edge y=18)
-    // If DN arrow is within ±65° of screen-top (where N label sits), shift DN label sideways
+    // Shift label sideways if TN is within ±65° of DN (near compass top)
     const LABEL_Y   = 14;
     const CLASH_DEG = 65;
     const SIDE_X    = 10;
 
-    let normDN = ((designNorthDeg % 360) + 360) % 360;
-    if (normDN > 180) normDN -= 360; // [-180, 180]
+    let normTN = ((globalNorthAngle % 360) + 360) % 360;
+    if (normTN > 180) normTN -= 360;
 
-    if (Math.abs(normDN) < CLASH_DEG) {
-      // DN near True North — push label sideways
-      if (normDN >= 0) {
+    if (Math.abs(normTN) < CLASH_DEG) {
+      if (normTN >= 0) {
         dnLabelEl.setAttribute('x', SVG_CX - SIDE_X);
         dnLabelEl.setAttribute('text-anchor', 'end');
       } else {
@@ -437,7 +445,7 @@ export function updateNorthRotation() {
   }
 }
 
-export function getDesignNorthDeg() { return designNorthDeg; }
+export function getDesignNorthAngle() { return designNorthAngle; }
 
 export function setNorthPointMode(mode) {
   // '3d': hide DOM widget — gizmo takes over; '2d': restore per saved preference
@@ -609,7 +617,7 @@ function onDragDown(e) {
     // In rotate mode: drag rotates the icon instead of moving it
     isRotating       = true;
     rotateStartAngle = angleFromNPCenter(e.clientX, e.clientY);
-    rotateStartDN    = designNorthDeg !== null ? designNorthDeg : 0;
+    rotateStartDN    = globalNorthAngle;
     npEl.setPointerCapture(e.pointerId);
     e.stopPropagation();
     return;
@@ -633,10 +641,10 @@ function onDragDown(e) {
 function handleDrag(e) {
   if (isRotating) {
     const cur   = angleFromNPCenter(e.clientX, e.clientY);
-    const newDN = rotateStartDN + (cur - rotateStartAngle);
-    applyDesignNorth(newDN);
+    const newTN = rotateStartDN + (cur - rotateStartAngle);
+    applyGlobalNorth(newTN);
     const field = document.getElementById('np-dn-field');
-    if (field) field.value = formatNorthAngle(newDN);
+    if (field) field.value = formatNorthAngle(newTN);
     return;
   }
   if (!dragPending && !isDragging) return;

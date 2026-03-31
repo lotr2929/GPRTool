@@ -19,7 +19,7 @@
  */
 
 import * as THREE from 'three';
-import { getDesignNorthDeg } from './north-point-2d.js';
+import { getDesignNorthAngle } from './north-point-2d.js';
 
 // ── Module state ──────────────────────────────────────────────
 let getState = null;
@@ -248,7 +248,7 @@ export function initNorthPoint3D(getStateCallback) {
   _buildCompassMesh();
   _buildOverlay();
   // Draw texture one frame after NP2D has injected #np-dn-group into the SVG
-  requestAnimationFrame(() => updateGizmoTexture(getDesignNorthDeg()));
+  requestAnimationFrame(() => updateGizmoTexture(getDesignNorthAngle()));
 }
 
 export function updateGizmoOverlay() {
@@ -286,7 +286,7 @@ export function renderCompassGizmo() {
   gizmoCamera.position.copy(bwd).multiplyScalar(5);
 
   // Redraw SVG texture only when DN value changes
-  const dnDeg = getDesignNorthDeg();
+  const dnDeg = getDesignNorthAngle();
   if (dnDeg !== _lastDrawnDnDeg) {
     updateGizmoTexture(dnDeg);
     _lastDrawnDnDeg = dnDeg;
