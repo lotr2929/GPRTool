@@ -400,36 +400,36 @@ export function updateNorthRotation() {
     camDeg = Math.atan2(_npN.x - _npO.x, _npN.y - _npO.y) * 180 / Math.PI;
   }
 
-  // Icon rotates by camera angle + design north offset
-  const iconRot = camDeg + (designNorthDeg !== null ? designNorthDeg : 0);
+  // N arrow points True North: rotate icon by camera azimuth only
+  const iconRot = camDeg;
   npRotEl.style.transform = `rotate(${iconRot}deg)`;
 
-  // DN group counter-rotates every frame so the line always points screen-up
+  // DN group rotates so its arrow points Design North on screen
+  // Net screen angle of DN = iconRot + groupRotation = designNorthDeg
+  // → groupRotation = designNorthDeg - iconRot
   if (dnGroupEl && dnLabelEl && designNorthDeg !== null) {
-    dnGroupEl.setAttribute('transform', `rotate(${-iconRot}, ${SVG_CX}, ${SVG_CY})`);
+    const dnScreenAngle = designNorthDeg - iconRot;
+    dnGroupEl.setAttribute('transform', `rotate(${dnScreenAngle}, ${SVG_CX}, ${SVG_CY})`);
 
     // Label: centered just above circle top by default (y=14, above edge y=18)
-    // If N is within ±40° of the top, shift label sideways to avoid overlap
+    // If DN arrow is within ±65° of screen-top (where N label sits), shift DN label sideways
     const LABEL_Y   = 14;
-    const CLASH_DEG = 65;  // degrees either side of top within which DN label shifts sideways
-    const SIDE_X    = 10; // px gap from centre when shifted sideways
+    const CLASH_DEG = 65;
+    const SIDE_X    = 10;
 
-    let normRot = ((iconRot % 360) + 360) % 360;
-    if (normRot > 180) normRot -= 360; // [-180, 180]: sign = which side N is on
+    let normDN = ((designNorthDeg % 360) + 360) % 360;
+    if (normDN > 180) normDN -= 360; // [-180, 180]
 
-    if (Math.abs(normRot) < CLASH_DEG) {
-      // N is near top — push label to opposite side
-      if (normRot >= 0) {
-        // N right of top → label left
+    if (Math.abs(normDN) < CLASH_DEG) {
+      // DN near True North — push label sideways
+      if (normDN >= 0) {
         dnLabelEl.setAttribute('x', SVG_CX - SIDE_X);
         dnLabelEl.setAttribute('text-anchor', 'end');
       } else {
-        // N left of top → label right
         dnLabelEl.setAttribute('x', SVG_CX + SIDE_X);
         dnLabelEl.setAttribute('text-anchor', 'start');
       }
     } else {
-      // N is clear — centre the label
       dnLabelEl.setAttribute('x', SVG_CX);
       dnLabelEl.setAttribute('text-anchor', 'middle');
     }
