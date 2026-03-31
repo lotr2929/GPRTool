@@ -411,8 +411,8 @@ export function updateNorthRotation() {
     // Label: centered just above circle top by default (y=14, above edge y=18)
     // If N is within ±40° of the top, shift label sideways to avoid overlap
     const LABEL_Y   = 14;
-    const CLASH_DEG = 40;
-    const SIDE_X    = 4; // gap from centre when shifted
+    const CLASH_DEG = 65;  // degrees either side of top within which DN label shifts sideways
+    const SIDE_X    = 10; // px gap from centre when shifted sideways
 
     let normRot = ((iconRot % 360) + 360) % 360;
     if (normRot > 180) normRot -= 360; // [-180, 180]: sign = which side N is on

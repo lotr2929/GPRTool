@@ -7,6 +7,15 @@
 
 ---
 
+## 0. KNOWN BROWSER ISSUES
+
+**Chrome:** GPRTool currently has rendering/performance issues in Google Chrome,
+possibly related to Chrome's internal message channel behaviour and GPU process
+conflicts with multiple Chromium-based apps running simultaneously.
+**Use Microsoft Edge for development and testing until this is resolved.**
+
+---
+
 ## 1. THE ONE RULE
 
 > **Touch it, extract it.**
@@ -270,7 +279,23 @@ When extracting a section from `index.html` into its own module:
 
 ---
 
-## 11. REPOMIX
+## 11. PENDING FEATURES — noted, not yet implemented
+
+- **Surface-aligned grid**: When in 2D surface canvas mode (wall or sloped
+  surface), the grid should align to the surface plane rather than being
+  hidden. Requires a separate GridHelper rotated to match the surface normal.
+
+- **Curved surface plant placement**: Curved surfaces are not yet in the
+  surface detection pipeline. UV grid projection onto curved surfaces is
+  deferred until curved geometry is supported.
+
+- **Axis labels**: X/Y/Z text labels at axis tips. Deferred until coordinate
+  input is built. Colour convention conveys orientation for now:
+  Red = X = East, Green = Y = North (world -Z), Blue = Z = Up (world +Y).
+
+---
+
+## 12. REPOMIX
 
 `repomix-output.xml` is a snapshot of the repo for feeding to AI tools that don't have filesystem access. Regenerate it before each session with an external AI tool:
 

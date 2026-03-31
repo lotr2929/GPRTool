@@ -69,6 +69,7 @@ function _buildCompassMesh() {
   );
   mesh.rotation.x = -Math.PI / 2;
   gizmoCompassMesh = mesh;
+  gizmoCompassMesh.scale.x = -1; // un-mirror: canvas texture renders flipped horizontally
   gizmoScene.add(mesh);
 }
 

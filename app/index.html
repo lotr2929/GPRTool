@@ -591,9 +591,9 @@
         return new THREE.Line(geom, new THREE.LineBasicMaterial({ color, depthTest: false }));
       };
       axesHelper = new THREE.Group();
-      axesHelper.add(makeAxisLine(new THREE.Vector3(axisLen, 0, 0), 0xff2222)); // X red
-      axesHelper.add(makeAxisLine(new THREE.Vector3(0, 0, axisLen), 0x2255ff)); // Z blue
-      axesYLine = makeAxisLine(new THREE.Vector3(0, axisLen, 0), 0x22aa44);     // Y green
+      axesHelper.add(makeAxisLine(new THREE.Vector3(axisLen, 0, 0),   0xff2222)); // X → East  (red)
+      axesHelper.add(makeAxisLine(new THREE.Vector3(0, 0, -axisLen),  0x22aa44)); // Y → North (green, world -Z)
+      axesYLine = makeAxisLine(new THREE.Vector3(0, axisLen, 0),      0x2255ff);  // Z → Up    (blue, world +Y)
       axesHelper.add(axesYLine);
       axesYLine.visible = (currentMode === '3d');
       axesHelper.renderOrder = 999;
@@ -1866,8 +1866,20 @@
             pan2D.z  = 0;
             zoom2D   = 1;
             const target = siteBoundaryLine || importedModel;
-            if (target) fit2DCamera(new THREE.Box3().setFromObject(target));
-            else update2DCamera();
+            if (target) {
+              fit2DCamera(new THREE.Box3().setFromObject(target));
+            } else {
+              // No site loaded — reset frustum to default 100-unit view
+              const aspect = container.clientWidth / (container.clientHeight || 1);
+              const halfH  = 50;
+              camera2D.left   = -halfH * aspect;
+              camera2D.right  =  halfH * aspect;
+              camera2D.top    =  halfH;
+              camera2D.bottom = -halfH;
+              base2DhalfH     =  halfH;
+              camera2D.updateProjectionMatrix();
+            }
+            update2DCamera();
             showFeedback('2D view reset');
           } else {
             const target = importedModel || siteBoundaryLine;

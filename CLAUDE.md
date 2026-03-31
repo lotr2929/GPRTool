@@ -11,7 +11,10 @@ Everything you need is in `_dev/`.
 ## Rules
 
 1. Do not write, edit, or move any file without explicit permission.
-2. Number every response so Boon can reference it easily.
+2. Format every response as a numbered list. Number each distinct
+   statement or point so Boon can reference them by number.
+   Use sub-lists (1a, 1b…) for related points under one item.
+   Reset numbering to 1 at the start of each new response.
 3. Use MCP filesystem tools for all file operations. Do not use bash —
    it runs on Linux and cannot reach this Windows filesystem.
 4. Find the simplest solution that fits the existing logic and structure
