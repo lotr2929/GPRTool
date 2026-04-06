@@ -1,9 +1,9 @@
-# GPRTool-Demo — Repository Map
+# GPRTool — Repository Map
 
-**Last updated:** 2026-03-31 (Session 7 — restructure)
-**Live URL:** https://gprtool-demo.vercel.app
-**Local path:** `C:\Users\263350F\_myProjects\GPRTool-Demo`
-**GitHub:** https://github.com/lotr2929/GPRTool-Demo.git
+**Last updated:** 2026-04-06 (Session — rename GPRTool-Demo to GPRTool)
+**Live URL:** https://gprtool.vercel.app
+**Local path:** `C:\Users\263350F\_myProjects\GPRTool`
+**GitHub:** https://github.com/lotr2929/GPRTool.git
 
 > Update this file at the start of every session after any structural changes.
 
@@ -31,7 +31,7 @@ User browser
 ## Directory Structure
 
 ```
-GPRTool-Demo/
+GPRTool/
 │
 ├── CLAUDE.md                   ← AI session instructions — read first
 │
@@ -160,7 +160,7 @@ Deploy
     → deploy.bat
     → git commit + push to GitHub
     → Vercel auto-builds from app/
-    → https://gprtool-demo.vercel.app
+    → https://gprtool.vercel.app
 ```
 
 ---
