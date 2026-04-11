@@ -428,10 +428,10 @@ function injectDNGroup(svg) {
   shaft.setAttribute('stroke', '#4a8a4a');
   shaft.setAttribute('stroke-width', '0.75');
 
-  // Dot — sits just outside the circle top (cy=15: bottom of dot at y=18 = circle top)
+  // Dot — centred on circumference (cy=18: circumference line crosses dot middle)
   const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   head.setAttribute('cx', SVG_CX);
-  head.setAttribute('cy', '15');
+  head.setAttribute('cy', '18');
   head.setAttribute('r', '3');
   head.setAttribute('fill', '#4a8a4a');
 
@@ -496,7 +496,7 @@ export function updateNorthRotation() {
     dnGroupEl.style.display = designNorthAngle !== globalNorthAngle ? '' : 'none';
 
     // Shift label sideways if TN arrow is near compass top (where D label sits)
-    const LABEL_Y   = 9;  // sits 3px above dot at cy=15, close to DN pointer
+    const LABEL_Y   = 12;  // 3-unit gap above dot at cy=18, close to DN pointer
     const CLASH_DEG = 65;
     const SIDE_X    = 10;
 
