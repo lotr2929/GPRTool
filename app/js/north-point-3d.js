@@ -72,7 +72,7 @@ function _buildCompassMesh() {
       side: THREE.DoubleSide,
     })
   );
-  mesh.rotation.x = Math.PI / 2;
+  mesh.rotation.x = -Math.PI / 2;
   gizmoCompassMesh = mesh;
   if (_mainScene) _mainScene.add(mesh);
 }
