@@ -295,11 +295,11 @@ export function renderCompassGizmo() {
   const x    = Math.round(cw - gizmo3DRight - size);
   const y    = Math.round(gizmo3DBottom);
 
-  // Fix: always view compass from directly above -- extract yaw only from camera3D
+  // Fix: extract yaw only from camera3D, look straight down, no pitch copy
   const _euler = new THREE.Euler().setFromQuaternion(camera3D.quaternion, 'YXZ');
+  const _downYaw = new THREE.Euler(Math.PI / 2, _euler.y, 0, 'YXZ');
+  gizmoCamera.quaternion.setFromEuler(_downYaw);
   gizmoCamera.position.set(0, 5, 0);
-  gizmoCamera.up.set(Math.sin(_euler.y), 0, -Math.cos(_euler.y)); // yaw rotates "up" vector
-  gizmoCamera.lookAt(0, 0, 0);
 
   // Redraw SVG texture only when DN or GN value changes
   const dnDeg = getDesignNorthAngle();
