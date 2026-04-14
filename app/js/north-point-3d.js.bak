@@ -296,9 +296,9 @@ export function renderCompassGizmo() {
   const y    = Math.round(gizmo3DBottom);
 
   // Mirror camera3D orientation so icon tilts with camera
-  // Fix: always view compass from directly above (front face, no pitch copy)
-  gizmoCamera.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
-  gizmoCamera.position.set(0, 5, 0);
+  gizmoCamera.quaternion.copy(camera3D.quaternion);
+  const bwd = new THREE.Vector3(0, 0, 1).applyQuaternion(gizmoCamera.quaternion);
+  gizmoCamera.position.copy(bwd).multiplyScalar(5);
 
   // Redraw SVG texture only when DN or GN value changes
   const dnDeg = getDesignNorthAngle();
