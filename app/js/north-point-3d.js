@@ -358,7 +358,7 @@ export function renderCompassGizmo() {
   const dist = camera3D.position.distanceTo(target);
   const fovRad = camera3D.fov * Math.PI / 180;
   const pixelsPerUnit = ch / (2 * dist * Math.tan(fovRad / 2));
-  const worldScale = compassScreenSize / pixelsPerUnit;
+  const worldScale = compassScreenSize / (pixelsPerUnit * 3.0); // PlaneGeometry is 3x3 units
   gizmoCompassMesh.scale.set(worldScale, worldScale, worldScale);
 
   // Redraw SVG texture only when DN or GN value changes
