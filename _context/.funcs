@@ -1,32 +1,85 @@
 # GPRTool -- function index
-# Generated: 13 Apr 2026  10:34 am
+# Generated: 14 Apr 2026  11:37 am
 
 ## app/js/north-point-2d.js  (26 KB)
-  parseNorthAngle(str), formatNorthAngle(deg), formatNorthAngleCompact(deg), heightFromWidth(w), applySize(w), applyPos(right, bottom)
-  saveState(), restoreState(), resetPosInternal(), applyDesignNorth(deg), applyGlobalNorth(deg), angleFromNPCenter(clientX, clientY)
-  enterRotateMode(), exitRotateMode(), showDNInput(autoFocus), hideDNInput(), onDNKeyCapture(e), onClickOutsideDNInput(e)
-  showTNInput(autoFocus), hideTNInput(), onTNKeyCapture(e), onClickOutsideTNInput(e), injectDNGroup(svg), toggleNorthPoint()
-  setNorthPoint2DVisible(visible), resetNorthPos(), updateNorthRotation(), getDesignNorthAngle(), resetDesignNorth(), setNorthPointMode(mode)
-  initNorthPoint2D(getStateCallback), onResizeDown(e), handleResize(e), stopResize(), onDragDown(e), handleDrag(e)
-  stopDrag(), onPointerMove(e), onPointerUp()
+  parseNorthAngle(str)  --  Returns decimal degrees (+ve = east/clockwise) or null on error
+  formatNorthAngle(deg)  --  formatNorthAngleCompact: no spaces for the small compass label (e.g. "7°22'W")
+  formatNorthAngleCompact(deg)  --  formats a compass angle in degrees with direction (E/W) and minutes
+  heightFromWidth(w)  --  ── Size / position helpers ───────────────────────────────────
+  applySize(w)  --  sets the width and height of the north point element within defined limits
+  applyPos(right, bottom)  --  positions the north point element within viewport boundaries
+  saveState()  --  ── Persistence ───────────────────────────────────────────────
+  restoreState()  --  restores saved state from localStorage including size and visibility
+  resetPosInternal()  --  resets the north point position to default margins and saves state
+  applyDesignNorth(deg)  --  ── Design North ──────────────────────────────────────────────
+  applyGlobalNorth(deg)  --  updates the global north angle and refreshes the design north label
+  angleFromNPCenter(clientX, clientY)  --  ── Design North input field ──────────────────────────────────
+  enterRotateMode()  --  enables rotation mode with visual feedback
+  exitRotateMode()  --  disables rotation mode and resets cursor state
+  showDNInput(autoFocus)  --  displays the design north input field with optional auto-focus
+  hideDNInput()  --  hides the design north input field and cleans up event listeners
+  onDNKeyCapture(e)  --  handles keyboard events for the design north input field
+  onClickOutsideDNInput(e)  --  hides the design north input when clicking outside it
+  showTNInput(autoFocus)  --  ── True North input field (mirrors showDNInput but targets globalNorthAngle) ────────
+  hideTNInput()  --  hides the true north input field and cleans up event listeners
+  onTNKeyCapture(e)  --  handles keyboard events for the true north input field
+  onClickOutsideTNInput(e)  --  hides the true north input when clicking outside it
+  injectDNGroup(svg)  --  Shaft:            y = 28 → y = 37 (stops before centre clutter)
+  toggleNorthPoint()  --  ── Public API ────────────────────────────────────────────────
+  setNorthPoint2DVisible(visible)  --  shows or hides the north point 2D element
+  resetNorthPos()  --  resets the north point position to default margins
+  updateNorthRotation()  --  updates the north point rotation based on current mode and camera state
+  getDesignNorthAngle()  --  returns the current design north angle
+  getGlobalNorthAngle()  --  returns the current global north angle
+  resetDesignNorth()  --  resets the design north angle to 0
+  setNorthPointMode(mode)  --  switches between 3D and 2D modes for the north point
+  initNorthPoint2D(getStateCallback)  --  initializes the north point 2D element and sets up event listeners
+  onResizeDown(e)  --  ── Resize ────────────────────────────────────────────────────
+  handleResize(e)  --  handles resizing of the north point element during resize operations
+  stopResize()  --  stops the resize operation and cleans up state
+  onDragDown(e)  --  ── Drag ──────────────────────────────────────────────────────
+  handleDrag(e)  --  handles dragging of the north point element for rotation
+  stopDrag()  --  stops the drag operation and cleans up state
+  onPointerMove(e)  --  ── Combined pointer handlers ─────────────────────────────────
+  onPointerUp()  --  handles pointer up events to stop resize and drag operations
 
 ## app/js/north-point-3d.js  (11 KB)
-  _buildCompassMesh(), updateGizmoTexture(dnDeg), _buildOverlay(), _setSelected(sel), _onPointerDown(e), _onPointerMove(e)
-  _onPointerUp(e), initNorthPoint3D(getStateCallback), updateGizmoOverlay(), isGizmo3DVisible(), toggleGizmo3D(), renderCompassGizmo()
+  _buildCompassMesh()  --  ── Compass mesh ──────────────────────────────────────────────
+  updateGizmoTexture(dnDeg, gnDeg)  --  gnDeg: Global (True) North decimal degrees.
+  _buildOverlay()  --  ── Overlay div ───────────────────────────────────────────────
+  _setSelected(sel)  --  sets the selected state and updates the display accordingly
+  _onPointerDown(e)  --  handles mouse down events for the gizmo handles
+  _onPointerMove(e)  --  handles mouse move events for the gizmo
+  _onPointerUp(e)  --  handles mouse up events and resets the drag and resize states
+  initNorthPoint3D(getStateCallback)  --  ── Public API ────────────────────────────────────────────────
+  updateGizmoOverlay()  --  updates the gizmo overlay visibility and size
+  isGizmo3DVisible()  --  checks if the 3D gizmo is visible
+  toggleGizmo3D()  --  toggles the visibility of the 3D gizmo and updates the overlay
+  renderCompassGizmo()  --  renders the compass gizmo with the specified size and camera settings
 
-## app/index.html  (125 KB)
-  updateHeaderTime(), setAlarm(timeStr), triggerAlarm(), stopAlarm(), clearAlarm(), syncViewportBackground()
-  update2DCamera(), updateSceneHelpers(siteSpan), latlonToMetres(lon, lat, cLon, cLat), extractCoordinates(geojson), computeBBox(coords), computePolygonArea(coords)
-  computePolygonPerimeter(coords), lonToTileX(lon, z), latToTileY(lat, z), tileXToLon(tx, z), tileYToLat(ty, z), loadMapTiles(bbox)
-  mercatorY(lat), loadOneTile(tx, ty, z, bbox), clearMapTiles(), classifyNormal(normal), computeMeshArea(mesh), computeDominantNormal(mesh)
-  vKey(v), extractAllTriangles(modelGroup), buildCoplanarPatches(tris), patchArea(tris), detectSurfaces(modelGroup), populateSurfacePanel()
-  typeMat(s), applyMatToSurface(s, mat), hoverSurface(s), unhoverSurface(s), selectSurface(s), deselectSurface()
-  getPointerNDC(e), allSurfaceMeshes(), loadOBJ(file), loadGLTF(file), loadIFC(file), addEdgeOverlay(modelGroup)
-  detectAndApplyUnitScale(group), onModelLoaded(group, filename, format), drawSiteBoundary(coords), fit2DCamera(box), fit3DCamera(box), drawSurfaceCanvasOutline(surface)
-  clearSurfaceCanvasOutline(), fitSurfaceCamera(surface), switchMode(mode), resizeToContainer(), showFeedback(message, duration), recalcGPR()
-  updateClearBtn(), addPlantInstance(surface, species, canopyArea), removePlantInstance(surface, instanceId), updateInstanceCanopyArea(surface, instanceId, newArea), updateSurfaceListTag(surface), renderSurfacePlantSchedule(surface)
-  renderPlantList(), refreshModalStatus(), openPlantModal(), closePlantModal(), placementTypeForCategory(cat), substrateCapRadius(depth_mm)
-  substrateCapLabel(depth_mm), radiusLimits(species, surface), getSurfaceCentre(surface), raycastSurface(ndc, surface), worldToSurfaceUV(worldPt, surface), surfaceUVToWorld(u, v, surface)
-  canvasNDC(e), startPlacement(species), cancelPlacement(), clearPreview(), showCirclePreview(cx, cz, radius, surface), showPolygonPreview(pts, mouseUV, surface)
-  commitCirclePlacement(surface, species, centre, radius, area), commitPolygonPlacement(surface, species, polyPts), polygonArea(pts), proxyMatForCategory(cat), buildCircleProxy(inst, surface, species), buildPolygonProxy(inst, surface, species)
-  removeProxyForInstance(inst), clearAllProxies(), toggleAxes()
+## _archive/camera.js  (1 KB)
+  createCamera(renderer, container)  --  creates a PerspectiveCamera with stable FOV, safe clipping, and dynamic aspect ratio
+
+## _archive/main.js  (16 KB)
+  loadLayout()  --  asynchronously loads and inserts header HTML into the DOM
+  updateHeaderTime()  --  updates the header datetime display with the current time
+  fitCameraToObject(object, padding)  --  adjusts the camera to fit a 3D object with optional padding
+  resize()  --  updates camera and renderer dimensions to match container size
+  applyScale()  --  applies scaling to a cube object and updates its texture mapping
+  animate()  --  continuously updates controls and renders the 3D scene
+  lonLatToMetres(lon, lat, originLon, originLat)  --  converts longitude/latitude coordinates to metres relative to an origin point
+  polygonArea(pts)  --  Shoelace formula — area of a 2D polygon from [x,y] pairs
+  polygonPerimeter(pts)  --  Perimeter of a polygon from [x,y] pairs
+  centroid(ring)  --  Centroid of lon/lat ring
+  fmtArea(m2)  --  Format metres² with thousands separator
+  fmtDist(m)  --  Format metres
+  clearSiteFromScene()  --  -- Scene helpers --
+  drawSiteInScene(localCoords)  --  clears and redraws a site shape in the 3D scene from local coordinates
+  updateSitePanel(data)  --  displays site information and hides empty properties section
+  parseGeoJSON(text)  --  -- File handling --
+  createAlarmPopup()  --  creates a DOM element for an alarm popup interface
+  setAlarm(timeStr)  --  sets an alarm time and adjusts it to the next day if it's in the past
+  checkAlarm()  --  checks if the current time has reached the alarm time and triggers it if so
+  triggerAlarm()  --  activates the alarm visual and audio feedback
+  stopAlarm()  --  deactivates the alarm and cleans up related resources
+  clearAlarm()  --  removes alarm-related visual indicators and clears the alarm time

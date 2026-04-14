@@ -1,4 +1,4 @@
-# geometry.py: Generates basic 3D shapes for the GPRTool demo.
+# _archive/backend/geometry.py: Generates basic 3D shapes for the GPRTool demo without FreeCAD dependency.
 """
 Simple geometry generation without FreeCAD dependency.
 Generates basic 3D shapes for the GPRTool demo.

@@ -1,4 +1,4 @@
-# accdb_export.py: Script to export Microsoft Access database tables to CSV files.
+# accdb_export.py: Connects to a Microsoft Access database, exporting tables to CSV.
 """
 accdb_export.py
 GPRTool - Microsoft Access Database Exporter

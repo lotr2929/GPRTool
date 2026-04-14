@@ -1,4 +1,4 @@
-# _archive/close.bat: Closes various application windows, including backend and frontend terminals, as part of the project shutdown process.
+# _archive/close.bat: Closes various application windows related to the GPRTool-Demo project.
 @echo off
 echo Closing GPRTool-Demo...
 

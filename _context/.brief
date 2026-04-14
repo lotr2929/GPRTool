@@ -1,7 +1,7 @@
 # GPRTool -- Project Brief
 
 ## What this is
-GPRTool is a web-based 3D visualisation and modelling application, likely for geospatial or GPR data, developed by Boon Ong at Curtin University. It utilises HTML, CSS, JavaScript (ESM modules) with Three.js for the frontend, and Python for backend processing (LAI pipeline). Development and testing are specifically conducted in Microsoft Edge.
+GPRTool is a web-based application for ground penetration radar (GPR) data visualization and analysis, using HTML/CSS/JS with Three.js for 3D rendering. It's deployed on Vercel/GitHub with no npm dependencies. The project includes a LAI (Leaf Area Index) processing pipeline in Python.
 
 ## Deployment
 - Live URL: [FILL IN]
@@ -10,16 +10,16 @@ GPRTool is a web-based 3D visualisation and modelling application, likely for ge
 - Key env vars: [FILL IN e.g. SUPABASE_URL, SUPABASE_KEY, API keys]
 
 ## Current focus
-The main current focus is refactoring `index.html` by incrementally extracting its functional sections into modular JavaScript files within `app/js/`. This aims to reduce `index.html` to a minimal shell, establish a well-defined `app/js/` module structure, and keep `_map.md` as the authoritative file structure record.
+The project is actively working on extracting code from index.html into modular JS files in app/js/ while maintaining compatibility with Chrome (using Edge for development).
 
 ## Key constraints
-- Use Microsoft Edge for all development and testing due to known Chrome issues.
-- `app/` directory must only contain HTML, CSS, JavaScript; `lai/` must only contain Python.
-- All icons must be inline SVG; raster images are restricted to `app/images/`.
-- All `app/js/` modules must declare dependencies at the top and expose only what is strictly necessary.
-- Any modification to `index.html` mandates extracting the affected code into a new `app/js/` module.
-- File operations must exclusively use MCP filesystem tools, not bash commands.
-- Prioritise the simplest solution that aligns with existing logic and structure, aiming for minimal files, dependencies, and moving parts.
+- No Python in app/ directory (LAI pipeline lives in lai/)
+- Icons must be inline SVG, never PNG
+- Third-party libraries in app/js/lib/ must not be edited
+- "Touch it, extract it" rule: extract code from index.html to separate files
+- Chrome issues require development in Edge
+- No global variables; explicit dependencies only
+```
 
 ## Off-limits
 - [FILL IN: data or files that must never be sent to external APIs or logged]

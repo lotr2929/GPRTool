@@ -1,4 +1,4 @@
-# _archive/backend/app.py: Defines the main application for the GPRTool Demo API, handling backend operations and API endpoints.
+# _archive/backend/app.py: Defines the main application for the GPRTool Demo API, handling backend operations and serving frontend assets.
 from fastapi import FastAPI, Query
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles

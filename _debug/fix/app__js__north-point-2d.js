@@ -1,4 +1,3 @@
-// north-point-2d.js: provides a 2D DOM compass widget for navigation and orientation purposes.
 /**
  * north-point-2d.js — 2D DOM compass widget
  *
@@ -112,6 +111,7 @@ function formatNorthAngle(deg) {
   return `${wholeDeg}°${wholeMin}' ${dir}`;
 }
 
+// formats a compass angle in degrees with direction (E/W) and minutes
 function formatNorthAngleCompact(deg) {
   if (deg === 0 || deg === null) return '0°';
   const abs      = Math.abs(deg);
@@ -131,12 +131,14 @@ function heightFromWidth(w) {
   return Math.round(w * (NP_BASE_H / NP_BASE_W));
 }
 
+// sets the width and height of the north point element within defined limits
 function applySize(w) {
   npW = Math.max(MIN_W, Math.min(MAX_W, w));
   npEl.style.width  = npW + 'px';
   npEl.style.height = heightFromWidth(npW) + 'px';
 }
 
+// positions the north point element within viewport boundaries
 function applyPos(right, bottom) {
   const vw = npVP.clientWidth;
   const vh = npVP.clientHeight;
@@ -164,6 +166,7 @@ function saveState() {
   } catch {}
 }
 
+// restores saved state from localStorage including size and visibility
 function restoreState() {
   try {
     const saved = JSON.parse(localStorage.getItem(NP_KEY));
@@ -184,6 +187,7 @@ function restoreState() {
   }
 }
 
+// resets the north point position to default margins and saves state
 function resetPosInternal() {
   npEl.style.right  = NP_MARGIN + 'px';
   npEl.style.bottom = NP_MARGIN + 'px';
@@ -209,6 +213,7 @@ function applyDesignNorth(deg) {
   saveState();
 }
 
+// updates the global north angle and refreshes the design north label
 function applyGlobalNorth(deg) {
   globalNorthAngle = deg ?? 0;
   // Label shows tilt of DN relative to TN
@@ -225,12 +230,14 @@ function angleFromNPCenter(clientX, clientY) {
   return Math.atan2(clientX - cx, cy - clientY) * 180 / Math.PI;
 }
 
+// enables rotation mode with visual feedback
 function enterRotateMode() {
   rotateMode = true;
   npEl.style.cursor = 'crosshair';
   npEl.classList.add('np-rotating');
 }
 
+// disables rotation mode and resets cursor state
 function exitRotateMode() {
   rotateMode = false;
   isRotating = false;
@@ -238,6 +245,7 @@ function exitRotateMode() {
   npEl.classList.remove('np-rotating');
 }
 
+// displays the design north input field with optional auto-focus
 function showDNInput(autoFocus = true) {
   // Create on first use
   let inp = document.getElementById('np-dn-input');
@@ -299,6 +307,7 @@ function showDNInput(autoFocus = true) {
   }, 50);
 }
 
+// hides the design north input field and cleans up event listeners
 function hideDNInput() {
   const inp = document.getElementById('np-dn-input');
   if (inp) inp.style.display = 'none';
@@ -307,6 +316,7 @@ function hideDNInput() {
   exitRotateMode();
 }
 
+// handles keyboard events for the design north input field
 function onDNKeyCapture(e) {
   const inp = document.getElementById('np-dn-input');
   if (!inp || inp.style.display === 'none') return;
@@ -334,6 +344,7 @@ function onDNKeyCapture(e) {
   }
 }
 
+// hides the design north input when clicking outside it
 function onClickOutsideDNInput(e) {
   const inp = document.getElementById('np-dn-input');
   if (inp && !inp.contains(e.target) && !npEl.contains(e.target)) hideDNInput();
@@ -390,6 +401,7 @@ function showTNInput(autoFocus = true) {
   setTimeout(() => { document.addEventListener('click', onClickOutsideTNInput); }, 50);
 }
 
+// hides the true north input field and cleans up event listeners
 function hideTNInput() {
   const inp = document.getElementById('np-tn-input');
   if (inp) inp.style.display = 'none';
@@ -398,6 +410,7 @@ function hideTNInput() {
   exitRotateMode();
 }
 
+// handles keyboard events for the true north input field
 function onTNKeyCapture(e) {
   const inp = document.getElementById('np-tn-input');
   if (!inp || inp.style.display === 'none') return;
@@ -415,6 +428,7 @@ function onTNKeyCapture(e) {
   }
 }
 
+// hides the true north input when clicking outside it
 function onClickOutsideTNInput(e) {
   const inp = document.getElementById('np-tn-input');
   if (inp && !inp.contains(e.target) && !npEl.contains(e.target)) hideTNInput();
@@ -475,16 +489,19 @@ export function toggleNorthPoint() {
   saveState();
 }
 
+// shows or hides the north point 2D element
 export function setNorthPoint2DVisible(visible) {
   if (!npEl) return;
   npEl.style.display = visible ? '' : 'none';
 }
 
+// resets the north point position to default margins
 export function resetNorthPos() {
   if (!npEl) return;
   resetPosInternal();
 }
 
+// updates the north point rotation based on current mode and camera state
 export function updateNorthRotation() {
   if (!npRotEl || !npEl || npEl.style.display === 'none') return;
   const { currentMode, camera2D, camera3D, controls3D, pan2D, rotate2D } = getState();
@@ -536,10 +553,14 @@ export function updateNorthRotation() {
   }
 }
 
+// returns the current design north angle
 export function getDesignNorthAngle() { return designNorthAngle; }
+// returns the current global north angle
 export function getGlobalNorthAngle() { return globalNorthAngle; }
+// resets the design north angle to 0
 export function resetDesignNorth() { applyDesignNorth(0); }
 
+// switches between 3D and 2D modes for the north point
 export function setNorthPointMode(mode) {
   // '3d': hide DOM widget — gizmo takes over; '2d': restore per saved preference
   if (!npEl) return;
@@ -554,6 +575,7 @@ export function setNorthPointMode(mode) {
   }
 }
 
+// initializes the north point 2D element and sets up event listeners
 export function initNorthPoint2D(getStateCallback) {
   getState = getStateCallback;
   npEl    = document.getElementById('np-container');
@@ -649,6 +671,7 @@ function onResizeDown(e) {
   npEl.setPointerCapture(e.pointerId);
 }
 
+// handles resizing of the north point element during resize operations
 function handleResize(e) {
   if (!isResizing) return;
 
@@ -682,6 +705,7 @@ function handleResize(e) {
   npEl.style.bottom = '';
 }
 
+// stops the resize operation and cleans up state
 function stopResize() {
   if (!isResizing) return;
   isResizing   = false;
@@ -725,6 +749,7 @@ function onDragDown(e) {
   e.stopPropagation();
 }
 
+// handles dragging of the north point element for rotation
 function handleDrag(e) {
   if (isRotating) {
     const cur   = angleFromNPCenter(e.clientX, e.clientY);
@@ -750,6 +775,7 @@ function handleDrag(e) {
   applyPos(vw - (mouseX + dragOffset.x), vh - (mouseY + dragOffset.y));
 }
 
+// stops the drag operation and cleans up state
 function stopDrag() {
   if (isRotating) {
     isRotating = false;
@@ -768,6 +794,7 @@ function onPointerMove(e) {
   handleDrag(e);
 }
 
+// handles pointer up events to stop resize and drag operations
 function onPointerUp() {
   stopResize();
   stopDrag();

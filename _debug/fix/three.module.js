@@ -1,4 +1,4 @@
-// three.module.js: This file serves as a module for Three.js, providing constants and enumerations for 3D rendering.
+// three.module.js: Provides a module for integrating the Three.js library into the application.
 /**
  * @license
  * Copyright 2010-2023 Three.js Authors

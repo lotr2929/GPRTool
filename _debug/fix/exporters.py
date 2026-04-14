@@ -1,4 +1,4 @@
-# _archive/backend/exporters.py: Provides functionality for exporting 3D model data from the backend.
+# _archive/backend/exporters.py: Exporter functions for converting 3D model data into various file formats.
 from pathlib import Path
 
 def write_obj(verts, tris, out_path: Path):

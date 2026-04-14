@@ -1,5 +1,5 @@
 # Project Map: GPRTool
-Generated: Mon, 13 Apr 2026, 10:34 am  (0.2s)
+Generated: Tue, 14 Apr 2026, 11:37 am  (0.1s)
 Files:     98
 
 [dir]  _archive/
@@ -41,8 +41,8 @@ Files:     98
       [file] gpr-logo4.png (419.4 KB)
     [file] gpr-logo.png (829.4 KB)
   [dir]  js/
-    [file] north-point-2d.js (26.2 KB)
-    [file] north-point-3d.js (10.7 KB)
+    [file] north-point-2d.js (26.3 KB)
+    [file] north-point-3d.js (11.3 KB)
     [file] OrbitControls.js (4.8 KB)  -- Simplified, stable OrbitControls
     [file] three.module.js (1.2 MB)
   [dir]  textures/

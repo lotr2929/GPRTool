@@ -1,8 +1,8 @@
-Stack: HTML/CSS/JS, Three.js, Microsoft Edge for development and testing
-Target directory structure is defined in _map.md and is being built toward incrementally
-app/js/ will contain extracted modules with specific responsibilities such as scene, controls, and surfaces
-Each JS file in app/js/ must declare dependencies at the top and expose only what other modules need
-Subfolders are only allowed for features with 3+ files of their own, with tools/ being the exception
+Stack: HTML/CSS/JS, Three.js, Vercel/GitHub. No npm.
+Target architecture: Modular JS files in `app/js/` with strict extraction rule.
+Browser-specific: Chrome issues; use Edge for development.
+File structure: `app/js/` with subfolder `tools/` only, no globals.
+Module rules: Explicit dependencies, ES modules, no global variables.
 
 ---
 # GPRTool -- file index

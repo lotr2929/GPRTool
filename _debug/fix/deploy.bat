@@ -1,4 +1,4 @@
-# deploy.bat: Automates the deployment process for GPRTool using Vercel credentials.
+# deploy.bat: Deploys the GPRTool application to Vercel using predefined environment variables.
 @echo off
 cd /d "%~dp0"
 echo ========================================

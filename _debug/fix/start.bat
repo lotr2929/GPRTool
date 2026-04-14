@@ -1,4 +1,4 @@
-# start.bat: Starts the local development server for GPRTool and opens it in the default browser.
+# start.bat: Starts the local development server and opens the browser for the GPRTool application.
 @echo off
 REM GPRTool — start.bat
 REM Starts the local dev server and opens the browser.

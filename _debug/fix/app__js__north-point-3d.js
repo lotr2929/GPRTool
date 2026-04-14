@@ -1,4 +1,3 @@
-// north-point-3d.js — implements a 3D HUD compass gizmo for visualising directional information.
 /**
  * north-point-3d.js — 3D HUD compass gizmo
  *
@@ -172,6 +171,7 @@ function _buildOverlay() {
   });
 }
 
+// sets the selected state and updates the display accordingly
 function _setSelected(sel) {
   _gzSelected = sel;
   const show  = sel ? 'block' : 'none';
@@ -179,6 +179,7 @@ function _setSelected(sel) {
   gizmoOverlay.style.outline = sel ? '1.5px solid #4a8a4a' : 'none';
 }
 
+// handles mouse down events for the gizmo handles
 function _onPointerDown(e) {
   if (e.button !== 0) return;
   const handle = e.target.dataset?.handle;
@@ -197,6 +198,7 @@ function _onPointerDown(e) {
   e.stopPropagation();
 }
 
+// handles mouse move events for the gizmo
 function _onPointerMove(e) {
   const { container } = getState();
   const cw = container.clientWidth;
@@ -244,6 +246,7 @@ function _onPointerMove(e) {
   }
 }
 
+// handles mouse up events and resets the drag and resize states
 function _onPointerUp(e) {
   const wasDrag   = _gzDragging;
   const wasResize = _gzResizing;
@@ -267,6 +270,7 @@ export function initNorthPoint3D(getStateCallback) {
   requestAnimationFrame(() => updateGizmoTexture(getDesignNorthAngle(), getGlobalNorthAngle()));
 }
 
+// updates the gizmo overlay visibility and size
 export function updateGizmoOverlay() {
   if (!gizmoOverlay) return;
   const { currentMode } = getState();
@@ -278,8 +282,10 @@ export function updateGizmoOverlay() {
   gizmoOverlay.style.bottom   = gizmo3DBottom + 'px';
 }
 
+// checks if the 3D gizmo is visible
 export function isGizmo3DVisible() { return gizmo3DVisible; }
 
+// toggles the visibility of the 3D gizmo and updates the overlay
 export function toggleGizmo3D() {
   gizmo3DVisible = !gizmo3DVisible;
   updateGizmoOverlay();
@@ -287,6 +293,7 @@ export function toggleGizmo3D() {
   showFeedback('North Point ' + (gizmo3DVisible ? 'visible' : 'hidden'));
 }
 
+// renders the compass gizmo with the specified size and camera settings
 export function renderCompassGizmo() {
   const { renderer, camera3D, container } = getState();
 

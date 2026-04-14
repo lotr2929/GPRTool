@@ -1,4 +1,4 @@
-# lai_categorise.py: categorises LAI species entries from a CSV file into predefined categories based on a genus lookup table.
+# lai_categorise.py: categorises LAI species into predefined categories based on genus lookup tables.
 """
 lai_categorise.py
 GPRTool - LAI Species Categoriser

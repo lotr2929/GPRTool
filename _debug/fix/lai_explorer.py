@@ -1,4 +1,4 @@
-# lai_explorer.py: Explores LAI databases, reading and processing ORNL and TRY raw CSV data to extract geographic origin and flag tropical/subtropical species.
+# lai_explorer.py: Exploring and processing LAI databases to extract geographic origin and species information.
 """
 lai_explorer.py
 GPRTool - LAI Database Explorer

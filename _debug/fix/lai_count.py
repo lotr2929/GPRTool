@@ -1,4 +1,4 @@
-# _archive/lai_count.py: Script to quickly count single, multi, and community species in a combined CSV file.
+# _archive/lai_count.py: Provides a quick count of single vs multi/community species in a combined CSV file.
 """Quick count of single vs multi/community species in combined CSV."""
 import csv
 
