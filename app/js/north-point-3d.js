@@ -24,8 +24,12 @@ import { getDesignNorthAngle, getGlobalNorthAngle } from './north-point-2d.js';
 // ── Module state ──────────────────────────────────────────────
 let getState = null;
 
-const gizmoScene  = new THREE.Scene();
-const gizmoCamera = new THREE.OrthographicCamera(-1.5, 1.5, 1.5, -1.5, 0.1, 20);
+// Compass mesh lives in the MAIN scene -- no separate gizmo scene or camera needed.
+let _mainScene  = null;  // set at init from getState
+let _camera3D   = null;  // set at init from getState
+const _raycaster = new THREE.Raycaster();
+const _groundNormal = new THREE.Vector3(0, 1, 0);
+const _groundPlane  = new THREE.Plane(_groundNormal, 0); // Y=0 plane
 
 let gizmoCompassMesh = null;
 let _gizmoCanvasTex  = null;
@@ -71,7 +75,7 @@ function _buildCompassMesh() {
   mesh.rotation.x = -Math.PI / 2;
   gizmoCompassMesh = mesh;
   gizmoCompassMesh.scale.x = -1; // un-mirror: canvas texture renders flipped horizontally
-  gizmoScene.add(mesh);
+  if (_mainScene) _mainScene.add(mesh);
 }
 
 // Serialise #np-rotator svg into canvas texture.
@@ -260,11 +264,14 @@ function _onPointerUp(e) {
 
 export function initNorthPoint3D(getStateCallback) {
   getState = getStateCallback;
+  const { renderer: _r, camera3D: _c, container: _cont } = getStateCallback();
+  _mainScene = _r.__compassScene || (() => {
+    // We need the main scene -- passed via getState callback at render time
+    return null;
+  })();
+  _camera3D  = _c;
   _buildCompassMesh();
   _buildOverlay();
-  // Position gizmo camera above the compass looking straight down (set once at init)
-  gizmoCamera.position.set(0, 5, 0);
-  gizmoCamera.lookAt(0, 0, 0);
   // Draw texture one frame after NP2D has injected #np-dn-group into the SVG
   requestAnimationFrame(() => updateGizmoTexture(getDesignNorthAngle(), getGlobalNorthAngle()));
 }
@@ -291,17 +298,43 @@ export function toggleGizmo3D() {
 
 export function renderCompassGizmo() {
   const { renderer, camera3D, container } = getState();
+  if (!gizmoCompassMesh) return;
 
-  const size = gizmo3DSize;
-  const cw   = container.clientWidth;
-  const ch   = container.clientHeight;
-  const x    = Math.round(cw - gizmo3DRight - size);
-  const y    = Math.round(gizmo3DBottom);
+  // Add mesh to main scene on first call (scene not available at init time)
+  if (!gizmoCompassMesh.parent) {
+    // Walk up from renderer to find scene via the animate loop's scene variable
+    // We inject it here: main.js calls renderCompassGizmo() after renderer.render(scene,camera)
+    // so we can't get scene directly. We use a workaround: expose it on the renderer.
+    if (!renderer._compassMainScene) return; // not yet set
+    renderer._compassMainScene.add(gizmoCompassMesh);
+  }
 
-  // Camera stays above (position set at init). Rotate compass by updating "up" for yaw only.
-  const _euler = new THREE.Euler().setFromQuaternion(camera3D.quaternion, 'YXZ');
-  gizmoCamera.up.set(-Math.sin(_euler.y), 0, -Math.cos(_euler.y));
-  gizmoCamera.lookAt(0, 0, 0);
+  const cw = container.clientWidth;
+  const ch = container.clientHeight;
+
+  // Fixed screen position: bottom-right corner (NDC coords: x=0.82, y=-0.82)
+  const ndcX =  0.82;
+  const ndcY = -0.82;
+
+  // Cast ray from that screen position through camera3D into world
+  _raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera3D);
+  const target = new THREE.Vector3();
+  const hit = _raycaster.ray.intersectPlane(_groundPlane, target);
+  if (!hit) return; // ray parallel to ground (shouldn't happen for normal angles)
+
+  // Move compass to that world position (on the ground)
+  gizmoCompassMesh.position.copy(target);
+  gizmoCompassMesh.rotation.y = 0; // N label always points True North (-Z)
+
+  // Scale: keep apparent screen size constant regardless of zoom/distance.
+  // At distance D from camera with fov F, a world unit = screenHeight / (2 * D * tan(F/2)) pixels.
+  // We want the compass to always be ~compassScreenSize pixels.
+  const compassScreenSize = Math.min(cw, ch) * 0.10; // 10% of viewport short side
+  const dist = camera3D.position.distanceTo(target);
+  const fovRad = camera3D.fov * Math.PI / 180;
+  const pixelsPerUnit = ch / (2 * dist * Math.tan(fovRad / 2));
+  const worldScale = compassScreenSize / pixelsPerUnit;
+  gizmoCompassMesh.scale.set(-worldScale, worldScale, worldScale); // scale.x neg = un-mirror canvas
 
   // Redraw SVG texture only when DN or GN value changes
   const dnDeg = getDesignNorthAngle();
@@ -311,20 +344,4 @@ export function renderCompassGizmo() {
     _lastDrawnDnDeg = dnDeg;
     _lastDrawnGnDeg = gnDeg;
   }
-  // N label always points True North (world -Z) — mesh never rotates
-  gizmoCompassMesh.rotation.y = 0;
-
-  renderer.setScissorTest(true);
-  renderer.setScissor(x, y, size, size);
-  renderer.setViewport(x, y, size, size);
-
-  // No colour clear — main scene shows through (transparent frame)
-  const savedAutoClear  = renderer.autoClear;
-  renderer.autoClear    = false;
-  renderer.clear(false, true, false); // depth-only clear
-  renderer.render(gizmoScene, gizmoCamera);
-  renderer.autoClear    = savedAutoClear;
-
-  renderer.setScissorTest(false);
-  renderer.setViewport(0, 0, cw, ch);
 }

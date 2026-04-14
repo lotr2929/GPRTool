@@ -1970,7 +1970,10 @@
       if (axesHelper)  axesHelper.rotation.y  = -_dnRad;
 
       renderer.render(scene, camera);
-      if (currentMode === '3d' && isGizmo3DVisible()) renderCompassGizmo();
+      if (currentMode === '3d' && isGizmo3DVisible()) {
+        renderer._compassMainScene = scene; // expose for renderCompassGizmo
+        renderCompassGizmo();
+      }
       requestAnimationFrame(animate);
     })();
 
