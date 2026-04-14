@@ -38,9 +38,9 @@ let _lastDrawnDnDeg  = undefined; // sentinel — forces draw on first frame
 let _lastDrawnGnDeg  = undefined;
 
 // Frame state — pixel size drives everything, frustum NEVER changes
-let gizmo3DSize    = 120;
-let gizmo3DRight   = 20;
-let gizmo3DBottom  = 20;
+let gizmo3DSize    = 200;
+let gizmo3DRight   = 15;
+let gizmo3DBottom  = 15;
 let gizmo3DVisible = true;
 
 // Drag / resize state
@@ -59,9 +59,11 @@ const _gzHandles = {};
 
 function _buildCompassMesh() {
   const cv = document.createElement('canvas');
-  cv.width = cv.height = 256;
+  cv.width = cv.height = 512;
   _gizmoCtx       = cv.getContext('2d');
   _gizmoCanvasTex = new THREE.CanvasTexture(cv);
+  _gizmoCanvasTex.generateMipmaps = false;
+  _gizmoCanvasTex.minFilter = THREE.LinearFilter;;
 
   const mesh = new THREE.Mesh(
     new THREE.PlaneGeometry(3.0, 3.0),
@@ -115,11 +117,11 @@ function updateGizmoTexture(dnDeg, gnDeg) {
   const url    = URL.createObjectURL(blob);
   const img    = new Image();
   img.onload = () => {
-    const scale = Math.min(256 / 64, 256 / 72);
+    const scale = Math.min(512 / 64, 512 / 72);
     const dw    = 64 * scale;
     const dh    = 72 * scale;
     const dx    = (256 - dw) / 2;
-    _gizmoCtx.clearRect(0, 0, 256, 256);
+    _gizmoCtx.clearRect(0, 0, 512, 512);
     _gizmoCtx.drawImage(img, dx, 0, dw, dh);
     _gizmoCanvasTex.needsUpdate = true;
     URL.revokeObjectURL(url);
