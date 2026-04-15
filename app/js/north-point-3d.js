@@ -393,11 +393,22 @@ export function renderCompassGizmo() {
   const overlayBotY = ch - gizmo3DBottom;           // CSS pixels from top
   const extraBelow  = Math.max(0, Math.ceil(nearScreenY - overlayBotY) + 4);
 
-  // Scissor: overlay frame + near-edge overflow. WebGL Y from canvas bottom.
+  // Far edge (away from camera) may project above the overlay top.
+  const farEdgeWorld = new THREE.Vector3(
+    target.x + camToTargetXZ.x * worldScale * 1.5,
+    0,
+    target.z + camToTargetXZ.y * worldScale * 1.5
+  );
+  const farNDC      = farEdgeWorld.clone().project(camera3D);
+  const farScreenY  = (1 - farNDC.y) / 2 * ch;    // CSS pixels from top
+  const overlayTopY = ch - gizmo3DBottom - gizmo3DSize; // CSS pixels from top
+  const extraAbove  = Math.max(0, Math.ceil(overlayTopY - farScreenY) + 4);
+
+  // Scissor: overlay frame + overflow on both edges. WebGL Y from canvas bottom.
   const sx = cw - gizmo3DRight - gizmo3DSize;
   const sy = Math.max(0, gizmo3DBottom - extraBelow);
   renderer.setScissorTest(true);
-  renderer.setScissor(sx, sy, gizmo3DSize, gizmo3DSize + extraBelow);
+  renderer.setScissor(sx, sy, gizmo3DSize, gizmo3DSize + extraBelow + extraAbove);
 
   // Disable auto-clear so the main scene shows through transparent areas
   const prevAutoClear = renderer.autoClear;
