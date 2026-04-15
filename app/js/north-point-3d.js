@@ -40,8 +40,8 @@ let _lastDrawnGnDeg  = undefined;
 
 // Frame state — pixel size drives everything, frustum NEVER changes
 let gizmo3DSize    = 200;
-let gizmo3DRight   = 15;
-let gizmo3DBottom  = 60;
+let gizmo3DRight   = 0;
+let gizmo3DBottom  = 0;
 let gizmo3DVisible = true;
 
 // Drag / resize state
@@ -81,54 +81,78 @@ function _buildCompassMesh() {
   _compassScene.add(mesh); // dedicated scene -- rendered with scissor, not added to main scene
 }
 
-// Serialise #np-rotator svg into canvas texture.
-// dnDeg: Design North decimal degrees (+ve = E/clockwise), or null.
-// gnDeg: Global (True) North decimal degrees.
-function updateGizmoTexture(dnDeg, gnDeg) {
-  const svgEl = document.querySelector('#np-rotator svg');
-  if (!svgEl) return;
+// ── Direct canvas compass drawing ───────────────────────────
+// Draws the compass directly via Canvas 2D API — no SVG serialisation,
+// no Blob, no Image roundtrip. Renders at full 512×512 resolution.
 
-  const clone   = svgEl.cloneNode(true);
+function _fmtAngleCompact(deg) {
+  if (!deg) return '0°';
+  const abs = Math.abs(deg), dir = deg > 0 ? 'E' : 'W';
+  const d = Math.floor(abs), m = Math.round((abs - d) * 60);
+  if (m === 0)  return `${d}°${dir}`;
+  if (m === 60) return `${d + 1}°${dir}`;
+  return `${d}°${m}'${dir}`;
+}
 
-  // Rotate housing (ticks) to match Design North
-  const housingGroup = clone.querySelector('#np-housing-group');
-  if (housingGroup) {
-    housingGroup.setAttribute('transform', `rotate(${dnDeg}, 32, 40)`);
+function _drawCompass(dnDeg, gnDeg) {
+  const cv  = _gizmoCtx.canvas;
+  const W   = cv.width;   // 512
+  const H   = cv.height;  // 512
+  const ctx = _gizmoCtx;
+  ctx.clearRect(0, 0, W, H);
+
+  // Map SVG viewBox (64×72) into canvas (512×512)
+  const sc = H / 72;               // ~7.111 px per SVG unit
+  const ox = (W - 64 * sc) / 2;   // horizontal offset to centre
+  ctx.save();
+  ctx.translate(ox, 0);
+  ctx.scale(sc, sc);               // now drawing in SVG coord space
+
+  const CX = 32, CY = 40;
+  const toRad = d => (d || 0) * Math.PI / 180;
+
+  // ── Housing (rotates with dnDeg) ──
+  ctx.save();
+  ctx.translate(CX, CY); ctx.rotate(toRad(dnDeg)); ctx.translate(-CX, -CY);
+  ctx.strokeStyle = '#555'; ctx.lineWidth = 0.75;
+  ctx.beginPath(); ctx.arc(CX, CY, 22, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(32, 15); ctx.lineTo(32, 20);
+  ctx.moveTo(32, 60); ctx.lineTo(32, 65);
+  ctx.moveTo(7,  40); ctx.lineTo(12, 40);
+  ctx.moveTo(52, 40); ctx.lineTo(57, 40);
+  ctx.stroke();
+  ctx.restore();
+
+  // ── TN needle (rotates with gnDeg) ──
+  ctx.save();
+  ctx.translate(CX, CY); ctx.rotate(toRad(gnDeg)); ctx.translate(-CX, -CY);
+  ctx.font = 'bold 13px Outfit, Georgia, serif';
+  ctx.fillStyle = '#1a1a1a'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText('N', 32, 14);
+  ctx.beginPath(); ctx.moveTo(32, 18); ctx.lineTo(32, 40); ctx.lineTo(42, 43);
+  ctx.closePath(); ctx.fillStyle = '#1a1a1a'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(32, 62); ctx.lineTo(32, 40); ctx.lineTo(22, 37);
+  ctx.closePath(); ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#555';
+  ctx.lineWidth = 0.6; ctx.fill(); ctx.stroke();
+  ctx.restore();
+
+  // ── DN group (only when DN ≠ TN) ──
+  if (dnDeg !== gnDeg) {
+    ctx.save();
+    ctx.translate(CX, CY); ctx.rotate(toRad(dnDeg)); ctx.translate(-CX, -CY);
+    ctx.strokeStyle = '#4a8a4a'; ctx.lineWidth = 0.75;
+    ctx.beginPath(); ctx.moveTo(32, 18); ctx.lineTo(32, 62); ctx.stroke();
+    ctx.beginPath(); ctx.arc(32, 18, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#4a8a4a'; ctx.fill();
+    ctx.font = '7px Outfit, sans-serif';
+    ctx.fillStyle = '#4a8a4a'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    ctx.fillText(_fmtAngleCompact(dnDeg - gnDeg), 32, 13);
+    ctx.restore();
   }
 
-  // Rotate TN needle to match True North
-  const tnNeedle = clone.querySelector('#np-tn-needle');
-  if (tnNeedle) {
-    tnNeedle.setAttribute('transform', `rotate(${gnDeg}, 32, 40)`);
-  }
-
-  // DN arrow dot stays at top relative to housing (0 degrees relative to housing)
-  // or we rotate it by dnDeg if it's in the SVG root.
-  const dnGroup = clone.querySelector('#np-dn-group');
-  if (dnGroup) {
-    if (dnDeg !== null && dnDeg !== undefined) {
-      dnGroup.style.display = '';
-      dnGroup.setAttribute('transform', `rotate(${dnDeg}, 32, 40)`);
-    } else {
-      dnGroup.style.display = 'none';
-    }
-  }
-
-  const svgStr = new XMLSerializer().serializeToString(clone);
-  const blob   = new Blob([svgStr], { type: 'image/svg+xml' });
-  const url    = URL.createObjectURL(blob);
-  const img    = new Image();
-  img.onload = () => {
-    const scale = Math.min(512 / 64, 512 / 72);
-    const dw    = 64 * scale;
-    const dh    = 72 * scale;
-    const dx    = (256 - dw) / 2;
-    _gizmoCtx.clearRect(0, 0, 512, 512);
-    _gizmoCtx.drawImage(img, dx, 0, dw, dh);
-    _gizmoCanvasTex.needsUpdate = true;
-    URL.revokeObjectURL(url);
-  };
-  img.src = url;
+  ctx.restore(); // undo scale + translate
+  _gizmoCanvasTex.needsUpdate = true;
 }
 
 // ── Overlay div ───────────────────────────────────────────────
@@ -300,7 +324,7 @@ export function initNorthPoint3D(getStateCallback) {
   _buildCompassMesh();
   _buildOverlay();
   // Draw texture one frame after NP2D has injected #np-dn-group into the SVG
-  requestAnimationFrame(() => updateGizmoTexture(getDesignNorthAngle(), getGlobalNorthAngle()));
+  requestAnimationFrame(() => _drawCompass(getDesignNorthAngle(), getGlobalNorthAngle()));
 }
 
 export function updateGizmoOverlay() {
@@ -352,21 +376,42 @@ export function renderCompassGizmo() {
   const worldScale = gizmo3DSize / (pixelsPerUnit * 3.0);
   gizmoCompassMesh.scale.set(worldScale, worldScale, worldScale);
 
-  // Scissor-clip rendering to exactly the overlay rect so perspective
-  // overhang never bleeds outside the frame.
-  // WebGL scissor Y is measured from the BOTTOM of the canvas.
+  // Project the near edge of the compass plane (closest to camera in XZ)
+  // to find how far it overflows below the overlay frame due to perspective.
+  // Extend the scissor rect downward to cover it exactly.
+  const camToTargetXZ = new THREE.Vector2(
+    target.x - camera3D.position.x,
+    target.z - camera3D.position.z
+  ).normalize();
+  const nearEdgeWorld = new THREE.Vector3(
+    target.x - camToTargetXZ.x * worldScale * 1.5,
+    0,
+    target.z - camToTargetXZ.y * worldScale * 1.5
+  );
+  const nearNDC     = nearEdgeWorld.clone().project(camera3D);
+  const nearScreenY = (1 - nearNDC.y) / 2 * ch;   // CSS pixels from top
+  const overlayBotY = ch - gizmo3DBottom;           // CSS pixels from top
+  const extraBelow  = Math.max(0, Math.ceil(nearScreenY - overlayBotY) + 4);
+
+  // Scissor: overlay frame + near-edge overflow. WebGL Y from canvas bottom.
   const sx = cw - gizmo3DRight - gizmo3DSize;
-  const sy = gizmo3DBottom;
+  const sy = Math.max(0, gizmo3DBottom - extraBelow);
   renderer.setScissorTest(true);
-  renderer.setScissor(sx, sy, gizmo3DSize, gizmo3DSize);
+  renderer.setScissor(sx, sy, gizmo3DSize, gizmo3DSize + extraBelow);
+
+  // Disable auto-clear so the main scene shows through transparent areas
+  const prevAutoClear = renderer.autoClear;
+  renderer.autoClear = false;
   renderer.render(_compassScene, camera3D);
+  renderer.autoClear = prevAutoClear;
+
   renderer.setScissorTest(false);
 
   // Redraw texture only when north angles change
   const dnDeg = getDesignNorthAngle();
   const gnDeg = getGlobalNorthAngle();
   if (dnDeg !== _lastDrawnDnDeg || gnDeg !== _lastDrawnGnDeg) {
-    updateGizmoTexture(dnDeg, gnDeg);
+    _drawCompass(dnDeg, gnDeg);
     _lastDrawnDnDeg = dnDeg;
     _lastDrawnGnDeg = gnDeg;
   }
