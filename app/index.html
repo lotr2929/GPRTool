@@ -224,6 +224,8 @@
     import { OrbitControls } from './js/OrbitControls.js';
     import { OBJLoader }  from 'three/addons/loaders/OBJLoader.js';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { initSiteSelection }    from './js/site-selection.js';
+    import { initCADMapperImport, buildLayerPanel } from './js/cadmapper-import.js';
     import {
       initNorthPoint2D,
       updateNorthRotation,
@@ -366,7 +368,13 @@
     let currentMode      = '2d';
     let siteBoundaryLine = null;
     let siteSurface      = null;
+    let sitePinGroup     = null;
+    let sitePinDom       = null;
+    let sitePinWorldPos  = null;
+    let siteOriginLon    = 0;   // map origin set by drawSiteBoundary — used for pin projection
+    let siteOriginLat    = 0;
     let terrainMesh      = null;
+    let cadmapperGroup   = null;   // THREE.Group — CADMapper site context layers
     let mapTileGroup     = null;
     let importedModel    = null;   // THREE.Group — the loaded 3D model
     let gridHelper       = null;
@@ -539,7 +547,7 @@
         camera2D.bottom *= factor;
         camera2D.updateProjectionMatrix();
       } else {
-        zoom2D = Math.max(0.05, Math.min(50, zoom2D * factor));
+        zoom2D = Math.max(0.002, Math.min(50, zoom2D * factor));
         update2DCamera();
       }
     }, { passive: false });
@@ -576,8 +584,8 @@
       axesYLine = null;
 
       const gridSize = 10000;
-      const rawCell  = siteSpan / 100;
-      const cellSize = rawCell < 1 ? 1 : rawCell < 2 ? 2 : rawCell < 5 ? 5 : 10;
+      const rawCell  = siteSpan / 10;
+      const cellSize = rawCell < 50 ? 50 : rawCell < 100 ? 100 : rawCell < 250 ? 250 : 500;
       const divisions = gridSize / cellSize;
 
       gridHelper = new THREE.GridHelper(gridSize, divisions, 0x8a9b7a, 0xbcc9b0);
@@ -661,7 +669,7 @@
        MAP TILE OVERLAY
     ============================================================ */
     const MAP_ZOOM    = 18;
-    const TILE_SERVER = 'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png';
+    const TILE_SERVER = 'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
 
     function lonToTileX(lon, z) {
       return Math.floor((lon + 180) / 360 * Math.pow(2, z));
@@ -696,6 +704,9 @@
 
       const toggle = document.getElementById('mapOverlayToggle');
       if (toggle) mapTileGroup.visible = toggle.checked;
+
+      // Hide grid when map tiles are active — tiles provide spatial reference
+      if (gridHelper) gridHelper.visible = false;
     }
 
     function mercatorY(lat) {
@@ -742,6 +753,8 @@
       });
       scene.remove(mapTileGroup);
       mapTileGroup = null;
+      // Restore grid when map is cleared
+      if (gridHelper) gridHelper.visible = (currentMode === '2d');
     }
 
     /* ============================================================
@@ -1543,7 +1556,7 @@
     /* ============================================================
        SITE BOUNDARY DRAWING (GeoJSON)
     ============================================================ */
-    function drawSiteBoundary(coords) {
+    function drawSiteBoundary(coords, opts = {}) {
       suppressResize = true;
       if (siteBoundaryLine) {
         scene.remove(siteBoundaryLine);
@@ -1552,8 +1565,18 @@
       }
 
       const bbox = computeBBox(coords);
+
+      // If a geocoded origin is supplied (from Select Site), use it as the
+      // world origin so the address point is always at (0,0,0) = screen centre.
+      // Otherwise fall back to the parcel centroid (manual GeoJSON import).
+      const originLon = (opts.originLng != null) ? opts.originLng : bbox.cLon;
+      const originLat = (opts.originLat != null) ? opts.originLat : bbox.cLat;
+
+      window._siteBBoxCenter = { cLon: originLon, cLat: originLat };
+      siteOriginLon = originLon;
+      siteOriginLat = originLat;
       const points = coords.map(c => {
-        const [x, z] = latlonToMetres(c[0], c[1], bbox.cLon, bbox.cLat);
+        const [x, z] = latlonToMetres(c[0], c[1], originLon, originLat);
         return new THREE.Vector3(x, 0, z);
       });
 
@@ -1561,17 +1584,6 @@
       const mat  = new THREE.LineBasicMaterial({ color: 0xff6600, linewidth: 2 });
       siteBoundaryLine = new THREE.LineLoop(geom, mat);
       scene.add(siteBoundaryLine);
-
-      if (siteSurface) { scene.remove(siteSurface); siteSurface.geometry.dispose(); siteSurface = null; }
-      const shape     = new THREE.Shape(points.map(p => new THREE.Vector2(p.x, p.z)));
-      const shapeGeom = new THREE.ShapeGeometry(shape);
-      shapeGeom.rotateX(Math.PI / 2);
-      shapeGeom.translate(0, -0.05, 0);
-      siteSurface = new THREE.Mesh(
-        shapeGeom,
-        new THREE.MeshBasicMaterial({ color: 0xf5f0e8, side: THREE.DoubleSide })
-      );
-      scene.add(siteSurface);
 
       const box    = new THREE.Box3().setFromObject(siteBoundaryLine);
       const size   = new THREE.Vector3();
@@ -1581,7 +1593,24 @@
       const siteSpan = Math.max(size.x, size.z);
 
       updateSceneHelpers(siteSpan);
-      fit2DCamera(box);
+
+      // Centre camera on geocoded origin (0,0,0) when opts.originLng is set,
+      // so the address point is always in the middle of the view.
+      if (opts.originLng != null) {
+        const aspect = container.clientWidth / (container.clientHeight || 1);
+        const halfH  = Math.max(siteSpan * 0.8, 100);
+        base2DhalfH  = halfH;
+        camera2D.left   = -halfH * aspect;
+        camera2D.right  =  halfH * aspect;
+        camera2D.top    =  halfH;
+        camera2D.bottom = -halfH;
+        pan2D.x = 0;
+        pan2D.z = 0;
+        zoom2D  = 1;
+        update2DCamera();
+      } else {
+        fit2DCamera(box);
+      }
       loadMapTiles(bbox);
       switchMode('2d');
 
@@ -1609,7 +1638,7 @@
         renderer.setSize(w, h, false);
         camera3D.aspect = w / h;
         camera3D.updateProjectionMatrix();
-        if (siteBoundaryLine) {
+        if (siteBoundaryLine && opts.originLng == null) {
           fit2DCamera(new THREE.Box3().setFromObject(siteBoundaryLine));
         }
       }));
@@ -1628,7 +1657,7 @@
       const aspect = container.clientWidth / (container.clientHeight || 1);
       const siteW  = size.x * 1.3;
       const siteH  = size.z * 1.3;
-      const halfH  = Math.max(siteW / (2 * aspect), siteH / 2);
+      const halfH  = Math.max(siteW / (2 * aspect), siteH / 2, 100); // min 200m view
 
       base2DhalfH     = halfH;
       camera2D.left   = -halfH * aspect;
@@ -1824,14 +1853,14 @@
           fitSurfaceCamera(selectedSurface);
           drawSurfaceCanvasOutline(selectedSurface);
           if (gridHelper) gridHelper.visible = false;
-          if (axesHelper)  axesHelper.visible = false;
-          const typeLabels = { ground: 'Ground plane', roof: 'Roof plane', wall: 'Wall plane', sloped: 'Sloped surface' };
+          if (axesHelper)  axesHelper.visible = false;          const typeLabels = { ground: 'Ground plane', roof: 'Roof plane', wall: 'Wall plane', sloped: 'Sloped surface' };
           document.getElementById('status-mode').textContent = '2D';
           const modeLabel = canvasMode === 'ortho' ? 'Ortho' : 'Surface';
           showFeedback(`2D canvas [${modeLabel}] \u2014 ${typeLabels[selectedSurface.type] || selectedSurface.type} \u2014 ${selectedSurface.area} m\u00b2`, 0);
         } else {
           clearSurfaceCanvasOutline();
-          if (gridHelper) gridHelper.visible = true;
+          // Only show grid if no map tiles are active
+          if (gridHelper) gridHelper.visible = !mapTileGroup;
           if (axesHelper) axesHelper.visible = true;
           if (axesYLine)  axesYLine.visible  = false;
           if (siteBoundaryLine) fit2DCamera(new THREE.Box3().setFromObject(siteBoundaryLine));
@@ -1970,6 +1999,7 @@
       if (axesHelper)  axesHelper.rotation.y  = -_dnRad;
 
       renderer.render(scene, camera);
+      updateSitePinDOM();
       if (currentMode === '3d' && isGizmo3DVisible()) {
         renderer._compassMainScene = scene; // expose for renderCompassGizmo
         renderCompassGizmo();
@@ -2002,31 +2032,7 @@
       if (duration > 0) feedbackTimer = setTimeout(() => { el.textContent = 'Ready'; }, duration);
     }
 
-    /* ============================================================
-       GEOJSON IMPORT
-    ============================================================ */
-    document.getElementById('importGeoJSONBtn').addEventListener('click', () =>
-      document.getElementById('geojsonFileInput').click());
 
-    document.getElementById('geojsonFileInput').addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        try {
-          const geojson = JSON.parse(ev.target.result);
-          const coords  = extractCoordinates(geojson);
-          if (!coords || coords.length < 3) {
-            showFeedback('Error: No valid polygon found in GeoJSON'); return;
-          }
-          drawSiteBoundary(coords);
-        } catch {
-          showFeedback('Error: Could not parse GeoJSON file');
-        }
-      };
-      reader.readAsText(file);
-      e.target.value = '';
-    });
 
     /* ============================================================
        CLEAR SITE
@@ -2042,6 +2048,14 @@
         siteSurface.geometry.dispose();
         siteSurface = null;
       }
+      if (sitePinGroup) {
+        scene.remove(sitePinGroup);
+        sitePinGroup.traverse(c => { c.geometry?.dispose(); c.material?.dispose(); });
+        sitePinGroup = null;
+      }
+      document.getElementById('site-pin-dom')?.remove();
+      sitePinDom = null;
+      sitePinWorldPos = null;
       if (importedModel) {
         scene.remove(importedModel);
         scene.remove(edgeGroup);
@@ -2056,6 +2070,12 @@
         scene.remove(terrainMesh);
         terrainMesh.geometry.dispose();
         terrainMesh = null;
+      }
+      if (cadmapperGroup) {
+        scene.remove(cadmapperGroup);
+        cadmapperGroup.traverse(c => { c.geometry?.dispose(); c.material?.dispose(); });
+        cadmapperGroup = null;
+        document.getElementById('cadmapper-layer-section')?.remove();
       }
       clearMapTiles();
       surfaces        = [];
@@ -2116,9 +2136,6 @@
       if (mapTileGroup) mapTileGroup.visible = e.target.checked;
     });
 
-    document.getElementById('importImageBtn')?.addEventListener('click',      () => showFeedback('Image underlay \u2014 coming soon'));
-    document.getElementById('setScaleBtn')?.addEventListener('click',         () => showFeedback('Set Scale \u2014 coming soon'));
-    document.getElementById('setNorthBtn')?.addEventListener('click',         () => showFeedback('Set North \u2014 coming soon'));
     document.getElementById('componentLibraryBtn')?.addEventListener('click', () => showFeedback('Component Library \u2014 coming soon'));
     document.getElementById('generateReportBtn')?.addEventListener('click',   () => showFeedback('GPR Report \u2014 coming soon'));
 
@@ -3131,8 +3148,6 @@
         else if (action === 'north-reset')         resetNorthPos();
         // Note: toggleNorthPoint / resetNorthPos imported from north-point-2d.js
         else if (action === 'import-model')        document.getElementById('import3DModelBtn')?.click();
-        else if (action === 'import-geojson-menu') document.getElementById('importGeoJSONBtn')?.click();
-        else if (action === 'import-image')        document.getElementById('importImageBtn')?.click();
         else    showFeedback(`${action} \u2014 coming soon`);
       }));
 
@@ -3150,6 +3165,104 @@
     ============================================================ */
     initNorthPoint2D(() => ({ currentMode, camera2D, camera3D, controls3D, pan2D, rotate2D }));
     initNorthPoint3D(() => ({ renderer, camera3D, container, currentMode, showFeedback }));
+
+    // Site selection + CADMapper import modules
+    // showSitePin: hides orange boundary, adds a Google-style DOM teardrop pin
+    // lat/lng = Nominatim geocoded point — placed precisely regardless of polygon centroid
+    function showSitePin(lat, lng) {
+      if (siteBoundaryLine) siteBoundaryLine.visible = false;
+
+      // Clear any previous mesh pin
+      if (sitePinGroup) {
+        scene.remove(sitePinGroup);
+        sitePinGroup.traverse(c => { c.geometry?.dispose(); c.material?.dispose(); });
+        sitePinGroup = null;
+      }
+
+      // Remove any existing DOM pin
+      document.getElementById('site-pin-dom')?.remove();
+
+      // Create DOM teardrop pin
+      sitePinDom = document.createElement('div');
+      sitePinDom.id = 'site-pin-dom';
+      sitePinDom.style.cssText = `
+        position:absolute; pointer-events:none; z-index:10;
+        transform:translate(-50%, -100%);`;
+      sitePinDom.innerHTML = `
+        <svg width="30" height="42" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="15" cy="41" rx="6" ry="2" fill="rgba(0,0,0,0.20)"/>
+          <path d="M15 1 C7.268 1 1 7.268 1 15 C1 24.5 15 41 15 41 C15 41 29 24.5 29 15 C29 7.268 22.732 1 15 1 Z"
+                fill="#1e3d1e" stroke="white" stroke-width="1.2"/>
+          <circle cx="15" cy="15" r="7" fill="white"/>
+          <circle cx="15" cy="15" r="4" fill="#4a7c3f"/>
+        </svg>`;
+      document.getElementById('viewport').appendChild(sitePinDom);
+
+      // Convert Nominatim lat/lng to world coords using the same bbox centre that
+      // drawSiteBoundary used — this places pin at the geocoded address, not polygon centroid
+      if (lat != null && lng != null && window._siteBBoxCenter) {
+        const bc  = window._siteBBoxCenter;
+        const wx  =  (lng - bc.cLon) * Math.cos(bc.cLat * Math.PI / 180) * 111320;
+        const wz  = -(lat - bc.cLat) * 111320;
+        sitePinWorldPos = new THREE.Vector3(wx, 0, wz);
+      } else {
+        sitePinWorldPos = new THREE.Vector3(0, 0, 0);
+      }
+
+      updateSitePinDOM();
+    }
+
+    function updateSitePinDOM() {
+      if (!sitePinDom || !sitePinWorldPos) return;
+      const vec  = sitePinWorldPos.clone().project(camera);
+      const rect = canvas.getBoundingClientRect();
+      const x    = (vec.x *  0.5 + 0.5) * rect.width;
+      const y    = (vec.y * -0.5 + 0.5) * rect.height;
+      sitePinDom.style.left = x + 'px';
+      sitePinDom.style.top  = y + 'px';
+    }
+
+    initSiteSelection({ drawSiteBoundary, onSiteSelected: (lat, lng) => showSitePin(lat, lng) });
+    initCADMapperImport({
+      THREE,
+      onLayersLoaded: (layerGroups) => {
+        // Clear existing CADMapper geometry
+        if (cadmapperGroup) {
+          scene.remove(cadmapperGroup);
+          cadmapperGroup.traverse(c => { c.geometry?.dispose(); c.material?.dispose(); });
+          cadmapperGroup = null;
+        }
+
+        // Build group, centre it in scene
+        cadmapperGroup = new THREE.Group();
+        cadmapperGroup.name = 'cadmapper-context';
+        Object.values(layerGroups).forEach(g => cadmapperGroup.add(g));
+
+        const box    = new THREE.Box3().setFromObject(cadmapperGroup);
+        const centre = new THREE.Vector3();
+        box.getCenter(centre);
+        cadmapperGroup.position.sub(centre);
+        box.setFromObject(cadmapperGroup);
+        cadmapperGroup.position.y -= box.min.y;
+
+        scene.add(cadmapperGroup);
+
+        const size = new THREE.Vector3();
+        new THREE.Box3().setFromObject(cadmapperGroup).getSize(size);
+        updateSceneHelpers(Math.max(size.x, size.z));
+        fit3DCamera(new THREE.Box3().setFromObject(cadmapperGroup));
+        switchMode('3d');
+
+        document.getElementById('empty-props').style.display       = 'none';
+        document.getElementById('clearSiteBtn').style.display      = 'block';
+        document.getElementById('left-panel').classList.add('site-imported');
+
+        buildLayerPanel(layerGroups);
+
+        const layerNames = Object.keys(layerGroups).join(', ');
+        showFeedback(`CADMapper context loaded \u2014 ${Object.keys(layerGroups).length} layers: ${layerNames}`);
+      }
+    });
 
     showFeedback('GPRTool ready', 2000);
   </script>

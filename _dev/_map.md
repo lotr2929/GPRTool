@@ -1,6 +1,6 @@
 # GPRTool — Repository Map
 
-**Last updated:** 2026-04-06 (Session — rename GPRTool-Demo to GPRTool)
+**Last updated:** 2026-04-16 (Session — Site Selection + CADMapper Import commands)
 **Live URL:** https://gprtool.vercel.app
 **Local path:** `C:\Users\263350F\_myProjects\GPRTool`
 **GitHub:** https://github.com/lotr2929/GPRTool.git

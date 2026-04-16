@@ -270,3 +270,199 @@ warm grey panels, SVG icons, 2D/3D toggle, status bar.
 | Bamboo | 9 |
 | Palm | 1 |
 | **TOTAL** | **760** |
+
+---
+
+## Session: Wed 15 Apr 2026 — Import Site Context (DXF) research
+
+### What was done
+
+Full research session — no code written. Investigated and scoped the "Import 3D Map with Terrain" feature.
+
+**Existing import command audit:**
+- `Import 3D Model…` — OBJ/glTF/GLB (IFC stub). Loads architectural model, detects surfaces, switches to 3D view.
+- `Import Site Boundary…` — GeoJSON/JSON. Loads site parcel boundary, draws orange LineLoop + cream fill, loads CartoCDN map tile overlay.
+- `Import Site Image…` — stub only, shows "coming soon".
+- `terrainMesh` variable declared and cleaned up but never populated — placeholder only.
+
+**CADMapper investigation:**
+- CADMapper (cadmapper.com) converts OpenStreetMap + NASA SRTM + USGS into layered DXF files.
+- Free up to 1 km², AutoCAD DXF format, units in metres, correct scale and orientation out of the box.
+- Provides: terrain mesh, 3D buildings, roads (mesh surfaces), paths, parks, water, railways, contours.
+- Contours minimum interval is 4m (not 1m as initially assumed).
+
+**DXF file analysis (Perth CBD sample, 382k lines):**
+
+Layers confirmed:
+- `topography` — 1 MESH entity, 660 vertices, 3040 faces, X: 0–960m, Y: 0–570m, Z: 1.77–32.91m. Pre-triangulated. No Delaunay needed.
+- `contours` — 59 LWPOLYLINE entities, elevations 2m–42m at 4m intervals. Group code 38 = elevation.
+- `buildings` — 287 MESH entities, each building separate, Z = real height above terrain.
+- `highways`, `major_roads`, `minor_roads`, `paths` — MESH entities (road surfaces).
+- `parks`, `water`, `railways` — POLYLINE entities.
+
+No georeferencing embedded in DXF. UTM coordinates shown on CADMapper download page only.
+
+**Key design decisions made:**
+1. No georeferencing required. DXF is self-contained — correct scale, correct orientation, correct elevation.
+2. No GeoJSON site boundary required. The DXF IS the site.
+3. GeoJSON import retained as optional/advanced for users who need legal lot boundary (DA submissions, multi-site studies). Not a prerequisite.
+4. Division of responsibility: GPRTool handles GPR calculation. Georeferencing/planning submissions handled by the professional's own CAD tools (AutoCAD, Revit etc.).
+5. New primary workflow: Import Site Context (DXF) → toggle off existing building → Import 3D Model → assign plants → GPR.
+
+**Implementation confirmed feasible:**
+- Parse DXF MESH entity (group codes 92=vertex count, 10/20/30=XYZ, 90=face indices) → THREE.BufferGeometry
+- Axes: DXF X→Three X, DXF Y→Three Z, DXF Z (elevation)→Three Y
+- Layer visibility: separate THREE.Group per layer, checkboxes in UI
+- No external library needed
+- No Delaunay triangulation needed (terrain already a mesh)
+
+### What is next
+1. Write implementation plan for `Import Site Context…` (DXF) command
+2. New button in body.html left panel, new handler in index.html
+3. `parseCadmapperDXF(text)` function — reads MESH + LWPOLYLINE entities by layer
+4. Layer visibility panel in right panel — checkboxes for topography/buildings/roads/paths/parks/water
+5. Rename `Import Site Image…` consideration — still useful for non-GIS users
+
+### Files changed this session
+- None — research only
+
+### Test file available
+`C:\Users\263350F\Downloads\cadmapper-perth-western-australia-au.zip` — Perth CBD DXF, confirmed structure.
+
+
+---
+
+## Session: Thu 16 Apr 2026 (Part 2) — Select Site UX + Google Geocoding
+
+### What was done
+
+**Modal UI:**
+- Header changed to dark green (--chrome-dark #1e3d1e) with white text — matches GPRTool header
+- Full light-theme CSS variables throughout modal (--chrome-panel, --chrome-input, --text-primary)
+
+**Map tiles:**
+- Switched TILE_SERVER from light_all to Voyager (much clearer map)
+- Removed cream siteSurface fill — was covering map tiles
+- Grid hidden when map tiles load (loadMapTiles sets gridHelper.visible=false)
+- switchMode('2d') now respects mapTileGroup before showing grid
+- Grid minimum cell size increased to 50m (was 1m) — cleaner planning aesthetic
+- Tools menu sections (Building, Landscape, Plants) start collapsed
+
+**Site pin:**
+- Replaced Three.js mesh pin with DOM SVG teardrop pin (Google Maps style)
+- Dark green body, white ring, GPR green dot, drop shadow
+- Updates every animation frame via updateSitePinDOM() projection
+- Pin placed at exact geocoded lat/lng (not parcel centroid)
+- siteOriginLon/Lat stored in drawSiteBoundary, window._siteBBoxCenter used for world coord conversion
+
+**Overpass parcel query:**
+- Restored around:150 (correct — gives map context)
+- Added pointInPolygon() ray-casting test
+- Selection: prefers polygons CONTAINING origin, then smallest landuse > building > other
+- drawSiteBoundary(coords, opts) now accepts opts.originLat/Lng
+- When origin provided: scene centred on geocoded point (not polygon centroid)
+- Deferred resize no longer overrides camera when origin mode active
+
+**Google Maps Geocoding API:**
+- Created api/geocode.js — Vercel serverless proxy
+- Calls Google Maps Geocoding API server-side (key never exposed to browser)
+- Returns slim format: {display_name, lat, lng, precise, types}
+- geocodeGoogle() in site-selection.js calls proxy first, falls back to Nominatim
+- GOOGLE_MAPS_API_KEY added to Vercel GPRTool project env vars
+- Key restricted to Geocoding API only in Google Cloud Console
+- Overpass fallback and Nominatim fallback both preserved
+
+### Key lesson (N-42)
+Geocoding accuracy is the root cause of wrong pin placement, not the Overpass query.
+around:150 was always correct. The fix was: better geocoder (Google) + point-in-polygon
+selection + origin-anchored scene projection. All three required together.
+
+### What is next
+- Test deployed version: search "30 Beaufort Street Perth WA" — should pin correct side of street
+- Test Import from CADMapper with Perth CBD DXF
+- Register for Landgate SLIP account (boon.ong@curtin.edu.au) to replace OSM parcel data
+
+---
+
+## Session: Thu 16 Apr 2026 — Site Selection + CADMapper Import
+
+### What was done
+
+**UI restructure (body.html):**
+- Site section rebuilt: Select Site…, Import from CADMapper…, Clear Site only
+- Import 3D Model moved to Building section
+- Removed: Import Site Boundary, Import Site Image, Set Scale, Set North
+
+**New module: app/js/site-selection.js**
+- Modal with address search (Nominatim geocoder)
+- Overpass API parcel fetch (smallest polygon at lat/lng within 50m radius)
+- Fallback: 30m bounding box if no parcel found
+- Calls drawSiteBoundary on success
+
+**New module: app/js/cadmapper-import.js**
+- Modal: DXF file picker, UTM origin fields, layer checkboxes
+- Full DXF parser: MESH entities (terrain/buildings/roads) + LWPOLYLINE + POLYLINE+VERTEX (parks/water/railways)
+- Axis mapping: DXF X→Three X, DXF Y→Three Z, DXF Z→Three Y
+- MESH: code 92=vertCount, 10/20/30=XYZ, 93=faceListCount, 90×n=faceList. Triangles + quads.
+- LWPOLYLINE: code 38=elevation, 10/20=XY pairs
+- POLYLINE+VERTEX: VERTEX sub-entities merged before SEQEND
+- EdgesGeometry overlay for buildings and terrain (15° threshold)
+- Layer visibility panel injected into right panel on load (buildLayerPanel)
+- UTM↔WGS84 conversion utility (wgs84ToUTM) exported for OSM alignment
+- index.html: cadmapperGroup declared, onLayersLoaded centres geometry, switchMode 3D, fit camera
+
+**Dead code removed from index.html:**
+- importGeoJSONBtn + geojsonFileInput handlers
+- importImageBtn, setScaleBtn, setNorthBtn stubs
+- Menu bar dead refs (import-geojson-menu, import-image)
+
+### What is next
+- Test: run start.bat, open Edge DevTools console for errors
+- Test Select Site with "30 Beaufort Street Perth"
+- Test Import from CADMapper with C:\Users\263350F\Downloads\cadmapper-perth-western-australia-au.zip
+- Fix any parsing issues found in console
+- After testing: bump sw.js cache version, deploy via deploy.bat
+
+---
+
+## Session: Wed 15 Apr 2026 — Import Site Context (DXF) research
+
+### What was done
+
+Full research session — no code written. Investigated and scoped the "Import 3D Map with Terrain" feature.
+- cadmapper.com converts OSM + NASA SRTM + USGS into layered DXF, free up to 1 km2.
+- AutoCAD DXF format, metres, correct scale and orientation out of the box.
+- Minimum contour interval is 4m (not configurable lower on free tier).
+
+**DXF file analysis (Perth CBD sample, 382k lines):**
+
+Layers and entity types confirmed:
+- `topography` - 1 MESH (AcDbSubDMesh), 660 verts, 3040 faces, X:0-960m Y:0-570m Z:1.77-32.91m. Pre-triangulated terrain. No Delaunay needed.
+- `contours` - 59 LWPOLYLINE, elevations 2-42m at 4m intervals. Group code 38 = elevation per line.
+- `buildings` - 287 MESH entities, each building separate, Z = real height above terrain.
+- `highways`, `major_roads`, `minor_roads`, `paths` - MESH entities (road surfaces).
+- `parks`, `water`, `railways` - POLYLINE entities.
+
+No georeferencing embedded in DXF. UTM coords shown on CADMapper download page only (not needed).
+
+**Key design decisions:**
+1. DXF is self-contained - correct scale, orientation, elevation. No lat/lon needed.
+2. DXF IS the site. No GeoJSON prerequisite.
+3. GeoJSON import retained as optional/advanced (DA submissions, multi-site studies).
+4. Division of responsibility: GPRTool does GPR. Georeferencing stays in professional CAD tools.
+5. Workflow: Import Site Context (DXF) -> toggle off existing building -> Import 3D Model -> plants -> GPR.
+
+**Implementation confirmed feasible - no external libraries needed:**
+- Parse MESH: group codes 92=vertex count, 10/20/30=XYZ vertices, 90=face indices
+- Axis mapping: DXF X->Three X, DXF Y->Three Z, DXF Z->Three Y
+- Layer visibility: separate THREE.Group per layer, checkboxes in right panel
+- No Delaunay triangulation (terrain pre-meshed by CADMapper)
+
+### What is next
+1. Write implementation plan for `Import Site Context` (DXF) command
+2. New button in body.html, new `parseCadmapperDXF(text)` function in index.html
+3. Layer visibility panel - checkboxes for topography/buildings/roads/paths/parks/water
+4. Test file: C:\Users\263350F\Downloads\cadmapper-perth-western-australia-au.zip (Perth CBD)
+
+### Files changed this session
+- None - research only

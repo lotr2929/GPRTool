@@ -16,29 +16,15 @@
           <svg class="section-arrow" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
         </div>
         <div class="section-body">
-          <button class="command-btn" id="import3DModelBtn" title="Import 3D model from architect (OBJ, glTF, GLB, IFC)">
-            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 1l6 3.5V11L8 14.5 2 11V4.5L8 1z"/><path d="M8 1v13.5M2 4.5l6 3.5 6-3.5"/></svg>
-            Import 3D Model&#8230;
+          <button class="command-btn" id="selectSiteBtn" title="Search for a site by address">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 1.5C5.5 1.5 3.5 3.5 3.5 6c0 3.5 4.5 8.5 4.5 8.5s4.5-5 4.5-8.5c0-2.5-2-4.5-4.5-4.5z"/><circle cx="8" cy="6" r="1.5"/></svg>
+            Select Site&#8230;
           </button>
-          <input type="file" id="modelFileInput" accept=".obj,.gltf,.glb,.ifc" style="display:none">
-          <button class="command-btn" id="importGeoJSONBtn" title="Import a GeoJSON boundary file">
-            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2v8M5 7l3 3 3-3"/><rect x="2" y="11" width="12" height="3" rx="0.5"/></svg>
-            Import Site Boundary&#8230;
+          <button class="command-btn" id="importCADMapperBtn" title="Import site context from CADMapper DXF">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 12h10M8 3v7M5 7l3 3 3-3"/><rect x="1.5" y="11" width="13" height="2.5" rx="0.5"/></svg>
+            Import from CADMapper&#8230;
           </button>
-          <input type="file" id="geojsonFileInput" accept=".geojson,.json" style="display:none">
-          <button class="command-btn" id="importImageBtn" title="Import a site plan image as underlay">
-            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="1.5" y="2.5" width="13" height="11" rx="1"/><circle cx="5.5" cy="6" r="1.2"/><path d="M1.5 10.5l3.5-3 3 2.5 2.5-2.5 3.5 3"/></svg>
-            Import Site Image&#8230;
-          </button>
-          <button class="command-btn" id="setScaleBtn" title="Set scale for non-georeferenced images">
-            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><line x1="2" y1="8" x2="14" y2="8"/><line x1="2" y1="6" x2="2" y2="10"/><line x1="14" y1="6" x2="14" y2="10"/></svg>
-            Set Scale
-          </button>
-          <button class="command-btn" id="setNorthBtn" title="Set orientation manually">
-            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="6"/><path d="M8 4v8M8 4L6 7h4L8 4z" fill="currentColor" stroke="none"/></svg>
-            Set North
-          </button>
-          <button class="command-btn btn-danger" id="clearSiteBtn" style="display:none" title="Remove current site and model">
+          <button class="command-btn btn-danger" id="clearSiteBtn" style="display:none" title="Remove current site and all content">
             <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 3l10 10M13 3L3 13"/></svg>
             Clear Site
           </button>
@@ -57,12 +43,17 @@
       </div>
 
       <!-- BUILDING -->
-      <div class="command-section" id="section-building">
+      <div class="command-section collapsed" id="section-building">
         <div class="section-header" data-section="building">
           <span>Building</span>
           <svg class="section-arrow" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
         </div>
         <div class="section-body">
+          <button class="command-btn" id="import3DModelBtn" title="Import 3D model from architect (OBJ, glTF, GLB, IFC)">
+            <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 1l6 3.5V11L8 14.5 2 11V4.5L8 1z"/><path d="M8 1v13.5M2 4.5l6 3.5 6-3.5"/></svg>
+            Import 3D Model&#8230;
+          </button>
+          <input type="file" id="modelFileInput" accept=".obj,.gltf,.glb,.ifc" style="display:none">
           <p class="tool-group-note">Surface creation tools — define massing for landscape design</p>
           <div class="tool-group-label">2D</div>
           <button class="command-btn tool-btn" data-action="rectangle">
@@ -114,7 +105,7 @@
       </div>
 
       <!-- LANDSCAPE -->
-      <div class="command-section" id="section-landscape">
+      <div class="command-section collapsed" id="section-landscape">
         <div class="section-header" data-section="landscape">
           <span>Landscape</span>
           <svg class="section-arrow" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
@@ -136,7 +127,7 @@
       </div>
 
       <!-- PLANTS -->
-      <div class="command-section" id="section-plants">
+      <div class="command-section collapsed" id="section-plants">
         <div class="section-header" data-section="plants">
           <span>Plants</span>
           <svg class="section-arrow" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
