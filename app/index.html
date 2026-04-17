@@ -226,6 +226,7 @@
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
     import { initSiteSelection }    from './js/site-selection.js';
     import { initCADMapperImport, buildLayerPanel } from './js/cadmapper-import.js';
+    import { DesignGridManager }    from './js/design-grid.js';
     import {
       initNorthPoint2D,
       updateNorthRotation,
@@ -383,6 +384,7 @@
     let manualMinorDivisions = null;   // sub-divisions per major cell; null = no minor grid
     let _lastSiteSpan        = 1000;   // cached for grid popup repaint
     let axesHelper           = null;
+    let designGridManager    = null;   // Design Grid system (see js/design-grid.js)
     let axesYLine        = null;  // Y (green) — shown in 3D only
     let feedbackTimer    = null;
 
@@ -680,6 +682,11 @@
         manualGridSpacing    = (maj > 0)  ? maj : null;
         manualMinorDivisions = (min >= 2) ? min : null;
         updateSceneHelpers(_lastSiteSpan);
+        // Also update the Design Grid spacing (Design Grid owns minor lines)
+        if (designGridManager) {
+          const cell = _majorCellSize();
+          designGridManager.setHorizontalSpacing(cell, manualMinorDivisions ?? 0);
+        }
         const cell = _majorCellSize();
         const s1   = manualGridSpacing    ? `major ${manualGridSpacing} m` : 'major auto';
         const sub  = manualMinorDivisions ? cell / manualMinorDivisions : null;
@@ -790,19 +797,25 @@
         : (rawCell < 50 ? 50 : rawCell < 100 ? 100 : rawCell < 250 ? 250 : 500);
       const divisions = gridSize / cellSize;
 
-      gridHelper = new THREE.GridHelper(gridSize, divisions, 0x8a9b7a, 0xbcc9b0);
+      // CAD Universe grid — ALWAYS aligned with True North, NEVER rotates.
+      // Very subtle: it is the background georeference, not the active design grid.
+      gridHelper = new THREE.GridHelper(gridSize, divisions, 0xc0cdb8, 0xd8e2d0);
+      gridHelper.material.opacity     = 0.45;
+      gridHelper.material.transparent = true;
       gridHelper.visible = (currentMode === '2d');
       scene.add(gridHelper);
+      // gridHelperMinor belongs to the Design Grid, not the CAD Universe.
+      // It is created and managed by DesignGridManager (see js/design-grid.js).
 
-      if (manualMinorDivisions && manualMinorDivisions >= 2) {
-        const minorSpacing   = cellSize / manualMinorDivisions;
-        const minorDivisions = Math.round(gridSize / minorSpacing);
-        gridHelperMinor = new THREE.GridHelper(gridSize, minorDivisions, 0xc8d4c0, 0xc8d4c0);
-        gridHelperMinor.material.opacity     = 0.35;
-        gridHelperMinor.material.transparent = true;
-        gridHelperMinor.renderOrder          = -1;
-        gridHelperMinor.visible = gridHelper.visible;
-        scene.add(gridHelperMinor);
+      // Update Design Grid extent and spacing to match site span
+      if (designGridManager) {
+        const extent = gridSize / 2;
+        designGridManager.setHorizontalExtent(extent);
+        designGridManager.setHorizontalSpacing(
+          manualGridSpacing    ?? cellSize,
+          manualMinorDivisions ?? 0
+        );
+        designGridManager.setVisible(currentMode === '2d');
       }
 
       const axisLen = siteSpan * 0.3;
@@ -919,7 +932,7 @@
       if (toggle) mapTileGroup.visible = toggle.checked;
 
       // Hide grid when map tiles are active — tiles provide spatial reference
-      if (gridHelper) gridHelper.visible = false;
+      setGridVisible(false);
     }
 
     function mercatorY(lat) {
@@ -967,7 +980,7 @@
       scene.remove(mapTileGroup);
       mapTileGroup = null;
       // Restore grid when map is cleared
-      if (gridHelper) gridHelper.visible = (currentMode === '2d');
+      setGridVisible(currentMode === '2d');
     }
 
     /* ============================================================
@@ -2065,7 +2078,7 @@
         if (selectedSurface) {
           fitSurfaceCamera(selectedSurface);
           drawSurfaceCanvasOutline(selectedSurface);
-          if (gridHelper) gridHelper.visible = false;
+          setGridVisible(false);
           if (axesHelper)  axesHelper.visible = false;          const typeLabels = { ground: 'Ground plane', roof: 'Roof plane', wall: 'Wall plane', sloped: 'Sloped surface' };
           document.getElementById('status-mode').textContent = '2D';
           const modeLabel = canvasMode === 'ortho' ? 'Ortho' : 'Surface';
@@ -2073,7 +2086,7 @@
         } else {
           clearSurfaceCanvasOutline();
           // Only show grid if no map tiles are active
-          if (gridHelper) gridHelper.visible = !mapTileGroup;
+          setGridVisible(!mapTileGroup);
           if (axesHelper) axesHelper.visible = true;
           if (axesYLine)  axesYLine.visible  = false;
           if (siteBoundaryLine) fit2DCamera(new THREE.Box3().setFromObject(siteBoundaryLine));
@@ -2085,7 +2098,7 @@
         camera   = camera3D;
         controls = controls3D;
         clearSurfaceCanvasOutline();
-        if (gridHelper) gridHelper.visible = true;  // grid visible in 3D, aligned to DN
+        setGridVisible(false);  // grid hidden in 3D (Design Grid also hidden)
         if (axesHelper) axesHelper.visible = true;
         if (axesYLine)  axesYLine.visible  = true;
         const target = importedModel
@@ -2203,17 +2216,21 @@
       controls.update();
       updateNorthRotation();
 
-      // Grid, axes and all scene geometry follow Design North so everything
-      // stays aligned when the user rotates the north point.
-      // dnDeg +ve = East = clockwise; Three.js rotation.y +ve = counterclockwise, so negate.
+      // ── CAD Universe orientation ──────────────────────────────────────────
+      // The CAD grid (gridHelper) is FIXED at True North. It never rotates.
+      // The axes helper rotates with Design North as a visual orientation aid.
+      // The DXF model, site boundary, and all imported geometry never rotate.
+      //
+      // dnDeg +ve = clockwise from True North (e.g. Design North is East of True North)
+      // Three.js rotation.y +ve = CCW, so we negate.
       const _dn    = getDesignNorthAngle();
       const _dnRad = (_dn ?? 0) * Math.PI / 180;
-      if (gridHelper)      gridHelper.rotation.y      = -_dnRad;
-      if (gridHelperMinor) { gridHelperMinor.rotation.y = -_dnRad; gridHelperMinor.visible = gridHelper?.visible ?? false; }
-      if (axesHelper)      axesHelper.rotation.y      = -_dnRad;
-      if (cadmapperGroup)  cadmapperGroup.rotation.y  = -_dnRad;
-      if (importedModel)   importedModel.rotation.y   = -_dnRad;
-      if (siteBoundaryLine) siteBoundaryLine.rotation.y = -_dnRad;
+
+      // Axes: rotate with Design North (shows the design coordinate system)
+      if (axesHelper) axesHelper.rotation.y = -_dnRad;
+
+      // Design Grid: rotate group to match Design North (cheap matrix op, no geometry rebuild)
+      if (designGridManager) designGridManager.setHorizontalRotation(-_dnRad);
 
       renderer.render(scene, camera);
       updateSitePinDOM();
@@ -2341,8 +2358,9 @@
 
     document.getElementById('toggleGridBtn').addEventListener('click', () => {
       if (gridHelper) {
-        gridHelper.visible = !gridHelper.visible;
-        showFeedback('Grid ' + (gridHelper.visible ? 'on' : 'off'));
+        const next = !gridHelper.visible;
+        setGridVisible(next);
+        showFeedback('Grid ' + (next ? 'on' : 'off'));
       }
     });
 
@@ -3439,6 +3457,15 @@
       sitePinDom.style.top  = y + 'px';
     }
 
+    // Initialise the Design Grid Manager (see js/design-grid.js for full docs)
+    designGridManager = new DesignGridManager(THREE, scene);
+
+    // Helper: keep CAD grid and Design Grid visibility in sync
+    function setGridVisible(v) {
+      if (gridHelper) gridHelper.visible = v;
+      if (designGridManager) designGridManager.setVisible(v);
+    }
+
     initSiteSelection({ drawSiteBoundary, onSiteSelected: (lat, lng) => showSitePin(lat, lng) });
     initCADMapperImport({
       THREE,
@@ -3458,15 +3485,40 @@
         const box    = new THREE.Box3().setFromObject(cadmapperGroup);
         const centre = new THREE.Vector3();
         box.getCenter(centre);
-        cadmapperGroup.position.sub(centre);
-        box.setFromObject(cadmapperGroup);
-        cadmapperGroup.position.y -= box.min.y;
+
+        // Centre by moving children (not the group) so cadmapperGroup stays at
+        // world (0,0,0). Rotation in the animation loop then pivots correctly
+        // around the scene centre — the DXF's visual centre.
+        cadmapperGroup.children.forEach(child => {
+          child.position.x -= centre.x;
+          child.position.z -= centre.z;
+        });
+        const box2 = new THREE.Box3().setFromObject(cadmapperGroup);
+        cadmapperGroup.children.forEach(child => { child.position.y -= box2.min.y; });
 
         scene.add(cadmapperGroup);
 
         const size = new THREE.Vector3();
         new THREE.Box3().setFromObject(cadmapperGroup).getSize(size);
-        updateSceneHelpers(Math.max(size.x, size.z));
+        const siteSpan = Math.max(size.x, size.z);
+        updateSceneHelpers(siteSpan);
+
+        // Initialise the horizontal Design Grid at the DXF centre (world origin).
+        // Origin = (0,0,0) because we centred the DXF by moving its children above.
+        // Spacing and extent are sourced from updateSceneHelpers values.
+        // The grid is built at True North; rotation is applied each frame via
+        // designGridManager.setHorizontalRotation() in the animation loop.
+        const rawCell  = siteSpan / 10;
+        const cellSize = manualGridSpacing
+          ? manualGridSpacing
+          : (rawCell < 50 ? 50 : rawCell < 100 ? 100 : rawCell < 250 ? 250 : 500);
+        designGridManager.initHorizontal(
+          cellSize,
+          manualMinorDivisions ?? 0,
+          5000,
+          new THREE.Vector3(0, 0, 0)
+        );
+
         fit3DCamera(new THREE.Box3().setFromObject(cadmapperGroup));
         switchMode('3d');
 
