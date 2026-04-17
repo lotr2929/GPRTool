@@ -563,41 +563,41 @@
       pop.id = 'grid-spacing-popup';
       pop.style.cssText = `
         position:fixed; z-index:1000;
-        background:var(--chrome-bg,#2c2c2c); border:1px solid var(--chrome-border,#444);
-        border-radius:6px; box-shadow:0 4px 20px rgba(0,0,0,0.55);
+        background:var(--chrome-panel); border:1px solid var(--chrome-border);
+        border-radius:6px; box-shadow:0 4px 20px rgba(0,0,0,0.18);
         padding:12px 14px; width:214px;
         font-family:var(--font-ui,'Outfit',sans-serif); font-size:12px;
-        color:var(--text-primary,#e8e8e8);`;
+        color:var(--text-primary);`;
       pop.innerHTML = `
         <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;
-                    color:var(--text-secondary,#888);margin-bottom:10px;">Grid Spacing</div>
+                    color:var(--text-secondary);margin-bottom:10px;">Grid Spacing</div>
         <div style="display:grid;grid-template-columns:44px 1fr auto;
                     gap:7px 8px;align-items:center;margin-bottom:6px;">
-          <span style="font-size:11px;color:var(--text-secondary,#aaa);">Major Grid</span>
+          <span style="font-size:11px;color:var(--text-secondary);">Major Grid</span>
           <input type="number" id="gs-major" min="1" max="10000" step="1" placeholder="auto"
-            style="background:var(--chrome-input,#1a1a1a);border:1px solid var(--chrome-border,#444);
-                   border-radius:4px;color:var(--text-primary,#e8e8e8);font-size:12px;
+            style="background:var(--chrome-input);border:1px solid var(--chrome-border);
+                   border-radius:4px;color:var(--text-primary);font-size:12px;
                    padding:4px 6px;outline:none;text-align:right;
                    width:100%;box-sizing:border-box;">
-          <span style="font-size:11px;color:var(--text-secondary,#888);">m</span>
-          <span style="font-size:11px;color:var(--text-secondary,#aaa);">Minor Grid</span>
+          <span style="font-size:11px;color:var(--text-secondary);">m</span>
+          <span style="font-size:11px;color:var(--text-secondary);">Minor Grid</span>
           <input type="number" id="gs-minor" min="2" max="100" step="1" placeholder="off"
-            style="background:var(--chrome-input,#1a1a1a);border:1px solid var(--chrome-border,#444);
-                   border-radius:4px;color:var(--text-primary,#e8e8e8);font-size:12px;
+            style="background:var(--chrome-input);border:1px solid var(--chrome-border);
+                   border-radius:4px;color:var(--text-primary);font-size:12px;
                    padding:4px 6px;outline:none;text-align:right;
                    width:100%;box-sizing:border-box;">
-          <span style="font-size:11px;color:var(--text-secondary,#888);">lines</span>
+          <span style="font-size:11px;color:var(--text-secondary);">lines</span>
         </div>
-        <div id="gs-hint" style="font-size:10px;color:var(--text-secondary,#666);
+        <div id="gs-hint" style="font-size:10px;color:var(--text-muted);
                                   margin-bottom:10px;min-height:13px;"></div>
         <div style="display:flex;gap:6px;">
-          <button id="gs-ok" style="flex:1;background:var(--accent-mid,#4a8a4a);color:#fff;
+          <button id="gs-ok" style="flex:1;background:var(--accent-mid);color:#fff;
             border:none;border-radius:4px;font-size:12px;padding:5px 0;cursor:pointer;">OK</button>
-          <button id="gs-cancel" style="flex:1;background:var(--chrome-border,#444);
-            color:var(--text-primary,#e8e8e8);border:none;border-radius:4px;
+          <button id="gs-cancel" style="flex:1;background:var(--chrome-panel-alt);
+            color:var(--text-primary);border:1px solid var(--chrome-border);border-radius:4px;
             font-size:12px;padding:5px 0;cursor:pointer;">Cancel</button>
-          <button id="gs-reset" style="flex:1;background:none;color:var(--text-secondary,#888);
-            border:1px solid var(--chrome-border,#444);border-radius:4px;
+          <button id="gs-reset" style="flex:1;background:none;color:var(--text-secondary);
+            border:1px solid var(--chrome-border);border-radius:4px;
             font-size:12px;padding:5px 0;cursor:pointer;" title="Reset both to auto">Reset</button>
         </div>`;
       document.body.appendChild(pop);

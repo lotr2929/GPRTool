@@ -39,19 +39,19 @@ const LAYER_CONFIG = {
 const MODAL_HTML = `
 <div id="cadmapper-overlay" style="
   display:none; position:fixed; inset:0;
-  background:rgba(0,0,0,0.55); z-index:1100;
+  background:rgba(0,0,0,0.35); z-index:1100;
   align-items:center; justify-content:center;">
   <div id="cadmapper-modal" style="
-    background:var(--chrome-bg,#2c2c2c);
-    border:1px solid var(--chrome-border,#444);
+    background:var(--chrome-panel);
+    border:1px solid var(--chrome-border);
     border-radius:6px; width:460px; max-width:95vw;
-    box-shadow:0 8px 32px rgba(0,0,0,0.55);
-    color:var(--text-primary,#e8e8e8);
-    font-family:var(--font-ui,'Outfit',sans-serif);
+    box-shadow:0 8px 32px rgba(0,0,0,0.22);
+    color:var(--text-primary);
+    font-family:var(--font,'Outfit',sans-serif);
     overflow:hidden;">
 
     <!-- Shared header -->
-    <div style="padding:12px 16px; border-bottom:1px solid var(--chrome-border,#444);
+    <div style="padding:12px 16px; border-bottom:1px solid var(--chrome-border);
                 display:flex; align-items:center; gap:10px;
                 background:var(--chrome-dark,#1e3d1e);">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
@@ -68,9 +68,9 @@ const MODAL_HTML = `
 
     <!-- STEP 1: Instructions -->
     <div id="cadmapper-step1">
-      <div style="padding:16px 18px 14px; border-bottom:1px solid var(--chrome-border,#444);">
+      <div style="padding:16px 18px 14px; border-bottom:1px solid var(--chrome-border);">
         <p style="margin:0 0 10px; font-size:12px; line-height:1.6; color:var(--text-secondary,#aaa);">
-          <strong style="color:var(--text-primary,#e8e8e8);">CADMapper</strong> converts
+          <strong style="color:var(--text-primary);">CADMapper</strong> converts
           OpenStreetMap and NASA terrain data into layered DXF files — buildings, roads,
           terrain and more — ready to import into GPRTool.
           Download is <strong style="color:var(--accent-light,#90c890);">free up to 1 km&sup2;</strong>
@@ -104,7 +104,7 @@ const MODAL_HTML = `
                        display:flex; align-items:center; justify-content:center;
                        font-size:10px; font-weight:700;">3</span>
           <span>On the download confirmation page, note your
-            <strong style="color:var(--text-primary,#e8e8e8);">Spatial Reference System</strong>:
+            <strong style="color:var(--text-primary);">Spatial Reference System</strong>:
             copy the <strong>UTM Zone</strong>, <strong>Easting</strong>, and
             <strong>Northing</strong> values — GPRTool needs these to geolocate your model.</span>
         </div>
@@ -117,7 +117,7 @@ const MODAL_HTML = `
         </div>
       </div>
       <div style="padding:10px 16px 14px; display:flex; justify-content:flex-end;
-                  border-top:1px solid var(--chrome-border,#444);">
+                  border-top:1px solid var(--chrome-border);">
         <button id="cadmapper-proceed-btn" style="
           background:var(--accent-mid,#4a8a4a); color:#fff; border:none;
           border-radius:4px; font-size:12px; padding:7px 18px;
@@ -128,60 +128,60 @@ const MODAL_HTML = `
     <!-- STEP 2: File + Spatial Reference System + layers -->
     <div id="cadmapper-step2" style="display:none;">
 
-      <div style="padding:14px 16px; border-bottom:1px solid var(--chrome-border,#444);">
-        <label style="font-size:11px; color:var(--text-secondary,#888); display:block; margin-bottom:6px;">
+      <div style="padding:14px 16px; border-bottom:1px solid var(--chrome-border);">
+        <label style="font-size:11px; color:var(--text-secondary); display:block; margin-bottom:6px;">
           DXF File (from cadmapper.com)
         </label>
         <div style="display:flex; gap:8px; align-items:center;">
           <span id="cadmapper-filename" style="
-            flex:1; font-size:12px; color:var(--text-secondary,#888);
-            background:var(--chrome-input,#1a1a1a); border:1px solid var(--chrome-border,#444);
+            flex:1; font-size:12px; color:var(--text-secondary);
+            background:var(--chrome-input); border:1px solid var(--chrome-border);
             border-radius:4px; padding:6px 10px;
             overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
             No file selected
           </span>
           <button id="cadmapper-file-btn" style="
-            background:var(--chrome-border,#444); color:var(--text-primary,#e8e8e8);
-            border:none; border-radius:4px; font-size:12px;
+            background:var(--chrome-panel-alt); color:var(--text-primary);
+            border:1px solid var(--chrome-border); border-radius:4px; font-size:12px;
             padding:6px 12px; cursor:pointer; white-space:nowrap;">Browse&#8230;</button>
           <input type="file" id="cadmapper-file-input" accept=".dxf" style="display:none">
         </div>
       </div>
 
-      <div style="padding:14px 16px; border-bottom:1px solid var(--chrome-border,#444);">
-        <label style="font-size:11px; color:var(--text-secondary,#888); display:block; margin-bottom:2px;">
+      <div style="padding:14px 16px; border-bottom:1px solid var(--chrome-border);">
+        <label style="font-size:11px; color:var(--text-secondary); display:block; margin-bottom:2px;">
           Spatial Reference System
         </label>
-        <div style="font-size:10px; color:var(--text-secondary,#555); margin-bottom:8px;">
+        <div style="font-size:10px; color:var(--text-muted); margin-bottom:8px;">
           From your CADMapper download page &mdash; required to geolocate your model
         </div>
         <div style="display:flex; gap:8px;">
           <div style="flex:1;">
-            <div style="font-size:10px; color:var(--text-secondary,#666); margin-bottom:3px;">Easting (m)</div>
+            <div style="font-size:10px; color:var(--text-secondary); margin-bottom:3px;">Easting (m)</div>
             <input id="cadmapper-easting" type="number" placeholder="e.g. 388500"
-              style="width:100%; box-sizing:border-box; background:var(--chrome-input,#1a1a1a);
-                     border:1px solid var(--chrome-border,#444); border-radius:4px;
-                     color:var(--text-primary,#e8e8e8); font-size:12px; padding:5px 8px; outline:none;">
+              style="width:100%; box-sizing:border-box; background:var(--chrome-input);
+                     border:1px solid var(--chrome-border); border-radius:4px;
+                     color:var(--text-primary); font-size:12px; padding:5px 8px; outline:none;">
           </div>
           <div style="flex:1;">
-            <div style="font-size:10px; color:var(--text-secondary,#666); margin-bottom:3px;">Northing (m)</div>
+            <div style="font-size:10px; color:var(--text-secondary); margin-bottom:3px;">Northing (m)</div>
             <input id="cadmapper-northing" type="number" placeholder="e.g. 6461800"
-              style="width:100%; box-sizing:border-box; background:var(--chrome-input,#1a1a1a);
-                     border:1px solid var(--chrome-border,#444); border-radius:4px;
-                     color:var(--text-primary,#e8e8e8); font-size:12px; padding:5px 8px; outline:none;">
+              style="width:100%; box-sizing:border-box; background:var(--chrome-input);
+                     border:1px solid var(--chrome-border); border-radius:4px;
+                     color:var(--text-primary); font-size:12px; padding:5px 8px; outline:none;">
           </div>
           <div style="width:80px;">
-            <div style="font-size:10px; color:var(--text-secondary,#666); margin-bottom:3px;">UTM Zone</div>
+            <div style="font-size:10px; color:var(--text-secondary); margin-bottom:3px;">UTM Zone</div>
             <input id="cadmapper-zone" type="text" placeholder="e.g. 50S"
-              style="width:100%; box-sizing:border-box; background:var(--chrome-input,#1a1a1a);
-                     border:1px solid var(--chrome-border,#444); border-radius:4px;
-                     color:var(--text-primary,#e8e8e8); font-size:12px; padding:5px 8px; outline:none;">
+              style="width:100%; box-sizing:border-box; background:var(--chrome-input);
+                     border:1px solid var(--chrome-border); border-radius:4px;
+                     color:var(--text-primary); font-size:12px; padding:5px 8px; outline:none;">
           </div>
         </div>
       </div>
 
-      <div style="padding:12px 16px; border-bottom:1px solid var(--chrome-border,#444);">
-        <div style="font-size:11px; color:var(--text-secondary,#888); margin-bottom:8px;">Layers to import</div>
+      <div style="padding:12px 16px; border-bottom:1px solid var(--chrome-border);">
+        <div style="font-size:11px; color:var(--text-secondary); margin-bottom:8px;">Layers to import</div>
         <div style="display:flex; flex-wrap:wrap; gap:6px 14px;">
           ${Object.entries(LAYER_CONFIG).map(([k, v]) =>
             `<label style="font-size:11px;display:flex;align-items:center;gap:5px;cursor:pointer;">
@@ -193,12 +193,12 @@ const MODAL_HTML = `
 
       <div style="padding:10px 16px; display:flex; align-items:center; gap:8px;">
         <button id="cadmapper-back-btn" style="
-          background:none; color:var(--text-secondary,#888);
-          border:1px solid var(--chrome-border,#444); border-radius:4px;
+          background:none; color:var(--text-secondary);
+          border:1px solid var(--chrome-border); border-radius:4px;
           font-size:12px; padding:6px 12px; cursor:pointer; white-space:nowrap;">
           &#8592; Back
         </button>
-        <span id="cadmapper-status" style="flex:1; font-size:11px; color:var(--text-secondary,#888);">
+        <span id="cadmapper-status" style="flex:1; font-size:11px; color:var(--text-secondary);">
           Select a DXF file to import.
         </span>
         <button id="cadmapper-import-btn" disabled style="
@@ -260,7 +260,7 @@ function setStatus(msg, isError = false) {
   const el = document.getElementById('cadmapper-status');
   if (!el) return;
   el.textContent = msg;
-  el.style.color = isError ? '#e06060' : 'var(--text-secondary,#888)';
+  el.style.color = isError ? '#e06060' : 'var(--text-secondary)';
 }
 
 function onFileSelected(e) {
@@ -268,7 +268,7 @@ function onFileSelected(e) {
   if (!file) return;
   _dxfFile = file;
   document.getElementById('cadmapper-filename').textContent = file.name;
-  document.getElementById('cadmapper-filename').style.color = 'var(--text-primary,#e8e8e8)';
+  document.getElementById('cadmapper-filename').style.color = 'var(--text-primary)';
   document.getElementById('cadmapper-import-btn').disabled = false;
   document.getElementById('cadmapper-import-btn').style.opacity = '1';
   setStatus(`Ready: ${file.name} (${(file.size / 1024).toFixed(0)} KB)`);
@@ -548,7 +548,7 @@ export function buildLayerPanel(layerGroups, container) {
     const name = document.createElement('span');
     name.style.cssText = 'flex:1;font-size:12px;'; name.textContent = cfg.label;
     const cnt = document.createElement('span');
-    cnt.style.cssText = 'font-size:10px;color:var(--text-secondary,#888);'; cnt.textContent = count;
+    cnt.style.cssText = 'font-size:10px;color:var(--text-secondary);'; cnt.textContent = count;
     label.append(cb, dot, name, cnt);
     row.appendChild(label);
     section.appendChild(row);
