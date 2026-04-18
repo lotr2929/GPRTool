@@ -141,6 +141,12 @@
 
     const scene = new THREE.Scene();
 
+    // ── Bridge local vars to state so modules (grid.js, geo.js etc.) can read them ──
+    state.scene    = scene;
+    state.renderer = renderer;
+    state.canvas   = canvas;
+    state.container = container;
+
     function syncViewportBackground() {
       const css = getComputedStyle(document.documentElement)
         .getPropertyValue('--vp-bgcolor').trim() || '#ffffff';
@@ -161,6 +167,11 @@
     camera2D.quaternion.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
 
     let camera = camera2D;
+
+    // Bridge cameras to state
+    state.camera3D = camera3D;
+    state.camera2D = camera2D;
+    state.camera   = camera;
 
     /* ============================================================
        CONTROLS
@@ -3117,6 +3128,7 @@
 
     // Initialise the Design Grid Manager (see js/design-grid.js for full docs)
     designGridManager = new DesignGridManager(THREE, scene);
+    state.designGridManager = designGridManager; // bridge to state for grid.js
 
     // Helper: enforce the one-grid-visible rule.
     // CAD grid shows when Design North = 0 (no design rotation set).
