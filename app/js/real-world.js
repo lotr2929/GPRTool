@@ -133,7 +133,12 @@ export function utmToWGS84(easting, northing, zone, hemisphere = 'N') {
   const lon0 = ((zone - 1) * 6 - 180 + 3) * Math.PI / 180;
 
   const x = easting - 500000;
-  const y = hemisphere === 'S' ? northing - 10000000 : northing;
+  // CADMapper convention: southern hemisphere northing is given as a negative offset
+  // from the equator (e.g. -3535933 for Perth). Standard UTM stores this as a positive
+  // value with 10,000,000 false northing added (e.g. 6464067). Both forms are handled:
+  //   CADMapper-style (northing < 0):  use directly — already the signed meridional arc
+  //   Standard UTM S  (northing > 0):  subtract 10,000,000 to get signed meridional arc
+  const y = (northing < 0) ? northing : (hemisphere === 'S' ? northing - 10000000 : northing);
 
   const M   = y / k0;
   const mu  = M / (a * (1 - e2 / 4 - 3 * e2 * e2 / 64));
