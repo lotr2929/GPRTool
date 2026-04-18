@@ -1,3 +1,6 @@
+# Temporary debug scripts
+_debug/
+
 # Dependencies
 node_modules/
 .venv/
