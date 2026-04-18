@@ -2289,6 +2289,7 @@
       el.textContent = message;
       if (feedbackTimer) clearTimeout(feedbackTimer);
       if (duration > 0) feedbackTimer = setTimeout(() => { el.textContent = 'Ready'; }, duration);
+    }
 
     /* ============================================================
        LOT BOUNDARY PANEL — appears in right panel after DXF import
