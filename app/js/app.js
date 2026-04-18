@@ -46,20 +46,7 @@
     document.getElementById('body-container').innerHTML = bodyHTML;
     initUI();
 
-    /* ============================================================
-       HEADER: CLOCK
-    ============================================================ */
-    updateHeaderTime();
-
-    /* ============================================================
-       HEADER: ALARM
-    ============================================================ */
-    let alarmTime     = null;
-    let alarmInterval = null;
-    let isRinging     = false;
-
-    /* alarm listener -- moved to ui.js */;
-
+    /* ── ui.js handles: clock, alarm, showFeedback, section collapse ─── */
 
 
 
