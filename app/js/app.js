@@ -34,6 +34,7 @@
       isGizmo3DVisible,
     } from './north-point-3d.js';
     import { state } from './state.js';
+    import { loadOBJ, loadGLTF, loadIFC, addEdgeOverlay, detectAndApplyUnitScale } from './model.js';
     import { updateSceneHelpers, showGridSpacingPopup, majorCellSize } from './grid.js';
     import { initGeo, latlonToMetres, extractCoordinates, computeBBox, computePolygonArea, computePolygonPerimeter, loadMapTiles, clearMapTiles } from './geo.js';
     import { initUI, showFeedback } from './ui.js';
@@ -927,60 +928,8 @@
       }
     });
 
-    /* ============================================================
-       MODEL LOADING — OBJ
-    ============================================================ */
-    function loadOBJ(file) {
-      showFeedback('Loading OBJ model\u2026', 0);
-      const url    = URL.createObjectURL(file);
-      const loader = new OBJLoader();
-      loader.load(
-        url,
-        group => {
-          URL.revokeObjectURL(url);
-          onModelLoaded(group, file.name, 'OBJ');
-        },
-        xhr => {
-          if (xhr.total) showFeedback(`Loading\u2026 ${Math.round(xhr.loaded / xhr.total * 100)}%`, 0);
-        },
-        err => {
-          URL.revokeObjectURL(url);
-          showFeedback('Error loading OBJ: ' + err.message);
-          console.error(err);
-        }
-      );
-    }
 
-    /* ============================================================
-       MODEL LOADING — glTF / GLB
-    ============================================================ */
-    function loadGLTF(file) {
-      showFeedback('Loading glTF model\u2026', 0);
-      const url    = URL.createObjectURL(file);
-      const loader = new GLTFLoader();
-      loader.load(
-        url,
-        gltf => {
-          URL.revokeObjectURL(url);
-          onModelLoaded(gltf.scene, file.name, file.name.toLowerCase().endsWith('.glb') ? 'GLB' : 'glTF');
-        },
-        xhr => {
-          if (xhr.total) showFeedback(`Loading\u2026 ${Math.round(xhr.loaded / xhr.total * 100)}%`, 0);
-        },
-        err => {
-          URL.revokeObjectURL(url);
-          showFeedback('Error loading glTF: ' + err.message);
-          console.error(err);
-        }
-      );
-    }
 
-    /* ============================================================
-       MODEL LOADING — IFC (stub)
-    ============================================================ */
-    function loadIFC(file) {
-      showFeedback('IFC import \u2014 coming in next build');
-    }
 
     /* ============================================================
        EDGE OVERLAY
@@ -989,120 +938,6 @@
     const edgeGroup = new THREE.Group();
     let   edgeLines = null;
 
-    function addEdgeOverlay(modelGroup) {
-      while (edgeGroup.children.length) {
-        const c = edgeGroup.children[0];
-        c.geometry?.dispose();
-        edgeGroup.remove(c);
-      }
-      edgeLines = null;
-      modelGroup.updateMatrixWorld(true);
-
-      const vKey = v =>
-        `${Math.round(v.x*1000)},${Math.round(v.y*1000)},${Math.round(v.z*1000)}`;
-
-      const edgeMap = new Map();
-
-      modelGroup.traverse(child => {
-        if (!child.isMesh) return;
-        const pos = child.geometry.attributes.position;
-        const idx = child.geometry.index;
-        if (!pos) return;
-
-        const meshId = child.uuid;
-        const getV   = i => new THREE.Vector3()
-          .fromBufferAttribute(pos, i)
-          .applyMatrix4(child.matrixWorld);
-
-        const seen  = new Map();
-        const verts = [];
-        const total = idx ? idx.count : pos.count;
-        for (let i = 0; i < total; i++) {
-          const vi = idx ? idx.getX(i) : i;
-          const v  = getV(vi);
-          const k  = vKey(v);
-          if (!seen.has(k)) { seen.set(k, true); verts.push(v); }
-        }
-        if (verts.length >= 2) {
-          const geom = new THREE.BufferGeometry().setFromPoints(verts);
-          const loop = new THREE.LineLoop(geom, edgeMat);
-          loop.renderOrder = 1;
-          edgeGroup.add(loop);
-        }
-
-        for (let i = 0; i < total; i += 3) {
-          const ia = idx ? idx.getX(i)   : i;
-          const ib = idx ? idx.getX(i+1) : i+1;
-          const ic = idx ? idx.getX(i+2) : i+2;
-          [[ia,ib],[ib,ic],[ic,ia]].forEach(([x,y]) => {
-            const va = getV(x), vb = getV(y);
-            const ka = vKey(va), kb = vKey(vb);
-            const ek = ka < kb ? `${ka}|${kb}` : `${kb}|${ka}`;
-            if (!edgeMap.has(ek)) edgeMap.set(ek, { a: va, b: vb, meshIds: new Set() });
-            edgeMap.get(ek).meshIds.add(meshId);
-          });
-        }
-      });
-
-      const jPts = [];
-      edgeMap.forEach(({ a, b, meshIds }) => {
-        if (meshIds.size >= 2) jPts.push(a.clone(), b.clone());
-      });
-
-      const meshList = [];
-      modelGroup.traverse(c => { if (c.isMesh) meshList.push(c); });
-
-      const boundaryEdges = [];
-      edgeMap.forEach(({ a, b, meshIds }) => {
-        if (meshIds.size === 1) boundaryEdges.push({ a, b, meshId: [...meshIds][0] });
-      });
-
-      const rayDown = new THREE.Vector3(0, -1, 0);
-      const rayUp   = new THREE.Vector3(0,  1, 0);
-      const caster  = new THREE.Raycaster();
-
-      boundaryEdges.forEach(({ a, b, meshId }) => {
-        meshList.forEach(targetMesh => {
-          if (targetMesh.uuid === meshId) return;
-
-          caster.set(a.clone().setY(a.y + 0.1), rayDown);
-          const hitsA = caster.intersectObject(targetMesh, false);
-
-          caster.set(b.clone().setY(b.y + 0.1), rayDown);
-          const hitsB = caster.intersectObject(targetMesh, false);
-
-          const hitsAup = hitsA.length ? hitsA :
-            (() => { caster.set(a.clone().setY(a.y - 0.1), rayUp); return caster.intersectObject(targetMesh, false); })();
-          const hitsBup = hitsB.length ? hitsB :
-            (() => { caster.set(b.clone().setY(b.y - 0.1), rayUp); return caster.intersectObject(targetMesh, false); })();
-
-          const hitA = hitsAup[0];
-          const hitB = hitsBup[0];
-
-          if (hitA && hitB) {
-            jPts.push(hitA.point.clone(), hitB.point.clone());
-          }
-        });
-      });
-
-      if (jPts.length) {
-        const jGeom = new THREE.BufferGeometry().setFromPoints(jPts);
-        const jSeg  = new THREE.LineSegments(jGeom, edgeMat);
-        jSeg.renderOrder = 2;
-        edgeGroup.add(jSeg);
-      }
-
-      edgeGroup.renderOrder = 1;
-      if (!scene.children.includes(edgeGroup)) scene.add(edgeGroup);
-
-      modelGroup.traverse(child => {
-        if (!child.isMesh) return;
-        child.material.polygonOffset      = true;
-        child.material.polygonOffsetFactor = 1;
-        child.material.polygonOffsetUnits  = 1;
-        child.material.needsUpdate = true;
-      });
-    }
 
     /* ============================================================
        UNIT AUTO-DETECTION + SCALE
@@ -1120,28 +955,6 @@
        In metres it would be ~100 units. The 500-unit threshold
        cleanly separates these two worlds.
     ============================================================ */
-    function detectAndApplyUnitScale(group) {
-      const box  = new THREE.Box3().setFromObject(group);
-      const size = new THREE.Vector3();
-      box.getSize(size);
-      const maxDim = Math.max(size.x, size.y, size.z);
-
-      let scale  = 1.0;
-      let unit   = 'm';
-      if (maxDim > 500) {
-        scale = 0.001; unit = 'mm';
-      } else if (maxDim > 50) {
-        scale = 0.01;  unit = 'cm';
-      }
-
-      if (scale !== 1.0) {
-        group.scale.set(scale, scale, scale);
-        group.updateMatrixWorld(true);
-        console.log(`GPRTool: model detected as ${unit} (maxDim=${maxDim.toFixed(1)}), scaled ×${scale}`);
-      }
-
-      return { scale, unit, rawMaxDim: maxDim };
-    }
 
     /* ============================================================
        ON MODEL LOADED
@@ -1157,7 +970,7 @@
       importedModel = group;
 
       // Auto-detect and apply unit scale BEFORE centring
-      const { scale, unit } = detectAndApplyUnitScale(group);
+      const { scale } = detectAndApplyUnitScale(group);
 
       const box    = new THREE.Box3().setFromObject(group);
       const centre = new THREE.Vector3();
@@ -1216,9 +1029,9 @@
       const file = e.target.files[0];
       if (!file) return;
       const ext = file.name.split('.').pop().toLowerCase();
-      if      (ext === 'obj')                    loadOBJ(file);
-      else if (ext === 'gltf' || ext === 'glb')  loadGLTF(file);
-      else if (ext === 'ifc')                    loadIFC(file);
+      if      (ext === 'obj')                    loadOBJ(file,  onModelLoaded);
+      else if (ext === 'gltf' || ext === 'glb')  loadGLTF(file, onModelLoaded);
+      else if (ext === 'ifc')                    loadIFC(file,  onModelLoaded);
       else showFeedback('Unsupported format. Use OBJ, glTF, GLB, or IFC.');
       e.target.value = '';
     });
