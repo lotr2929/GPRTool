@@ -224,6 +224,12 @@
     import { OrbitControls } from './js/OrbitControls.js';
     import { OBJLoader }  from 'three/addons/loaders/OBJLoader.js';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    // ── REAL WORLD (coordinates, geography) — import only from real-world.js ──
+    import {
+      setRealWorldAnchor, getRealWorldAnchor, hasRealWorldAnchor,
+      setSceneOffset, sceneToWGS84, wgs84ToScene,
+    } from './js/real-world.js';
+    // ── DESIGN WORLD (grids, north angle) — never mixes with Real World ────────
     import { initSiteSelection }    from './js/site-selection.js';
     import { initCADMapperImport, buildLayerPanel } from './js/cadmapper-import.js';
     import { DesignGridManager }    from './js/design-grid.js';
@@ -375,16 +381,22 @@
     let siteOriginLon    = 0;   // map origin set by drawSiteBoundary — used for pin projection
     let siteOriginLat    = 0;
     let terrainMesh      = null;
-    let cadmapperGroup   = null;   // THREE.Group — CADMapper site context layers
+    let cadmapperGroup   = null;   // THREE.Group — CADMapper site context layers (REAL WORLD geometry)
     let mapTileGroup     = null;
     let importedModel    = null;   // THREE.Group — the loaded 3D model
+    // ── CAD Universe grid (REAL WORLD — True North fixed, never rotates) ─────
     let gridHelper           = null;
-    let gridHelperMinor      = null;   // minor (subdivision) grid overlay
-    let manualGridSpacing    = null;   // major grid override (m); null = auto
-    let manualMinorDivisions = null;   // sub-divisions per major cell; null = no minor grid
-    let _lastSiteSpan        = 1000;   // cached for grid popup repaint
+    let gridHelperMinor      = null;
+    // CAD Grid spacing — auto-calculated from site span unless overridden
+    let manualGridSpacing    = null;   // major (m); null = auto
+    let manualMinorDivisions = null;   // sub-divisions; null = none
+    let _lastSiteSpan        = 1000;
     let axesHelper           = null;
+    // ── Design World state (overlays only — never stores geographic data) ─────
     let designGridManager    = null;   // Design Grid system (see js/design-grid.js)
+    // Design Grid spacing — starts equal to CAD values at import, user-controlled thereafter
+    let dgSpacing            = null;   // major (m); null = inherit from CAD
+    let dgMinorDivisions     = null;   // sub-divisions; null = none
     let axesYLine        = null;  // Y (green) — shown in 3D only
     let feedbackTimer    = null;
 
@@ -679,21 +691,24 @@
       majInp.focus(); majInp.select();
 
       const applyAll = (maj, min) => {
-        manualGridSpacing    = (maj > 0)  ? maj : null;
-        manualMinorDivisions = (min >= 2) ? min : null;
-        updateSceneHelpers(_lastSiteSpan);
-        // Also update the Design Grid spacing (Design Grid owns minor lines)
-        if (designGridManager) {
+        const hasDN = (getDesignNorthAngle() ?? 0) !== 0;
+        if (hasDN && designGridManager?.grids?.size) {
+          // Design Grid is active — update Design Grid spacing only
+          dgSpacing       = (maj > 0)  ? maj : null;
+          dgMinorDivisions = (min >= 2) ? min : null;
+          const cell = dgSpacing ?? _majorCellSize();
+          designGridManager.setHorizontalSpacing(cell, dgMinorDivisions ?? 0);
+          const sub = dgMinorDivisions ? cell / dgMinorDivisions : null;
+          showFeedback(`Design Grid — ${cell} m${sub ? ` · sub ${sub % 1 === 0 ? sub : sub.toFixed(1)} m` : ''}`);
+        } else {
+          // CAD grid is active — update CAD grid spacing only
+          manualGridSpacing    = (maj > 0)  ? maj : null;
+          manualMinorDivisions = (min >= 2) ? min : null;
+          updateSceneHelpers(_lastSiteSpan);
           const cell = _majorCellSize();
-          designGridManager.setHorizontalSpacing(cell, manualMinorDivisions ?? 0);
+          const sub  = manualMinorDivisions ? cell / manualMinorDivisions : null;
+          showFeedback(`CAD Grid — ${manualGridSpacing ?? cell} m${sub ? ` · sub ${sub % 1 === 0 ? sub : sub.toFixed(1)} m` : ''}`);
         }
-        const cell = _majorCellSize();
-        const s1   = manualGridSpacing    ? `major ${manualGridSpacing} m` : 'major auto';
-        const sub  = manualMinorDivisions ? cell / manualMinorDivisions : null;
-        const s2   = sub
-          ? `minor ${manualMinorDivisions} lines · ${sub % 1 === 0 ? sub : sub.toFixed(1)} m`
-          : 'minor off';
-        showFeedback(`Grid — ${s1}  ·  ${s2}`);
         pop.remove();
       };
       const onKey = e => {
@@ -798,9 +813,9 @@
       const divisions = gridSize / cellSize;
 
       // CAD Universe grid — ALWAYS aligned with True North, NEVER rotates.
-      // Very subtle: it is the background georeference, not the active design grid.
-      gridHelper = new THREE.GridHelper(gridSize, divisions, 0xc0cdb8, 0xd8e2d0);
-      gridHelper.material.opacity     = 0.45;
+      // Visible but secondary: the Design Grid (green) is the active working grid.
+      gridHelper = new THREE.GridHelper(gridSize, divisions, 0xa8b8a0, 0xc0cdb8);
+      gridHelper.material.opacity     = 0.65;
       gridHelper.material.transparent = true;
       gridHelper.visible = (currentMode === '2d');
       scene.add(gridHelper);
@@ -2232,6 +2247,9 @@
       // Design Grid: rotate group to match Design North (cheap matrix op, no geometry rebuild)
       if (designGridManager) designGridManager.setHorizontalRotation(-_dnRad);
 
+      // Switch between CAD grid and Design Grid based on whether Design North is set
+      updateGridVisibility();
+
       renderer.render(scene, camera);
       updateSitePinDOM();
       if (currentMode === '3d' && isGizmo3DVisible()) {
@@ -3460,10 +3478,29 @@
     // Initialise the Design Grid Manager (see js/design-grid.js for full docs)
     designGridManager = new DesignGridManager(THREE, scene);
 
-    // Helper: keep CAD grid and Design Grid visibility in sync
+    // Helper: enforce the one-grid-visible rule.
+    // CAD grid shows when Design North = 0 (no design rotation set).
+    // Design Grid shows when Design North ≠ 0 (user has defined a design orientation).
+    // Only one is visible at any time; the other is hidden.
+    // Pass forceMode = '2d' or '3d' to override the current mode check.
+    function updateGridVisibility(forceMode) {
+      const mode      = forceMode ?? currentMode;
+      const inView    = (mode === '2d') && !mapTileGroup;
+      const hasDN     = (getDesignNorthAngle() ?? 0) !== 0;
+      const showDG    = inView && hasDN  && !!designGridManager?.grids?.size;
+      const showCAD   = inView && !showDG;
+      if (gridHelper) gridHelper.visible = showCAD;
+      if (designGridManager) designGridManager.setVisible(showDG);
+    }
+    // Legacy alias — any existing call to setGridVisible(false) now hides both;
+    // setGridVisible(true) defers to updateGridVisibility.
     function setGridVisible(v) {
-      if (gridHelper) gridHelper.visible = v;
-      if (designGridManager) designGridManager.setVisible(v);
+      if (!v) {
+        if (gridHelper) gridHelper.visible = false;
+        if (designGridManager) designGridManager.setVisible(false);
+      } else {
+        updateGridVisibility();
+      }
     }
 
     initSiteSelection({ drawSiteBoundary, onSiteSelected: (lat, lng) => showSitePin(lat, lng) });
@@ -3496,6 +3533,12 @@
         const box2 = new THREE.Box3().setFromObject(cadmapperGroup);
         cadmapperGroup.children.forEach(child => { child.position.y -= box2.min.y; });
 
+        // ── REAL WORLD: record scene offset so any scene coord can be
+        // converted back to UTM / WGS84 via real-world.js.
+        // centre.x and centre.z are the DXF-local offsets (metres) that were
+        // subtracted to bring the DXF centroid to scene(0,0,0).
+        setSceneOffset(centre.x, centre.z);
+
         scene.add(cadmapperGroup);
 
         const size = new THREE.Vector3();
@@ -3512,9 +3555,16 @@
         const cellSize = manualGridSpacing
           ? manualGridSpacing
           : (rawCell < 50 ? 50 : rawCell < 100 ? 100 : rawCell < 250 ? 250 : 500);
+        // Initialise Design Grid spacing from current CAD grid defaults.
+        // dgSpacing/dgMinorDivisions are the Design Grid's own settings —
+        // they start equal to CAD values and diverge only when user explicitly
+        // changes them while the Design Grid is active.
+        if (dgSpacing === null) dgSpacing = cellSize;
+        if (dgMinorDivisions === null) dgMinorDivisions = 0;
+
         designGridManager.initHorizontal(
-          cellSize,
-          manualMinorDivisions ?? 0,
+          dgSpacing,
+          dgMinorDivisions,
           5000,
           new THREE.Vector3(0, 0, 0)
         );

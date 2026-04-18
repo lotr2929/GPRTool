@@ -21,6 +21,8 @@
  * UTM conversion utility exported for OSM/site-pin alignment in calling code.
  */
 
+import { setRealWorldAnchor } from './real-world.js';
+
 // ── Layer display config ───────────────────────────────────────────────────
 const LAYER_CONFIG = {
   topography:  { label: 'Terrain',     color: 0xc8b890, opacity: 1.0,  wire: false },
@@ -294,14 +296,10 @@ async function runImport() {
   const easting  = parseFloat(document.getElementById('cadmapper-easting').value);
   const northing = parseFloat(document.getElementById('cadmapper-northing').value);
   const zoneNum  = parseInt(document.getElementById('cadmapper-zone').value.trim(), 10);
+  // Set the Real World anchor — single source of truth in real-world.js.
+  // This is the ONLY place UTM coordinates enter the system from the UI.
   if (!isNaN(easting) && !isNaN(northing) && zoneNum > 0) {
-    window.siteUTMOrigin = {
-      easting, northing,
-      zone:       zoneNum,
-      hemisphere: northing < 0 ? 'S' : 'N',   // derive from sign of northing
-    };
-  } else {
-    window.siteUTMOrigin = null;
+    setRealWorldAnchor(zoneNum, easting, northing);
   }
 
   const selectedLayers = new Set(
@@ -574,22 +572,4 @@ export function buildLayerPanel(layerGroups, container) {
   return section;
 }
 
-// ── UTM → WGS84 (compact, no external library, accurate to ~1mm) ──────────
-export function wgs84ToUTM(lat, lng, zone) {
-  const a = 6378137.0, f = 1/298.257223563, k0 = 0.9996;
-  const e2 = 2*f - f*f, n2 = e2/(1-e2);
-  const lon0 = ((zone-1)*6 - 180 + 3) * Math.PI/180;
-  const phi = lat*Math.PI/180, lam = lng*Math.PI/180 - lon0;
-  const sinP = Math.sin(phi), cosP = Math.cos(phi), tanP = Math.tan(phi);
-  const N = a/Math.sqrt(1 - e2*sinP*sinP);
-  const T = tanP*tanP, C = n2*cosP*cosP, A = cosP*lam;
-  const M = a * (
-    (1 - e2/4 - 3*e2*e2/64)*phi
-    - (3*e2/8 + 3*e2*e2/32)*Math.sin(2*phi)
-    + (15*e2*e2/256)*Math.sin(4*phi)
-  );
-  const easting = k0*N*(A + (1-T+C)*A*A*A/6 + (5-18*T+T*T+72*C-58*n2)*A*A*A*A*A/120) + 500000;
-  const northing = k0*(M + N*tanP*(A*A/2 + (5-T+9*C+4*C*C)*A*A*A*A/24
-    + (61-58*T+T*T+600*C-330*n2)*A*A*A*A*A*A/720)) + (lat<0 ? 10000000 : 0);
-  return { easting, northing };
-}
+// wgs84ToUTM has moved to real-world.js — import it from there.

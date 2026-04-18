@@ -2,6 +2,15 @@
  * design-grid.js — Design Grid system for GPRTool
  *
  * ════════════════════════════════════════════════════════════════════════════
+ * BOUNDARY RULE — cast in stone
+ * ════════════════════════════════════════════════════════════════════════════
+ *
+ * This module is DESIGN WORLD only.
+ * It must NEVER import from real-world.js.
+ * It works entirely in Three.js scene space.
+ * Geographic coordinates (UTM, WGS84) are the sole domain of real-world.js.
+ *
+ * ════════════════════════════════════════════════════════════════════════════
  * ARCHITECTURAL CONTEXT — READ BEFORE EDITING
  * ════════════════════════════════════════════════════════════════════════════
  *
@@ -100,9 +109,14 @@
  */
 
 const DESIGN_GRID_MAJOR_COLOUR  = 0x3a6b30; // GPRTool accent green
-const DESIGN_GRID_MAJOR_OPACITY = 0.6;
+const DESIGN_GRID_MAJOR_OPACITY = 0.85;
 const DESIGN_GRID_MINOR_COLOUR  = 0x5d9450; // lighter green
-const DESIGN_GRID_MINOR_OPACITY = 0.28;
+const DESIGN_GRID_MINOR_OPACITY = 0.35;
+
+// Maximum number of lines per direction before the minor grid is suppressed.
+// At typical viewport widths, more than ~200 lines per direction produces a
+// solid-fill appearance rather than a readable grid.
+const MAX_MINOR_LINES_PER_DIR = 200;
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  DesignGrid — a single Design Grid instance
@@ -201,10 +215,20 @@ export class DesignGrid {
    * One draw call per colour rather than one per line.
    */
   _build() {
-    const { THREE, origin, xAxis, yAxis, majorSpacing, minorDivisions, extent } = this;
+    const { THREE, origin, xAxis, yAxis, majorSpacing, extent } = this;
+    let   { minorDivisions } = this;
 
     const count = Math.ceil(extent / majorSpacing);
     const half  = count * majorSpacing;
+
+    // Guard: if minor grid would produce more than MAX_MINOR_LINES_PER_DIR
+    // lines per direction it becomes a solid fill. Suppress it automatically.
+    if (minorDivisions >= 2) {
+      const minorLines = count * 2 * minorDivisions;   // approximate total per direction
+      if (minorLines > MAX_MINOR_LINES_PER_DIR) {
+        minorDivisions = 0;   // local override only — does not change this.minorDivisions
+      }
+    }
 
     const majorVerts = [];
     const minorVerts = [];
@@ -303,10 +327,13 @@ export class DesignGridManager {
     const THREE = this.THREE;
 
     // True North xAxis in Three.js Y-up coords = (0,0,-1)
-    // Rotation is applied via group.rotation.y externally — no need to bake it in.
-    const xAxis  = new THREE.Vector3(0, 0, -1);   // True North direction
-    const normal = new THREE.Vector3(0, 1,  0);   // Horizontal surface, Y = Up
-    const org    = origin ?? new THREE.Vector3(0, 0, 0);
+    const xAxis  = new THREE.Vector3(0, 0, -1);
+    const normal = new THREE.Vector3(0, 1,  0);
+
+    // Lift Design Grid 5cm above Y=0 to prevent Z-fighting with the CAD
+    // grid (THREE.GridHelper) and terrain surfaces which also live at Y=0.
+    const org = origin ? origin.clone() : new THREE.Vector3(0, 0, 0);
+    org.y = 0.05;
 
     if (this.grids.has(HORIZONTAL_ID)) {
       const g = this.grids.get(HORIZONTAL_ID);
