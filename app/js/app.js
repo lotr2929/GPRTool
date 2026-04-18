@@ -1297,8 +1297,8 @@
     /* ============================================================
        NORTH POINT 2D + 3D — initialise modules
     ============================================================ */
-    initNorthPoint2D(() => ({ currentMode: state.currentMode, camera2D, camera3D, state.controls3D, state.pan2D: state.pan2D, rotate2D: state.rotate2D }));
-    initNorthPoint3D(() => ({ renderer, camera3D, container, currentMode: state.currentMode, showFeedback }));
+    initNorthPoint2D(() => ({ currentMode: state.currentMode, camera2D: state.camera2D, camera3D: state.camera3D, controls3D: state.controls3D, pan2D: state.pan2D, rotate2D: state.rotate2D }));
+    initNorthPoint3D(() => ({ renderer: state.renderer, camera3D: state.camera3D, container: state.container, currentMode: state.currentMode, showFeedback }));
 
     // Site selection + CADMapper import modules
     // showSitePin: hides orange boundary, adds a Google-style DOM teardrop pin
