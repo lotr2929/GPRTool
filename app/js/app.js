@@ -9,9 +9,10 @@
       setSceneOffset, sceneToWGS84, wgs84ToScene,
     } from './real-world.js';
     import {
-      createInitialGPR, addBoundaryToGPR, openGPR, downloadGPR,
+      createInitialGPR, addBoundaryToGPR, openGPR, downloadGPR, getActiveGPRBlob,
     } from './gpr-file.js';
     import { initSiteBoundary, openBoundaryPicker } from './site-boundary.js';
+    import { initProjects, showProjectsModal, saveProject, loadProject } from './projects.js';
     // ── DESIGN WORLD (grids, north angle) — never mixes with Real World ────────
     import { initSiteSelection }    from './site-selection.js';
     import { initCADMapperImport, buildLayerPanel, parseCadmapperDXF } from './cadmapper-import.js';
@@ -2111,6 +2112,17 @@
             btn.textContent = '\u2713 Lot Boundary saved \u2014 Re-draw\u2026';
             btn.style.background = 'var(--accent-dark,#2d6b2d)';
             showFeedback('Lot boundary saved to project');
+            // ── Update Supabase repository with boundary ───────────────
+            const anchor = getRealWorldAnchor();
+            const blob   = await getActiveGPRBlob();
+            if (blob && anchor) {
+              saveProject(blob, {
+                site_name:    document.title || 'GPR Project',
+                has_boundary: true,
+                wgs84_lat:    anchor.lat,
+                wgs84_lng:    anchor.lng,
+              }).catch(e => console.warn('[GPR] Supabase boundary update failed:', e));
+            }
           } catch (err) {
             console.error('[GPR] boundary save failed:', err);
             showFeedback('Failed to save boundary: ' + err.message);
@@ -2279,108 +2291,79 @@
     }
 
     /* ============================================================
-       OPEN GPR FILE
+       OPEN GPR FILE — Recent Projects modal
     ============================================================ */
     document.getElementById('openGPRBtn').addEventListener('click', () => {
-      document.getElementById('openGPRInput').click();
+      showProjectsModal(async (file) => {
+        showFeedback('Opening project\u2026', 0);
+        try {
+          await openGPRFile(file);
+        } catch (err) {
+          console.error('[GPR open]', err);
+          showFeedback('Failed to open project: ' + err.message);
+        }
+      });
     });
 
-    document.getElementById('openGPRInput').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      e.target.value = '';
-      showFeedback('Opening GPR file\u2026', 0);
+    // ── Named function so both the modal callback and any future callers can use it ──
+    async function openGPRFile(file) {
+      const { manifest, reference, design, boundary, hasDXF, zip } = await openGPR(file);
 
-      try {
-        const { manifest, reference, design, boundary, hasDXF, zip } = await openGPR(file);
+      // ── REAL WORLD: restore anchor and scene offset from reference.json ──
+      setRealWorldAnchor(reference.utm_zone, reference.utm_easting, reference.utm_northing);
+      setSceneOffset(reference.scene_offset_x ?? 0, reference.scene_offset_z ?? 0);
 
-        // ── REAL WORLD: restore anchor and scene offset from reference.json ──
-        setRealWorldAnchor(reference.utm_zone, reference.utm_easting, reference.utm_northing);
-        setSceneOffset(reference.scene_offset_x ?? 0, reference.scene_offset_z ?? 0);
-
-        // ── Re-parse embedded DXF if present ──────────────────────────────
-        if (hasDXF) {
-          const dxfEntry = zip.file('context/cadmapper.dxf');
-          const dxfBytes = await dxfEntry.async('arraybuffer');
-          const dxfFile  = new File([dxfBytes], 'cadmapper.dxf');
-          const dxfText  = await dxfFile.text();
-
-          // Use all layers
-          const allLayers = new Set([
-            'topography','buildings','highways','major_roads',
-            'minor_roads','paths','parks','water','railways','contours'
-          ]);
-          const layerGroups = parseCadmapperDXF(dxfText, allLayers, THREE);
-
-          if (layerGroups && Object.keys(layerGroups).length) {
-            // Clear existing
-            if (cadmapperGroup) {
-              scene.remove(cadmapperGroup);
-              cadmapperGroup.traverse(c => { c.geometry?.dispose(); c.material?.dispose(); });
-              cadmapperGroup = null;
-            }
-            cadmapperGroup = new THREE.Group();
-            cadmapperGroup.name = 'cadmapper-context';
-            Object.values(layerGroups).forEach(g => cadmapperGroup.add(g));
-
-            // ── Re-apply original centring ────────────────────────────────
-            // The raw DXF always has un-centred coordinates. The original import
-            // subtracted centre.x/z (stored as scene_offset_x/z) from each child.
-            // We must do the same here so scene(0,0,0) = DXF centroid, consistent
-            // with the stored scene offset and all wgs84ToScene conversions.
-            const offX = reference.scene_offset_x ?? 0;
-            const offZ = reference.scene_offset_z ?? 0;
-            cadmapperGroup.children.forEach(child => {
-              child.position.x -= offX;
-              child.position.z -= offZ;
-            });
-            // Lift floor to Y=0
-            const floorBox = new THREE.Box3().setFromObject(cadmapperGroup);
-            cadmapperGroup.children.forEach(child => {
-              child.position.y -= floorBox.min.y;
-            });
-
-            scene.add(cadmapperGroup);
-            const size = new THREE.Vector3();
-            new THREE.Box3().setFromObject(cadmapperGroup).getSize(size);
-            const siteSpan = Math.max(size.x, size.z);
-            updateSceneHelpers(siteSpan);
-
-            designGridManager.initHorizontal(
-              design?.grid_spacing_m  ?? 100,
-              design?.minor_divisions ?? 0,
-              5000,
-              new THREE.Vector3(0, 0, 0)
-            );
-
-            fit3DCamera(new THREE.Box3().setFromObject(cadmapperGroup));
-            switchMode('3d');
-
-            document.getElementById('empty-props').style.display  = 'none';
-            document.getElementById('clearSiteBtn').style.display = 'block';
-            document.getElementById('left-panel').classList.add('site-imported');
-            buildLayerPanel(layerGroups);
+      // ── Re-parse embedded DXF if present ──────────────────────────────
+      if (hasDXF) {
+        const dxfEntry = zip.file('context/cadmapper.dxf');
+        const dxfBytes = await dxfEntry.async('arraybuffer');
+        const dxfText  = await new File([dxfBytes], 'cadmapper.dxf').text();
+        const allLayers = new Set([
+          'topography','buildings','highways','major_roads',
+          'minor_roads','paths','parks','water','railways','contours'
+        ]);
+        const layerGroups = parseCadmapperDXF(dxfText, allLayers, THREE);
+        if (layerGroups && Object.keys(layerGroups).length) {
+          if (cadmapperGroup) {
+            scene.remove(cadmapperGroup);
+            cadmapperGroup.traverse(c => { c.geometry?.dispose(); c.material?.dispose(); });
+            cadmapperGroup = null;
           }
+          cadmapperGroup = new THREE.Group();
+          cadmapperGroup.name = 'cadmapper-context';
+          Object.values(layerGroups).forEach(g => cadmapperGroup.add(g));
+          const offX = reference.scene_offset_x ?? 0;
+          const offZ = reference.scene_offset_z ?? 0;
+          cadmapperGroup.children.forEach(child => {
+            child.position.x -= offX;
+            child.position.z -= offZ;
+          });
+          const floorBox = new THREE.Box3().setFromObject(cadmapperGroup);
+          cadmapperGroup.children.forEach(child => { child.position.y -= floorBox.min.y; });
+          scene.add(cadmapperGroup);
+          const size = new THREE.Vector3();
+          new THREE.Box3().setFromObject(cadmapperGroup).getSize(size);
+          updateSceneHelpers(Math.max(size.x, size.z));
+          designGridManager.initHorizontal(
+            design?.grid_spacing_m ?? 100, design?.minor_divisions ?? 0,
+            5000, new THREE.Vector3(0, 0, 0)
+          );
+          fit3DCamera(new THREE.Box3().setFromObject(cadmapperGroup));
+          switchMode('3d');
+          document.getElementById('empty-props').style.display  = 'none';
+          document.getElementById('clearSiteBtn').style.display = 'block';
+          document.getElementById('left-panel').classList.add('site-imported');
+          buildLayerPanel(layerGroups);
         }
-
-        // ── Render lot boundary if present ────────────────────────────────
-        if (boundary) {
-          renderLotBoundary(boundary);
-        }
-
-        // ── Show boundary panel (draw or re-draw) ─────────────────────────
-        const wgs84Bounds = hasRealWorldAnchor() ? {
-          sw: sceneToWGS84(-reference.site_span_m / 2, -reference.site_span_m / 2),
-          ne: sceneToWGS84( reference.site_span_m / 2,  reference.site_span_m / 2),
-        } : null;
-        buildBoundaryPanel(wgs84Bounds, !!boundary);
-
-        showFeedback(`Opened: ${manifest.site_name ?? file.name}`);
-      } catch (err) {
-        console.error('[GPR open]', err);
-        showFeedback('Failed to open GPR file: ' + err.message);
       }
-    });
+      if (boundary) renderLotBoundary(boundary);
+      const wgs84Bounds = hasRealWorldAnchor() ? {
+        sw: sceneToWGS84(-reference.site_span_m / 2, -reference.site_span_m / 2),
+        ne: sceneToWGS84( reference.site_span_m / 2,  reference.site_span_m / 2),
+      } : null;
+      buildBoundaryPanel(wgs84Bounds, !!boundary);
+      showFeedback(`Opened: ${manifest.site_name ?? file.name}`);
+    }
 
     /* ============================================================
        VIEW CONTROLS
@@ -3537,6 +3520,7 @@
 
     initSiteSelection({ drawSiteBoundary, onSiteSelected: (lat, lng) => showSitePin(lat, lng) });
     initSiteBoundary();
+    initProjects();
     initCADMapperImport({
       THREE,
       onLayersLoaded: async (layerGroups, dxfFile) => {
@@ -3630,6 +3614,19 @@
               },
               dxfFile,
             });
+            // ── Auto-save to Supabase project repository ───────────────
+            try {
+              const blob = await getActiveGPRBlob();
+              if (blob) {
+                saveProject(blob, {
+                  site_name:      siteName,
+                  dxf_filename:   dxfFile?.name ?? null,
+                  has_boundary:   false,
+                  wgs84_lat:      anchor.lat,
+                  wgs84_lng:      anchor.lng,
+                }).catch(e => console.warn('[GPR] Supabase save failed:', e));
+              }
+            } catch (_) { /* non-critical */ }
             buildBoundaryPanel(wgs84Bounds, false);
             showFeedback('Project saved \u2014 draw lot boundary to complete site setup');
           } catch (err) {

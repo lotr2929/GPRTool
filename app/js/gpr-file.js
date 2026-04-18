@@ -65,6 +65,16 @@ let _activeZip        = null;   // JSZip instance of the open project
 
 export function getActiveProjectId() { return _activeProjectId; }
 
+/**
+ * Get the current active .gpr as a Blob (for uploading to project repository).
+ * Returns null if no active project.
+ */
+export async function getActiveGPRBlob() {
+  if (!_activeZip) return null;
+  return _activeZip.generateAsync({ type: 'blob', compression: 'DEFLATE',
+    compressionOptions: { level: 6 } });
+}
+
 // ── Create a new .gpr from a CADMapper import ─────────────────────────────
 
 /**
