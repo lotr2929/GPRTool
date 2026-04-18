@@ -2343,6 +2343,24 @@
       });
 
       row.appendChild(btn);
+
+      // Download button
+      const dlBtn = document.createElement('button');
+      dlBtn.textContent = '\u2913 Download .gpr';
+      dlBtn.style.cssText = `
+        width:100%; margin-top:6px; padding:5px 12px; font-size:11px; cursor:pointer;
+        background:none; color:var(--text-secondary); border:1px solid var(--chrome-border);
+        border-radius:4px; text-align:left;`;
+      dlBtn.addEventListener('click', async () => {
+        try {
+          const siteName = document.title || 'project';
+          await downloadGPR(siteName);
+        } catch (err) {
+          showFeedback('Download failed: ' + err.message);
+        }
+      });
+      row.appendChild(dlBtn);
+
       section.appendChild(row);
 
       const layerSection = document.getElementById('cadmapper-layer-section');
@@ -2529,7 +2547,23 @@
             cadmapperGroup.name = 'cadmapper-context';
             Object.values(layerGroups).forEach(g => cadmapperGroup.add(g));
 
-            // Apply stored scene offset (children already centred in the saved DXF)
+            // ── Re-apply original centring ────────────────────────────────
+            // The raw DXF always has un-centred coordinates. The original import
+            // subtracted centre.x/z (stored as scene_offset_x/z) from each child.
+            // We must do the same here so scene(0,0,0) = DXF centroid, consistent
+            // with the stored scene offset and all wgs84ToScene conversions.
+            const offX = reference.scene_offset_x ?? 0;
+            const offZ = reference.scene_offset_z ?? 0;
+            cadmapperGroup.children.forEach(child => {
+              child.position.x -= offX;
+              child.position.z -= offZ;
+            });
+            // Lift floor to Y=0
+            const floorBox = new THREE.Box3().setFromObject(cadmapperGroup);
+            cadmapperGroup.children.forEach(child => {
+              child.position.y -= floorBox.min.y;
+            });
+
             scene.add(cadmapperGroup);
             const size = new THREE.Vector3();
             new THREE.Box3().setFromObject(cadmapperGroup).getSize(size);
@@ -3820,7 +3854,7 @@
               },
               dxfFile,
             });
-            buildBoundaryPanel(wgs84Bounds);
+            buildBoundaryPanel(wgs84Bounds, false);
             showFeedback('Project saved \u2014 draw lot boundary to complete site setup');
           } catch (err) {
             console.warn('[GPR] .gpr creation failed:', err);
