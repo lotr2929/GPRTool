@@ -61,7 +61,7 @@ const MODAL_HTML = `
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.4">
         <circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c-2 2-3 4-3 6s1 4 3 6M8 2c2 2 3 4 3 6s-1 4-3 6"/>
       </svg>
-      <h3 style="margin:0; font-size:13px; font-weight:600; flex:1; color:#fff;">Import Site from OSM</h3>
+      <h3 style="margin:0; font-size:13px; font-weight:600; flex:1; color:#fff;">Import from OpenStreetMap</h3>
       <button id="osm-close" style="background:none;border:none;color:rgba(255,255,255,0.6);
         cursor:pointer;font-size:18px;line-height:1;padding:2px 6px;">&#x2715;</button>
     </div>

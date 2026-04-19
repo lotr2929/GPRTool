@@ -224,6 +224,8 @@ export function buildBoundaryPanel(wgs84Bounds, hasExisting = false) {
   title.style.cssText = 'font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-secondary);margin-bottom:6px;';
   title.textContent = 'Lot Boundary';
   section.appendChild(title);
+
+  const row = document.createElement('div');
   row.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
 
   const btn = document.createElement('button');
