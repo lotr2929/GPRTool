@@ -51,7 +51,7 @@ const MODAL_HTML = `
   align-items:center; justify-content:center;">
   <div id="osm-modal" style="
     background:var(--chrome-panel); border:1px solid var(--chrome-border);
-    border-radius:6px; width:460px; max-width:95vw;
+    border-radius:6px; width:540px; max-width:96vw;
     box-shadow:0 8px 32px rgba(0,0,0,0.22); color:var(--text-primary);
     font-family:var(--font,'Outfit',sans-serif); overflow:hidden;">
 
@@ -70,29 +70,30 @@ const MODAL_HTML = `
                 border-bottom:1px solid var(--chrome-border);">
       Free global site data from <strong style="color:var(--text-primary);">OpenStreetMap</strong>
       \u2014 buildings, roads, terrain, parks, water. No account required.
-      Right-click your site in <strong style="color:var(--text-primary);">Google Maps</strong>
-      to copy the latitude and longitude.
+      Click your site on the map below to set the location.
     </div>
 
-    <div style="padding:14px 16px; border-bottom:1px solid var(--chrome-border);">
-      <label style="font-size:11px;color:var(--text-secondary);display:block;margin-bottom:8px;">
-        Site centre (right-click in Google Maps to copy)
-      </label>
-      <div style="display:flex;gap:8px;">
-        <div style="flex:1;">
-          <div style="font-size:10px;color:var(--text-secondary);margin-bottom:3px;">Latitude</div>
-          <input id="osm-lat" type="number" step="any" placeholder="-31.9505"
-            style="width:100%;box-sizing:border-box;background:var(--chrome-input);
-            border:1px solid var(--chrome-border);border-radius:4px;
-            color:var(--text-primary);font-size:12px;padding:5px 8px;outline:none;">
-        </div>
-        <div style="flex:1;">
-          <div style="font-size:10px;color:var(--text-secondary);margin-bottom:3px;">Longitude</div>
-          <input id="osm-lng" type="number" step="any" placeholder="115.8605"
-            style="width:100%;box-sizing:border-box;background:var(--chrome-input);
-            border:1px solid var(--chrome-border);border-radius:4px;
-            color:var(--text-primary);font-size:12px;padding:5px 8px;outline:none;">
-        </div>
+    <!-- Google Maps click-to-locate panel -->
+    <div id="osm-map" style="width:100%;height:260px;background:#1a1a1a;position:relative;flex-shrink:0;">
+      <div id="osm-map-loading" style="position:absolute;inset:0;display:flex;align-items:center;
+        justify-content:center;color:#aaa;font-size:12px;">Loading map\u2026</div>
+    </div>
+
+    <div style="padding:10px 16px 6px;border-bottom:1px solid var(--chrome-border);
+                display:flex;gap:8px;align-items:center;">
+      <div style="flex:1;">
+        <div style="font-size:10px;color:var(--text-secondary);margin-bottom:3px;">Latitude</div>
+        <input id="osm-lat" type="number" step="any" placeholder="Click map\u2026"
+          style="width:100%;box-sizing:border-box;background:var(--chrome-input);
+          border:1px solid var(--chrome-border);border-radius:4px;
+          color:var(--text-primary);font-size:12px;padding:5px 8px;outline:none;">
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:10px;color:var(--text-secondary);margin-bottom:3px;">Longitude</div>
+        <input id="osm-lng" type="number" step="any" placeholder="Click map\u2026"
+          style="width:100%;box-sizing:border-box;background:var(--chrome-input);
+          border:1px solid var(--chrome-border);border-radius:4px;
+          color:var(--text-primary);font-size:12px;padding:5px 8px;outline:none;">
       </div>
     </div>
 
@@ -138,11 +139,57 @@ export function initOSMImport(callbacks) {
 }
 
 function openModal() {
-  setStatus('Enter UTM coordinates to import site data.');
+  setStatus('Click the map to set your site location, then click Import.');
   document.getElementById('osm-overlay').style.display = 'flex';
+  _initPickerMap();
 }
 function closeModal() {
   document.getElementById('osm-overlay').style.display = 'none';
+}
+
+// ── Google Maps click-to-locate picker ───────────────────────────────────
+let _pickerMap    = null;
+let _pickerMarker = null;
+let _mapsReady    = false;
+
+async function _initPickerMap() {
+  if (_pickerMap) { google.maps.event.trigger(_pickerMap, 'resize'); return; }
+  const loading = document.getElementById('osm-map-loading');
+  try {
+    const res = await fetch('/api/maps-key');
+    if (!res.ok) throw new Error('maps-key ' + res.status);
+    const { key } = await res.json();
+    if (!_mapsReady) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&callback=__osmMapsReady`;
+        s.onerror = () => reject(new Error('Maps script failed'));
+        window.__osmMapsReady = () => { _mapsReady = true; resolve(); };
+        document.head.appendChild(s);
+      });
+    }
+    if (loading) loading.style.display = 'none';
+    _pickerMap = new google.maps.Map(document.getElementById('osm-map'), {
+      center: { lat: -31.9505, lng: 115.8605 }, zoom: 14,
+      mapTypeId: google.maps.MapTypeId.HYBRID,
+      mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
+    });
+    _pickerMap.addListener('click', e => {
+      const lat = e.latLng.lat(), lng = e.latLng.lng();
+      document.getElementById('osm-lat').value = lat.toFixed(7);
+      document.getElementById('osm-lng').value = lng.toFixed(7);
+      if (_pickerMarker) _pickerMarker.setMap(null);
+      _pickerMarker = new google.maps.Marker({
+        position: e.latLng, map: _pickerMap,
+        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 8,
+          fillColor: '#4a8a4a', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 },
+      });
+      setStatus('Location set \u2014 select radius and click Import.');
+    });
+  } catch (err) {
+    if (loading) loading.textContent = 'Map unavailable \u2014 enter coordinates manually.';
+    console.warn('[OSM picker]', err);
+  }
 }
 function setStatus(msg, isError = false) {
   const el = document.getElementById('osm-status');
@@ -175,14 +222,27 @@ function buildOverpassQuery(bbox) {
 }
 
 async function fetchOverpass(query) {
-  const url = 'https://overpass-api.de/api/interpreter';
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'data=' + encodeURIComponent(query),
-  });
-  if (!res.ok) throw new Error('Overpass API error: ' + res.status);
-  return res.json();
+  const endpoints = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+  ];
+  let lastErr;
+  for (const url of endpoints) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'data=' + encodeURIComponent(query),
+      });
+      if (!res.ok) throw new Error('Overpass API error: ' + res.status);
+      return res.json();
+    } catch (err) {
+      lastErr = err;
+      console.warn('[OSM] endpoint failed, trying next:', url, err.message);
+    }
+  }
+  throw lastErr;
 }
 
 
