@@ -79,6 +79,7 @@
       if (ctrl &&  e.shiftKey && e.key === 'Z') { e.preventDefault(); showFeedback('Redo — coming soon'); }
       if (e.key === 'Escape') {
         if (state.boundaryDrawMode) { cancelBoundaryDraw(); showFeedback('Boundary draw cancelled'); return; }
+        if (state.zoomRectMode) { state.zoomRectMode = false; state.canvas.style.cursor = ''; showFeedback('Ready'); return; }
         deselectSurface(); showFeedback('Ready');
       }
       if (e.key === 'Enter' && state.boundaryDrawMode) { e.preventDefault(); confirmBoundaryDraw(); }
@@ -88,11 +89,11 @@
         update2DCamera();
         showFeedback('View oriented to North');
       }
-      // Z key = rectangular zoom mode
+      // Z key = rectangular zoom mode toggle (keyboard shortcut)
       if ((e.key === 'z' || e.key === 'Z') && !ctrl && state.currentMode === '2d') {
         state.zoomRectMode = !state.zoomRectMode;
         state.canvas.style.cursor = state.zoomRectMode ? 'crosshair' : '';
-        showFeedback(state.zoomRectMode ? 'Zoom rect: drag to zoom in, Z to cancel' : 'Ready');
+        showFeedback(state.zoomRectMode ? 'Zoom rect active \u2014 drag to zoom, Z or Escape to cancel' : 'Ready');
       }
     });
 
@@ -191,8 +192,8 @@
 
     state.renderer.domElement.addEventListener('pointerdown', e => {
       if (state.currentMode !== '2d') return;
-      if (e.button === 0 && state.zoomRectMode) {
-        // Zoom rect drag start
+      if ((e.button === 0 && state.zoomRectMode) || e.button === 2) {
+        // Zoom rect: activated by right-click drag OR when Z mode is active with left-click
         state.zoomRectStart = { x: e.clientX, y: e.clientY };
         state.zoomRectEl = document.createElement('div');
         state.zoomRectEl.style.cssText = 'position:absolute;border:2px dashed #4a8a4a;background:rgba(74,138,74,0.08);pointer-events:none;z-index:50;';
@@ -319,8 +320,11 @@
       state.renderer.domElement.releasePointerCapture(e.pointerId);
     });
 
+    state.renderer.domElement.addEventListener('contextmenu', e => {
+      if (state.zoomRectStart) { e.preventDefault(); return; } // suppress during zoom rect drag
+    });
+
     state.renderer.domElement.addEventListener('dblclick', e => {
-      if (!state.boundaryDrawMode || state.currentMode !== '2d') return;
       e.preventDefault();
       handleBoundaryDblClick();
     });

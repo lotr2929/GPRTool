@@ -558,18 +558,17 @@ async function runImport() {
     setStatus('Invalid coordinates — latitude must be -90 to 90, longitude -180 to 180.', true); return;
   }
 
-  // Derive UTM zone from longitude
+  // Derive UTM zone from longitude and convert to standard UTM
   const zone = Math.floor((lng + 180) / 6) + 1;
   const { easting, northing } = wgs84ToUTM(lat, lng, zone);
-  // CADMapper convention: southern hemisphere northing is negative
-  const utmNorthing = lat < 0 ? northing - 10000000 : northing;
+  // Use standard UTM northing (positive for both hemispheres) — real-world.js handles conversion
 
   const btn = document.getElementById('osm-import-btn');
   btn.disabled = true; btn.style.opacity = '0.5';
 
   try {
     // Set Real World anchor
-    setRealWorldAnchor(zone, easting, utmNorthing);
+    setRealWorldAnchor(zone, easting, northing);
 
     // Compute WGS84 bounding box directly from lat/lng + radius
     const bbox = latLngToBbox(lat, lng, radius);
