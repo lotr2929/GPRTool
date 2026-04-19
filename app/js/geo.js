@@ -157,26 +157,13 @@ export function clearMapTiles() {
 }
 
 // ── Google Maps satellite tile overlay ────────────────────────────────────
-// Uses the same Web Mercator tile grid as the OSM overlay.
-// Each tile fetched via Google Maps Static API (256×256, zoom 18).
-// Key fetched once from /api/maps-key and cached for the session.
+// Uses ESRI World Imagery — free, no key, same Web Mercator tile grid.
+// Swap URL for Google Maps Static API if that product is enabled on your key.
 
 const SAT_ZOOM = 18;
-let _mapsKey = null;
 
 export async function loadSatelliteTiles(bbox) {
   clearSatelliteTiles();
-  if (!_mapsKey) {
-    try {
-      const res = await fetch('/api/maps-key');
-      if (!res.ok) throw new Error('maps-key endpoint returned ' + res.status);
-      const data = await res.json();
-      _mapsKey = data.key;
-    } catch (err) {
-      console.warn('[GPRTool] satellite tiles: could not fetch Maps key:', err);
-      return;
-    }
-  }
 
   state.satTileGroup = new THREE.Group();
   state.satTileGroup.name = 'satellite-tiles';
@@ -196,18 +183,14 @@ export async function loadSatelliteTiles(bbox) {
 }
 
 function _loadOneSatTile(tx, ty, z, bbox) {
+  // ESRI World Imagery — note tile parameter order is z/y/x
+  const url = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${ty}/${tx}`;
+
   const west  = tileXToLon(tx,     z);
   const east  = tileXToLon(tx + 1, z);
   const north = tileYToLat(ty,     z);
   const south = tileYToLat(ty + 1, z);
-  // Use exact Mercator tile centre for the Static API request (not geographic midpoint)
-  const cLon  = tileXToLon(tx + 0.5, z);
-  const cLat  = tileYToLat(ty + 0.5, z);
 
-  const url = `https://maps.googleapis.com/maps/api/staticmap`
-    + `?center=${cLat},${cLon}&zoom=${z}&size=256x256&maptype=satellite&key=${_mapsKey}`;
-
-  // Positioning: identical Mercator math to loadOneTile (OSM overlay)
   const cosLat = Math.cos(bbox.cLat * Math.PI / 180) * 111320;
   const mYc    = mercatorY(bbox.cLat);
   const x0 =  (west  - bbox.cLon) * cosLat;
@@ -226,10 +209,10 @@ function _loadOneSatTile(tx, ty, z, bbox) {
     const mat  = new THREE.MeshBasicMaterial({ map: texture, depthWrite: false });
     const mesh = new THREE.Mesh(geom, mat);
     mesh.rotation.x = -Math.PI / 2;
-    mesh.position.set(cx, -0.10, cz);   // Y=-0.10: above OSM (-0.15), below boundary line (0.15)
+    mesh.position.set(cx, -0.10, cz);
     mesh.renderOrder = -1;
     state.satTileGroup.add(mesh);
-  }, undefined, () => { /* silent fail per tile */ });
+  }, undefined, (err) => { console.warn('[SAT] tile failed:', tx, ty, err); });
 }
 
 export function clearSatelliteTiles() {
