@@ -1325,15 +1325,14 @@
           setSceneOffset(0, 0);
         }
 
-        // ── REAL WORLD: compute WGS84 bounding box of the DXF for Google Maps picker.
-        // finalBox is computed after centering — min/max are scene-space metres.
+        scene.add(state.cadmapperGroup);
+
+        // ── REAL WORLD: compute WGS84 bounding box after group is in scene
         const finalBox = new THREE.Box3().setFromObject(state.cadmapperGroup);
         const wgs84Bounds = hasRealWorldAnchor() ? {
           sw: sceneToWGS84(finalBox.min.x, finalBox.min.z),
           ne: sceneToWGS84(finalBox.max.x, finalBox.max.z),
         } : null;
-
-        scene.add(state.cadmapperGroup);
 
         const size = new THREE.Vector3();
         new THREE.Box3().setFromObject(state.cadmapperGroup).getSize(size);

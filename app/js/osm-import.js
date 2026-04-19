@@ -46,81 +46,64 @@ let THREE      = null;  // set from callbacks at init, used by all geometry buil
 // ── Modal HTML ────────────────────────────────────────────────────────────
 const MODAL_HTML = `
 <div id="osm-overlay" style="
-  display:none; position:fixed; inset:0;
-  background:rgba(0,0,0,0.35); z-index:1100;
-  align-items:center; justify-content:center;">
-  <div id="osm-modal" style="
-    background:var(--chrome-panel); border:1px solid var(--chrome-border);
-    border-radius:6px; width:540px; max-width:96vw;
-    box-shadow:0 8px 32px rgba(0,0,0,0.22); color:var(--text-primary);
-    font-family:var(--font,'Outfit',sans-serif); overflow:hidden;">
+  display:none; position:fixed; inset:0; z-index:1100;
+  background:var(--chrome-panel); flex-direction:column;">
 
-    <div style="padding:12px 16px; border-bottom:1px solid var(--chrome-border);
-                display:flex; align-items:center; gap:10px;
-                background:var(--chrome-dark,#1e3d1e);">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.4">
-        <circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c-2 2-3 4-3 6s1 4 3 6M8 2c2 2 3 4 3 6s-1 4-3 6"/>
-      </svg>
-      <h3 style="margin:0; font-size:13px; font-weight:600; flex:1; color:#fff;">Import from OpenStreetMap</h3>
-      <button id="osm-close" style="background:none;border:none;color:rgba(255,255,255,0.6);
-        cursor:pointer;font-size:18px;line-height:1;padding:2px 6px;">&#x2715;</button>
+  <!-- Header bar -->
+  <div style="padding:10px 16px; border-bottom:1px solid var(--chrome-border);
+              display:flex; align-items:center; gap:10px; flex-shrink:0;
+              background:var(--chrome-dark,#1e3d1e);">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.4">
+      <circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c-2 2-3 4-3 6s1 4 3 6M8 2c2 2 3 4 3 6s-1 4-3 6"/>
+    </svg>
+    <h3 style="margin:0; font-size:13px; font-weight:600; color:#fff;">Import from OpenStreetMap</h3>
+    <span style="font-size:10px;color:rgba(255,255,255,0.5);">Click map to set site location</span>
+
+    <!-- Address search -->
+    <div style="display:flex;gap:6px;margin-left:16px;flex:1;max-width:400px;">
+      <input id="osm-address" type="text" placeholder="Search address\u2026"
+        style="flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);
+        border-radius:4px;color:#fff;font-size:12px;padding:5px 10px;outline:none;"
+        onkeydown="if(event.key==='Enter') document.getElementById('osm-search-btn').click()">
+      <button id="osm-search-btn" style="background:var(--accent-mid,#4a8a4a);color:#fff;border:none;
+        border-radius:4px;font-size:12px;padding:5px 12px;cursor:pointer;">Search</button>
     </div>
 
-    <div style="padding:14px 16px 10px; font-size:12px; color:var(--text-secondary); line-height:1.6;
-                border-bottom:1px solid var(--chrome-border);">
-      Free global site data from <strong style="color:var(--text-primary);">OpenStreetMap</strong>
-      \u2014 buildings, roads, terrain, parks, water. No account required.
-      Click your site on the map below to set the location.
-    </div>
-
-    <!-- Google Maps click-to-locate panel -->
-    <div id="osm-map" style="width:100%;height:260px;background:#1a1a1a;position:relative;flex-shrink:0;">
-      <div id="osm-map-loading" style="position:absolute;inset:0;display:flex;align-items:center;
-        justify-content:center;color:#aaa;font-size:12px;">Loading map\u2026</div>
-    </div>
-
-    <div style="padding:10px 16px 6px;border-bottom:1px solid var(--chrome-border);
-                display:flex;gap:8px;align-items:center;">
-      <div style="flex:1;">
-        <div style="font-size:10px;color:var(--text-secondary);margin-bottom:3px;">Latitude</div>
-        <input id="osm-lat" type="number" step="any" placeholder="Click map\u2026"
-          style="width:100%;box-sizing:border-box;background:var(--chrome-input);
-          border:1px solid var(--chrome-border);border-radius:4px;
-          color:var(--text-primary);font-size:12px;padding:5px 8px;outline:none;">
+    <!-- Controls row -->
+    <div style="display:flex;align-items:center;gap:10px;margin-left:8px;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span style="font-size:10px;color:rgba(255,255,255,0.6);">Lat</span>
+        <input id="osm-lat" type="number" step="any" placeholder="\u2014"
+          style="width:100px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);
+          border-radius:4px;color:#fff;font-size:11px;padding:4px 8px;outline:none;">
+        <span style="font-size:10px;color:rgba(255,255,255,0.6);">Lng</span>
+        <input id="osm-lng" type="number" step="any" placeholder="\u2014"
+          style="width:110px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);
+          border-radius:4px;color:#fff;font-size:11px;padding:4px 8px;outline:none;">
       </div>
-      <div style="flex:1;">
-        <div style="font-size:10px;color:var(--text-secondary);margin-bottom:3px;">Longitude</div>
-        <input id="osm-lng" type="number" step="any" placeholder="Click map\u2026"
-          style="width:100%;box-sizing:border-box;background:var(--chrome-input);
-          border:1px solid var(--chrome-border);border-radius:4px;
-          color:var(--text-primary);font-size:12px;padding:5px 8px;outline:none;">
-      </div>
-    </div>
-
-    <div style="padding:12px 16px; border-bottom:1px solid var(--chrome-border);">
-      <label style="font-size:11px;color:var(--text-secondary);display:block;margin-bottom:6px;">
-        Download radius
-      </label>
-      <select id="osm-radius" style="font-size:12px;background:var(--chrome-input);
-        border:1px solid var(--chrome-border);border-radius:4px;padding:5px 8px;
-        color:var(--text-primary);outline:none;width:100%;">
+      <select id="osm-radius" style="font-size:11px;background:rgba(255,255,255,0.1);
+        border:1px solid rgba(255,255,255,0.25);border-radius:4px;padding:4px 8px;
+        color:#fff;outline:none;">
         <option value="250">250 m</option>
-        <option value="500" selected>500 m (recommended)</option>
+        <option value="500" selected>500 m</option>
         <option value="750">750 m</option>
         <option value="1000">1 km</option>
       </select>
-    </div>
-
-    <div style="padding:10px 16px;display:flex;align-items:center;gap:8px;">
-      <span id="osm-status" style="flex:1;font-size:11px;color:var(--text-secondary);">
-        Enter latitude and longitude to import site data.
-      </span>
+      <span id="osm-status" style="font-size:11px;color:rgba(255,255,255,0.6);min-width:140px;"></span>
       <button id="osm-import-btn" style="
         background:var(--accent-mid,#4a8a4a);color:#fff;border:none;
-        border-radius:4px;font-size:12px;padding:7px 18px;cursor:pointer;">
+        border-radius:4px;font-size:12px;padding:6px 18px;cursor:pointer;white-space:nowrap;">
         Import
       </button>
+      <button id="osm-close" style="background:none;border:none;color:rgba(255,255,255,0.6);
+        cursor:pointer;font-size:20px;line-height:1;padding:2px 6px;">&#x2715;</button>
     </div>
+  </div>
+
+  <!-- Map fills all remaining space -->
+  <div id="osm-map" style="flex:1;min-height:0;background:#1a1a1a;position:relative;">
+    <div id="osm-map-loading" style="position:absolute;inset:0;display:flex;align-items:center;
+      justify-content:center;color:#aaa;font-size:13px;">Loading map\u2026</div>
   </div>
 </div>`;
 
@@ -128,23 +111,39 @@ const MODAL_HTML = `
 // ── Init ──────────────────────────────────────────────────────────────────
 export function initOSMImport(callbacks) {
   _callbacks = callbacks;
-  THREE = callbacks.THREE;   // make available to all geometry builders
+  THREE = callbacks.THREE;
   document.body.insertAdjacentHTML('beforeend', MODAL_HTML);
   document.getElementById('importOSMBtn').addEventListener('click', openModal);
   document.getElementById('osm-close').addEventListener('click', closeModal);
-  document.getElementById('osm-overlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('osm-overlay')) closeModal();
-  });
   document.getElementById('osm-import-btn').addEventListener('click', runImport);
+  document.getElementById('osm-search-btn').addEventListener('click', searchAddress);
 }
 
 function openModal() {
-  setStatus('Click the map to set your site location, then click Import.');
+  setStatus('Click the map to set your site location.');
   document.getElementById('osm-overlay').style.display = 'flex';
   _initPickerMap();
 }
 function closeModal() {
   document.getElementById('osm-overlay').style.display = 'none';
+}
+
+// ── Address search using Nominatim ───────────────────────────────────────
+async function searchAddress() {
+  const q = document.getElementById('osm-address').value.trim();
+  if (!q || !_pickerMap) return;
+  setStatus('Searching\u2026');
+  try {
+    const res  = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`);
+    const data = await res.json();
+    if (!data.length) { setStatus('Address not found.'); return; }
+    const lat = parseFloat(data[0].lat), lng = parseFloat(data[0].lon);
+    _pickerMap.setCenter({ lat, lng });
+    _pickerMap.setZoom(17);
+    setStatus('Navigate and click your exact site.');
+  } catch (err) {
+    setStatus('Search failed: ' + err.message);
+  }
 }
 
 // ── Google Maps click-to-locate picker ───────────────────────────────────
@@ -153,7 +152,10 @@ let _pickerMarker = null;
 let _mapsReady    = false;
 
 async function _initPickerMap() {
-  if (_pickerMap) { google.maps.event.trigger(_pickerMap, 'resize'); return; }
+  if (_pickerMap) {
+    setTimeout(() => google.maps.event.trigger(_pickerMap, 'resize'), 50);
+    return;
+  }
   const loading = document.getElementById('osm-map-loading');
   try {
     const res = await fetch('/api/maps-key');
