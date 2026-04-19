@@ -111,7 +111,7 @@ export function initSiteSelection({ drawSiteBoundary, onSiteSelected }) {
   document.body.insertAdjacentHTML('beforeend', MODAL_HTML);
 
   document.getElementById('selectSiteBtn')
-    .addEventListener('click', openModal);
+    ?.addEventListener('click', openModal);
   document.getElementById('site-select-close')
     .addEventListener('click', closeModal);
   document.getElementById('site-select-overlay')

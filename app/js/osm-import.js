@@ -41,6 +41,7 @@ const ROAD_WIDTHS = {
 
 // ── Module state ──────────────────────────────────────────────────────────
 let _callbacks = null;
+let THREE      = null;  // set from callbacks at init, used by all geometry builders
 
 // ── Modal HTML ────────────────────────────────────────────────────────────
 const MODAL_HTML = `
@@ -60,7 +61,7 @@ const MODAL_HTML = `
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.4">
         <circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c-2 2-3 4-3 6s1 4 3 6M8 2c2 2 3 4 3 6s-1 4-3 6"/>
       </svg>
-      <h3 style="margin:0; font-size:13px; font-weight:600; flex:1; color:#fff;">Import from OSM</h3>
+      <h3 style="margin:0; font-size:13px; font-weight:600; flex:1; color:#fff;">Import from Map</h3>
       <button id="osm-close" style="background:none;border:none;color:rgba(255,255,255,0.6);
         cursor:pointer;font-size:18px;line-height:1;padding:2px 6px;">&#x2715;</button>
     </div>
@@ -68,7 +69,7 @@ const MODAL_HTML = `
     <div style="padding:14px 16px 10px; font-size:12px; color:var(--text-secondary); line-height:1.6;
                 border-bottom:1px solid var(--chrome-border);">
       Free global site data from <strong style="color:var(--text-primary);">OpenStreetMap</strong>
-      — buildings, roads, terrain, parks, water. No account required.
+      \u2014 buildings, roads, terrain, parks, water. No account required.
       Enter the <strong style="color:var(--text-primary);">UTM coordinates</strong> of your site centre.
     </div>
 
@@ -132,6 +133,7 @@ const MODAL_HTML = `
 // ── Init ──────────────────────────────────────────────────────────────────
 export function initOSMImport(callbacks) {
   _callbacks = callbacks;
+  THREE = callbacks.THREE;   // make available to all geometry builders
   document.body.insertAdjacentHTML('beforeend', MODAL_HTML);
   document.getElementById('importOSMBtn').addEventListener('click', openModal);
   document.getElementById('osm-close').addEventListener('click', closeModal);
@@ -491,7 +493,6 @@ function buildLayerGroups(osmData, THREE) {
 
 // ── Run import ────────────────────────────────────────────────────────────
 async function runImport() {
-  const THREE    = _callbacks.THREE;
   const zone     = parseInt(document.getElementById('osm-zone').value.trim(), 10);
   const easting  = parseFloat(document.getElementById('osm-easting').value);
   const northing = parseFloat(document.getElementById('osm-northing').value);
@@ -515,24 +516,24 @@ async function runImport() {
     setStatus('Fetching OSM data\u2026');
     const osmData = await fetchOverpass(buildOverpassQuery(bbox));
     setStatus('Building geometry\u2026');
-    const layerGroups = buildLayerGroups(osmData, _callbacks.THREE);
+    const layerGroups = buildLayerGroups(osmData, THREE);
 
     // Fetch terrain mesh
     setStatus('Fetching terrain elevation\u2026');
-    const terrainGeom = await fetchTerrainMesh(bbox, _callbacks.THREE);
+    const terrainGeom = await fetchTerrainMesh(bbox, THREE);
     if (terrainGeom) {
       const cfg = LAYER_CONFIG.topography;
       const terrainGroup = new THREE.Group();
       terrainGroup.name = 'topography';
-      terrainGroup.add(new _callbacks.THREE.Mesh(terrainGeom,
-        new _callbacks.THREE.MeshBasicMaterial({
+      terrainGroup.add(new THREE.Mesh(terrainGeom,
+        new THREE.MeshBasicMaterial({
           color: cfg.color, opacity: cfg.opacity,
-          transparent: false, side: _callbacks.THREE.DoubleSide,
+          transparent: false, side: THREE.DoubleSide,
           polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 1,
         })));
-      const edges = new _callbacks.THREE.EdgesGeometry(terrainGeom, 10);
-      terrainGroup.add(new _callbacks.THREE.LineSegments(edges,
-        new _callbacks.THREE.LineBasicMaterial({ color: 0xa09070, opacity: 0.4, transparent: true })));
+      const edges = new THREE.EdgesGeometry(terrainGeom, 10);
+      terrainGroup.add(new THREE.LineSegments(edges,
+        new THREE.LineBasicMaterial({ color: 0xa09070, opacity: 0.4, transparent: true })));
       layerGroups.topography = terrainGroup;
     }
 
