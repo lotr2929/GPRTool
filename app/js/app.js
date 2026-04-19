@@ -88,6 +88,12 @@
         update2DCamera();
         showFeedback('View oriented to North');
       }
+      // Z key = rectangular zoom mode
+      if ((e.key === 'z' || e.key === 'Z') && !ctrl && state.currentMode === '2d') {
+        state.zoomRectMode = !state.zoomRectMode;
+        state.canvas.style.cursor = state.zoomRectMode ? 'crosshair' : '';
+        showFeedback(state.zoomRectMode ? 'Zoom rect: drag to zoom in, Z to cancel' : 'Ready');
+      }
     });
 
     /* ============================================================
@@ -185,6 +191,15 @@
 
     state.renderer.domElement.addEventListener('pointerdown', e => {
       if (state.currentMode !== '2d') return;
+      if (e.button === 0 && state.zoomRectMode) {
+        // Zoom rect drag start
+        state.zoomRectStart = { x: e.clientX, y: e.clientY };
+        state.zoomRectEl = document.createElement('div');
+        state.zoomRectEl.style.cssText = 'position:absolute;border:2px dashed #4a8a4a;background:rgba(74,138,74,0.08);pointer-events:none;z-index:50;';
+        document.getElementById('viewport').appendChild(state.zoomRectEl);
+        state.renderer.domElement.setPointerCapture(e.pointerId);
+        return;
+      }
       if (e.button === 1) {
         // Middle mouse — rotate the 2D view (not in surface canvas mode)
         if (state.selectedSurface) return;
@@ -203,6 +218,18 @@
     state.renderer.domElement.addEventListener('pointermove', e => {
       if (state.currentMode !== '2d') return;
       if (state.boundaryDrawMode) handleBoundaryMouseMove(e.clientX, e.clientY);
+      if (state.zoomRectMode && state.zoomRectStart && state.zoomRectEl) {
+        const rect  = state.canvas.getBoundingClientRect();
+        const x1    = Math.min(state.zoomRectStart.x, e.clientX) - rect.left;
+        const y1    = Math.min(state.zoomRectStart.y, e.clientY) - rect.top;
+        const w     = Math.abs(e.clientX - state.zoomRectStart.x);
+        const h     = Math.abs(e.clientY - state.zoomRectStart.y);
+        state.zoomRectEl.style.left   = x1 + 'px';
+        state.zoomRectEl.style.top    = y1 + 'px';
+        state.zoomRectEl.style.width  = w  + 'px';
+        state.zoomRectEl.style.height = h  + 'px';
+        return;
+      }
 
       if (state.rotate2DActive) {
         const dx = e.clientX - state.rotate2DLast.x;
@@ -252,6 +279,41 @@
 
     state.renderer.domElement.addEventListener('pointerup', e => {
       if (state.currentMode !== '2d') return;
+      // Zoom rect confirm
+      if (state.zoomRectMode && state.zoomRectStart && state.zoomRectEl) {
+        const rect  = state.canvas.getBoundingClientRect();
+        const ndcX1 = ((Math.min(state.zoomRectStart.x, e.clientX) - rect.left) / rect.width)  * 2 - 1;
+        const ndcX2 = ((Math.max(state.zoomRectStart.x, e.clientX) - rect.left) / rect.width)  * 2 - 1;
+        const ndcY1 = 1 - ((Math.min(state.zoomRectStart.y, e.clientY) - rect.top) / rect.height) * 2;
+        const ndcY2 = 1 - ((Math.max(state.zoomRectStart.y, e.clientY) - rect.top) / rect.height) * 2;
+        if (Math.abs(ndcX2 - ndcX1) > 0.02 && Math.abs(ndcY1 - ndcY2) > 0.02) {
+          // Convert NDC corners to world space and fit camera
+          const frustumW = (state.camera2D.right - state.camera2D.left) / state.camera2D.zoom;
+          const frustumH = (state.camera2D.top - state.camera2D.bottom) / state.camera2D.zoom;
+          const wx1 = state.pan2D.x + (ndcX1 * 0.5) * frustumW;
+          const wx2 = state.pan2D.x + (ndcX2 * 0.5) * frustumW;
+          const wz1 = state.pan2D.z + (-ndcY1 * 0.5) * frustumH;
+          const wz2 = state.pan2D.z + (-ndcY2 * 0.5) * frustumH;
+          const spanX = Math.abs(wx2 - wx1), spanZ = Math.abs(wz2 - wz1);
+          state.pan2D.x = (wx1 + wx2) / 2;
+          state.pan2D.z = (wz1 + wz2) / 2;
+          const aspect  = rect.width / rect.height;
+          const newHalfH = Math.max(spanX / aspect, spanZ) / 2;
+          state.camera2D.left   = -newHalfH * aspect;
+          state.camera2D.right  =  newHalfH * aspect;
+          state.camera2D.top    =  newHalfH;
+          state.camera2D.bottom = -newHalfH;
+          state.zoom2D = 1;
+          update2DCamera();
+        }
+        state.zoomRectEl.remove();
+        state.zoomRectEl    = null;
+        state.zoomRectStart = null;
+        state.zoomRectMode  = false;
+        state.canvas.style.cursor = '';
+        state.renderer.domElement.releasePointerCapture(e.pointerId);
+        return;
+      }
       state.pan2DActive    = false;
       state.rotate2DActive = false;
       state.renderer.domElement.releasePointerCapture(e.pointerId);
@@ -1294,12 +1356,15 @@
 
     // Shared onLayersLoaded callback — used by both OSM and CADMapper importers
     const onLayersLoaded = async (layerGroups, dxfFile) => {
-        // Clear existing CADMapper geometry
+        // Clear existing context geometry and reset .gpr state
         if (state.cadmapperGroup) {
           scene.remove(state.cadmapperGroup);
           state.cadmapperGroup.traverse(c => { c.geometry?.dispose(); c.material?.dispose(); });
           state.cadmapperGroup = null;
         }
+        clearLotBoundary();
+        clearSiteTerrain();
+        cancelBoundaryDraw();
 
         // Build group, centre it in scene
         state.cadmapperGroup = new THREE.Group();
@@ -1321,7 +1386,8 @@
           state.cadmapperGroup.children.forEach(child => { child.position.y -= box2.min.y; });
           setSceneOffset(centre.x, centre.z);
         } else {
-          // OSM: scene offset is zero — geometry sits at real-world anchor origin
+          // OSM: geometry already in scene space, centre is effectively zero
+          centre.set(0, 0, 0);
           setSceneOffset(0, 0);
         }
 
