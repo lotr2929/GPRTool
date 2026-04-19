@@ -16,7 +16,7 @@
  *   LWPOLYLINE      → contours (many)
  *   POLYLINE+VERTEX → parks, water, railways
  *
- * Axis mapping: DXF X → Three X,  DXF Y → Three Z,  DXF Z → Three Y
+ * Axis mapping: DXF X → Three X,  DXF Y → Three -Z,  DXF Z → Three Y
  *
  * UTM conversion utility exported for OSM/site-pin alignment in calling code.
  */
@@ -25,12 +25,12 @@ import { setRealWorldAnchor } from './real-world.js';
 
 // ── Layer display config ───────────────────────────────────────────────────
 const LAYER_CONFIG = {
-  topography:  { label: 'Terrain',     color: 0xc8b890, opacity: 1.0,  wire: false },
-  buildings:   { label: 'Buildings',   color: 0xd4d0c8, opacity: 0.85, wire: false },
-  highways:    { label: 'Highways',    color: 0x808078, opacity: 1.0,  wire: false },
-  major_roads: { label: 'Major Roads', color: 0x989890, opacity: 1.0,  wire: false },
-  minor_roads: { label: 'Minor Roads', color: 0xa8a8a0, opacity: 1.0,  wire: false },
-  paths:       { label: 'Paths',       color: 0xb8b8a8, opacity: 1.0,  wire: false },
+  topography:  { label: 'Terrain',     color: 0xc8b890, opacity: 1.0,  wire: false, yOffset: 0.00 },
+  buildings:   { label: 'Buildings',   color: 0xd4d0c8, opacity: 0.85, wire: false, yOffset: 0.00 },
+  highways:    { label: 'Highways',    color: 0x808078, opacity: 1.0,  wire: false, yOffset: 0.08 },
+  major_roads: { label: 'Major Roads', color: 0x989890, opacity: 1.0,  wire: false, yOffset: 0.06 },
+  minor_roads: { label: 'Minor Roads', color: 0xa8a8a0, opacity: 1.0,  wire: false, yOffset: 0.04 },
+  paths:       { label: 'Paths',       color: 0xb8b8a8, opacity: 1.0,  wire: false, yOffset: 0.02 },
   parks:       { label: 'Parks',       color: 0x70b850, opacity: 1.0,  line: true  },
   water:       { label: 'Water',       color: 0x5888c0, opacity: 1.0,  line: true  },
   railways:    { label: 'Railways',    color: 0x585048, opacity: 1.0,  line: true  },
@@ -414,6 +414,7 @@ export function parseCadmapperDXF(text, selectedLayers, THREE) {
     const cfg   = LAYER_CONFIG[layer] || { color: 0xaaaaaa, opacity: 1.0 };
     const group = new THREE.Group();
     group.name  = layer;
+    if (cfg.yOffset) group.position.y = cfg.yOffset;
 
     for (const geom of data.meshParts) {
       const mat = new THREE.MeshBasicMaterial({
