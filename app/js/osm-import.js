@@ -263,7 +263,7 @@ function tileYToLat(ty, z) {
 }
 
 async function fetchTerrainMesh(bbox, THREE) {
-  const Z = 13; // zoom 13 ≈ 10m/pixel at equator
+  const Z = 14; // zoom 14 ≈ 8m/pixel — comparable to SRTM 30m after step-4 sampling
   const txMin = lonToTileX(bbox.west,  Z);
   const txMax = lonToTileX(bbox.east,  Z);
   const tyMin = latToTileY(bbox.north, Z);
@@ -313,7 +313,7 @@ async function fetchTerrainTile(tx, ty, z) {
     const tileH = tileYToLat(ty, z)     - tileYToLat(ty + 1, z);
     const west  = tileXToLon(tx, z);
     const north = tileYToLat(ty, z);
-    const step  = 8; // sample every 8th pixel to reduce point count
+    const step  = 4; // sample every 4th pixel → ~32m spacing, comparable to SRTM 30m
     const points = [];
 
     for (let py = 0; py < canvas.height; py += step) {
@@ -652,7 +652,7 @@ async function runImport() {
       layerGroups.topography = terrainGroup;
 
       // Generate contour lines at 5m intervals from terrain points
-      const contourGroup = buildContourLines(terrainPts, 5, THREE);
+      const contourGroup = buildContourLines(terrainPts, 4, THREE); // 4m interval matches CADMapper
       if (contourGroup) layerGroups.contours = contourGroup;
     }
 
