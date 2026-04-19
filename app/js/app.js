@@ -900,6 +900,7 @@
         ne: sceneToWGS84( reference.site_span_m / 2,  reference.site_span_m / 2),
       } : null;
       buildBoundaryPanel(wgs84Bounds, !!boundary);
+      if (wgs84Bounds) loadSatelliteTiles(wgs84Bounds);
       showFeedback(`Opened: ${manifest.site_name ?? file.name}`);
     }
 
