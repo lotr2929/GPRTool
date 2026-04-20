@@ -1454,6 +1454,7 @@
             : osmAddress
               ? `OSM — ${osmAddress}`
               : 'Untitled Site';
+          state._activeProjectName = siteName;
           try {
             await createInitialGPR({
               siteName,
@@ -1515,7 +1516,6 @@
       const blob = await getActiveGPRBlob().catch(() => null);
       if (!blob) { showFeedback('Nothing to save — import a site first.'); return; }
       const anchor = getRealWorldAnchor();
-      if (!confirm('Save — overwrite current project?')) return;
       try {
         await saveProject(blob, {
           id:           state._activeProjectId ?? undefined,

@@ -100,19 +100,23 @@ export default async function handler(req, res) {
 
     let result;
     if (id) {
-      // Update existing
+      // Update existing — use Prefer:return=minimal to avoid returning the large gpr_data blob
       result = await sbFetch(`gpr_projects?id=eq.${id}`, {
-        method: 'PATCH', body: JSON.stringify(payload),
+        method: 'PATCH',
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify(payload),
       });
+      if (!result.ok) return res.status(result.status).json({ error: 'Save failed', detail: result.data });
+      return res.status(200).json({ project: { id, ...payload, gpr_data: undefined } });
     } else {
       // Insert new
       result = await sbFetch('gpr_projects', {
         method: 'POST', body: JSON.stringify(payload),
       });
+      if (!result.ok) return res.status(result.status).json({ error: 'Save failed', detail: result.data });
+      const saved = Array.isArray(result.data) ? result.data[0] : result.data;
+      return res.status(200).json({ project: saved });
     }
-    if (!result.ok) return res.status(result.status).json({ error: 'Save failed', detail: result.data });
-    const saved = Array.isArray(result.data) ? result.data[0] : result.data;
-    return res.status(200).json({ project: saved });
   }
 
   // ── DELETE ────────────────────────────────────────────────────────────────

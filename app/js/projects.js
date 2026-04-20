@@ -172,9 +172,29 @@ export function showSaveProjectDialog({ blob, defaultName, lat, lng, dxfFilename
     const selectEl   = overlay.querySelector('#spd-existing');
     const radios     = overlay.querySelectorAll('input[name="spd-mode"]');
 
+    // On open: if overwrite is pre-selected, populate name from first existing project
+    const initialMode = overlay.querySelector('input[name="spd-mode"]:checked')?.value;
+    if (initialMode === 'overwrite' && existing.length) {
+      nameInput.value = existing[0].site_name;
+    }
+
     radios.forEach(r => r.addEventListener('change', () => {
       selectEl.disabled = r.value !== 'overwrite' || !existing.length;
+      // When switching to overwrite, populate name from selected existing project
+      if (r.value === 'overwrite' && selectEl.value) {
+        const match = existing.find(p => p.id === selectEl.value);
+        if (match) nameInput.value = match.site_name;
+      }
     }));
+
+    // Also update name when overwrite dropdown selection changes
+    selectEl.addEventListener('change', () => {
+      const mode = overlay.querySelector('input[name="spd-mode"]:checked')?.value;
+      if (mode === 'overwrite') {
+        const match = existing.find(p => p.id === selectEl.value);
+        if (match) nameInput.value = match.site_name;
+      }
+    });
 
     const close = (save) => {
       document.body.removeChild(overlay);
