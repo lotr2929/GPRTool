@@ -104,6 +104,17 @@ export function initUI() {
     });
   });
 
+  // Close dropdown menus after any item is clicked
+  document.querySelectorAll('.dropdown-menu a').forEach(a => {
+    a.addEventListener('click', () => {
+      // Force all menus closed by briefly disabling pointer events on menu-items
+      document.querySelectorAll('.menu-item').forEach(mi => {
+        mi.style.pointerEvents = 'none';
+        setTimeout(() => mi.style.pointerEvents = '', 200);
+      });
+    });
+  });
+
   // Collapsible section headers
   document.querySelectorAll('.section-header').forEach(hdr =>
     hdr.addEventListener('click', () => hdr.closest('.command-section').classList.toggle('collapsed'))

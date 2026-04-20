@@ -142,7 +142,7 @@ export function showSaveProjectDialog({ blob, defaultName, lat, lng, dxfFilename
                 <span style="flex:1;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                   ${p.site_name}</span>
                 <span style="font-size:10px;color:var(--text-secondary);">
-                  ${new Date(p.updated_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'})}</span>
+                  ${new Date(p.updated_at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>
               </div>`).join('')
             : `<div style="padding:20px;text-align:center;font-size:12px;color:var(--text-secondary);">
                 No existing projects</div>`}
@@ -388,8 +388,8 @@ async function loadProjectList() {
       row.addEventListener('mouseover', () => row.style.background = 'var(--chrome-hover)');
       row.addEventListener('mouseout',  () => row.style.background = '');
 
-      const date = new Date(p.updated_at).toLocaleDateString('en-GB', {
-        day: 'numeric', month: 'short', year: 'numeric' });
+      const date = new Date(p.updated_at).toLocaleString('en-GB', {
+        day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' });
       const size = p.file_size_bytes
         ? (p.file_size_bytes < 1024*1024
             ? `${(p.file_size_bytes/1024).toFixed(0)} KB`
