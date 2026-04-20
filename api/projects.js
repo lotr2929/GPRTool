@@ -35,13 +35,12 @@ async function sbFetch(path, opts = {}) {
 // ── Extract file list from base64 .gpr (ZIP) ─────────────────────────────
 // Returns array of { name, size_bytes } for each file in the zip.
 // Uses the ZIP local file header format — no full decompression needed.
-async function extractGPRContents(gpr_data_b64) {
+function extractGPRContents(gpr_data_b64) {
   try {
     const binary = Buffer.from(gpr_data_b64, 'base64');
     const contents = [];
     let offset = 0;
     while (offset < binary.length - 30) {
-      // Local file header: PK\x03\x04
       if (binary[offset]!==0x50||binary[offset+1]!==0x4B||binary[offset+2]!==0x03||binary[offset+3]!==0x04) break;
       const compSize   = binary[offset+18] | (binary[offset+19]<<8) | (binary[offset+20]<<16) | (binary[offset+21]<<24);
       const uncompSize = binary[offset+22] | (binary[offset+23]<<8) | (binary[offset+24]<<16) | (binary[offset+25]<<24);
@@ -50,7 +49,6 @@ async function extractGPRContents(gpr_data_b64) {
       const name       = binary.slice(offset+30, offset+30+nameLen).toString('utf8');
       if (!name.endsWith('/')) contents.push({ name, size_bytes: uncompSize });
       offset += 30 + nameLen + extraLen + compSize;
-      if (compSize === 0 && !name.endsWith('/')) break; // safety: avoid infinite loop on empty files
     }
     return contents.length ? contents : null;
   } catch { return null; }
@@ -86,14 +84,14 @@ export default async function handler(req, res) {
   // ── SAVE ─────────────────────────────────────────────────────────────────
   if (req.method === 'POST' && action === 'save') {
     const { id, site_name, dxf_filename, gpr_data, file_size_bytes,
-            has_boundary, wgs84_lat, wgs84_lng } = req.body;
+            has_boundary, wgs84_lat, wgs84_lng, folder } = req.body;
 
     if (!site_name || !gpr_data) return res.status(400).json({ error: 'site_name and gpr_data required' });
 
-    const gpr_contents = await extractGPRContents(gpr_data);
+    const gpr_contents = extractGPRContents(gpr_data);
 
     const payload = {
-      folder:       body.folder ?? 'GPR Projects',
+      folder:       folder ?? 'GPR Projects',
       site_name, dxf_filename, gpr_data, file_size_bytes,
       has_boundary: !!has_boundary, wgs84_lat, wgs84_lng,
       gpr_contents,
