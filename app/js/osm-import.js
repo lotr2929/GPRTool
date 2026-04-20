@@ -472,7 +472,7 @@ function buildBuilding(ring, height, THREE) {
   if (ring.length < 3) return null;
   const pts2D = ring.map(ll => {
     const sc = wgs84ToScene(ll.lat, ll.lng);
-    return sc ? new THREE.Vector2(sc.x, sc.z) : null;
+    return sc ? new THREE.Vector2(sc.x, -sc.z) : null; // north=-Z: negate to match cadmapper convention
   }).filter(Boolean);
   if (pts2D.length < 3) return null;
 
@@ -511,7 +511,7 @@ function buildRoadPolygon(ring, halfWidth, THREE) {
 // Build flat filled polygon from XZ points
 function buildFlatPolygon(pts, THREE) {
   if (pts.length < 3) return null;
-  const pts2D = pts.map(p => new THREE.Vector2(p.x, p.z));
+  const pts2D = pts.map(p => new THREE.Vector2(p.x, -p.z)); // north=-Z: negate to match cadmapper convention
   const shape = new THREE.Shape(pts2D);
   const geom  = new THREE.ShapeGeometry(shape);
   geom.rotateX(-Math.PI / 2); // XY → XZ ground plane

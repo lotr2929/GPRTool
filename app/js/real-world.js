@@ -35,13 +35,13 @@
  *   DXF Y  =  Northing offset (metres, North positive in UTM)
  *   DXF Z  =  Elevation (metres above datum)
  *
- * parseMeshBlock maps them to Three.js (Y-up):
- *   Three.X  =  DXF X   (East)
- *   Three.Y  =  DXF Z   (Up)
- *   Three.Z  =  DXF Y   (North — note: Three +Z = CADMapper North direction)
- *
- * ⚠ This differs from the abstract CAD Universe convention (-Z = True North).
- * The import code is authoritative. Do not swap signs without testing imports.
+ * ⚠ NORTH = NEGATIVE Z throughout GPRTool. This matches cadmapper-import.js.
+ *   DXF X → Three.X (East)
+ *   DXF Z → Three.Y (Up)
+ *   DXF Y → Three.-Z  i.e. north is NEGATIVE Z
+ *   When building THREE.Shape from wgs84ToScene coords, always use -sc.z as the Y
+ *   component so that after rotateX(-PI/2) the result lands at sc.z (north=-Z).
+ *   buildLine() uses sc.z directly (correct). buildFlatPolygon/buildBuilding must negate.
  *
  * Scene–UTM conversion therefore:
  *   UTM easting  = anchor.easting  + sceneOffset.x + scene.x
