@@ -181,7 +181,18 @@
     state.controls3D.maxDistance        = 5000;
     state.controls3D.minPolarAngle      = 0.01;
     state.controls3D.maxPolarAngle      = Math.PI * 0.85;
-    state.controls3D.mouseButtons       = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+    state.controls3D.mouseButtons       = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
+
+    // Shift+left-click = pan in 3D
+    state.renderer.domElement.addEventListener('pointerdown', e => {
+      if (state.currentMode !== '3d') return;
+      if (e.button === 0 && e.shiftKey) state.controls3D.mouseButtons.LEFT = THREE.MOUSE.PAN;
+    });
+    state.renderer.domElement.addEventListener('pointerup', e => {
+      if (state.currentMode !== '3d') return;
+      state.controls3D.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+    });
+
     state.controls3D.touches            = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
 
     const controls2D = { update: () => {}, saveState: () => {}, target: new THREE.Vector3() };
@@ -354,14 +365,8 @@
     document.body.appendChild(_vpCtx);
 
     let _vpCtxX = 0, _vpCtxY = 0;
-    let _vpCtxDownX = 0, _vpCtxDownY = 0;
-    state.renderer.domElement.addEventListener('pointerdown', e => {
-      if (e.button === 2) { _vpCtxDownX = e.clientX; _vpCtxDownY = e.clientY; }
-    });
     state.renderer.domElement.addEventListener('contextmenu', e => {
       e.preventDefault();
-      // Suppress menu if pointer moved more than 4px (i.e. was a pan drag, not a click)
-      if (Math.hypot(e.clientX - _vpCtxDownX, e.clientY - _vpCtxDownY) > 4) return;
       _vpCtxX = e.clientX; _vpCtxY = e.clientY;
       const w = 178, h = 120;
       _vpCtx.style.left    = Math.min(e.clientX, window.innerWidth  - w - 4) + 'px';
