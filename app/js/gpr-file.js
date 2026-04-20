@@ -90,14 +90,16 @@ export async function getActiveGPRBlob() {
  * @param {File|null}    params.dxfFile      - Original DXF File object (embedded for re-import)
  * @returns {Promise<string>} projectId
  */
-export async function createInitialGPR({ siteName, reference, design, dxfFile = null }) {
+export async function createInitialGPR({ siteName, reference, design, dxfFile = null, osmGeoJSON = null }) {
   if (!window.JSZip) throw new Error('JSZip not loaded');
 
-  const now = new Date().toISOString();
-  const id  = 'gpr-' + Date.now();
+  const now    = new Date().toISOString();
+  const id     = 'gpr-' + Date.now();
+  const source = dxfFile ? 'cadmapper' : osmGeoJSON ? 'osm' : 'unknown';
 
   const sections = ['manifest', 'reference', 'design'];
-  if (dxfFile) sections.push('context/cadmapper.dxf');
+  if (dxfFile)    sections.push('context/cadmapper.dxf');
+  if (osmGeoJSON) sections.push('context.geojson');
 
   const manifest = {
     format_version: FORMAT_VERSION,
@@ -105,7 +107,7 @@ export async function createInitialGPR({ siteName, reference, design, dxfFile = 
     created:        now,
     modified:       now,
     site_name:      siteName,
-    source:         'cadmapper',
+    source,
     sections,
   };
 
@@ -117,6 +119,9 @@ export async function createInitialGPR({ siteName, reference, design, dxfFile = 
   if (dxfFile) {
     const dxfBytes = await dxfFile.arrayBuffer();
     zip.folder('context').file('cadmapper.dxf', dxfBytes);
+  }
+  if (osmGeoJSON) {
+    zip.file('context.geojson', JSON.stringify(osmGeoJSON, null, 2));
   }
 
   const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE',

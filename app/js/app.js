@@ -1353,7 +1353,7 @@
     initProjects();
 
     // Shared onLayersLoaded callback — used by both OSM and CADMapper importers
-    const onLayersLoaded = async (layerGroups, dxfFile, osmAddress = null) => {
+    const onLayersLoaded = async (layerGroups, dxfFile, osmAddress = null, osmGeoJSON = null) => {
         // Clear existing context geometry and reset .gpr state
         if (state.cadmapperGroup) {
           scene.remove(state.cadmapperGroup);
@@ -1475,6 +1475,7 @@
                 minor_divisions:    0,
               },
               dxfFile,
+              osmGeoJSON,
             });
             // ── Save Project dialog ────────────────────────────────────
             try {

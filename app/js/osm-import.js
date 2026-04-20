@@ -592,6 +592,35 @@ function buildLayerGroups(osmData, THREE) {
 }
 
 
+// ── Convert Overpass JSON → WGS84 GeoJSON FeatureCollection ──────────────
+// Stored as context.geojson in the .gpr. Coordinates are [lng, lat] per GeoJSON spec.
+// All tags preserved as properties. _gprLayer matches LAYER_CONFIG keys.
+function osmToGeoJSON(osmData) {
+  const features = [];
+  for (const el of osmData.elements) {
+    if (el.type !== 'way') continue;
+    const coords = (el.geometry || []).map(n => [n.lon, n.lat]);
+    if (coords.length < 2) continue;
+
+    const tags    = el.tags || {};
+    const layer   = classifyWay(tags);
+    const isClosed = coords.length >= 4 &&
+      Math.abs(coords[0][0] - coords[coords.length-1][0]) < 0.000001 &&
+      Math.abs(coords[0][1] - coords[coords.length-1][1]) < 0.000001;
+
+    const geometry = isClosed
+      ? { type: 'Polygon',    coordinates: [coords] }
+      : { type: 'LineString', coordinates: coords };
+
+    features.push({
+      type: 'Feature',
+      properties: { ...tags, _osmId: el.id, _osmType: el.type, _gprLayer: layer },
+      geometry,
+    });
+  }
+  return { type: 'FeatureCollection', features };
+}
+
 // ── Run import ────────────────────────────────────────────────────────────
 async function runImport() {
   const lat    = parseFloat(document.getElementById('osm-lat').value);
@@ -631,8 +660,9 @@ async function runImport() {
     }
 
     closeModal();
-    const addressVal = document.getElementById('osm-address')?.value?.trim();
-    _callbacks.onLayersLoaded(layerGroups, null, addressVal || null);
+    const addressVal  = document.getElementById('osm-address')?.value?.trim();
+    const osmGeoJSON  = osmToGeoJSON(osmData);
+    _callbacks.onLayersLoaded(layerGroups, null, addressVal || null, osmGeoJSON);
 
     // Terrain + contours: disabled pending optimisation (causes main thread freeze)
     // TODO: move to Web Worker or add a separate "Load Terrain" button
