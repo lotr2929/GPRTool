@@ -82,8 +82,6 @@ class OrbitControls extends EventDispatcher {
     }
 
     update() {
-        this.target.add(this.panOffset);
-
         const offset = this.tempVec3;
 
         offset.copy(this.object.position).sub(this.target);
@@ -135,6 +133,7 @@ class OrbitControls extends EventDispatcher {
         if (event.button === 0 && event.shiftKey) {
             this.state = "pan";
             this.panStart.set(event.clientX, event.clientY);
+            this._panGround = this._screenToGround(event.clientX, event.clientY);
         } else if (event.button === 0) {
             this.state = "rotate";
             this.rotateStart.set(event.clientX, event.clientY);
@@ -158,23 +157,30 @@ class OrbitControls extends EventDispatcher {
             this.sphericalDelta.phi -= this.rotateDelta.y;
             this.rotateStart.copy(this.rotateEnd);
         } else if (this.state === "pan") {
-            this.panEnd.set(event.clientX, event.clientY);
-            this.panDelta.subVectors(this.panEnd, this.panStart);
-            this._pan(this.panDelta.x, this.panDelta.y);
-            this.panStart.copy(this.panEnd);
+            // Project current mouse onto ground plane; slide target so
+            // the world point stays under the cursor.
+            const curr = this._screenToGround(event.clientX, event.clientY);
+            if (this._panGround && curr) {
+                const delta = this._panGround.clone().sub(curr);
+                this.target.add(delta);
+                this._panGround = this._screenToGround(event.clientX, event.clientY);
+            }
         }
         this.update();
     }
 
-    _pan(deltaX, deltaY) {
-        const el = this.domElement;
-        const dist = this.object.position.distanceTo(this.target);
-        const scale = dist * Math.tan((this.object.fov / 2) * Math.PI / 180) * 2 / el.clientHeight;
-        const right = new Vector3().setFromMatrixColumn(this.object.matrix, 0);
-        const up    = new Vector3().setFromMatrixColumn(this.object.matrix, 1);
-        right.multiplyScalar(-deltaX * scale * this.panSpeed);
-        up.multiplyScalar(deltaY * scale * this.panSpeed);
-        this.panOffset.add(right).add(up);
+    // Project a screen point onto the Y=0 ground plane via camera ray
+    _screenToGround(clientX, clientY) {
+        const rect = this.domElement.getBoundingClientRect();
+        const ndcX =  ((clientX - rect.left) / rect.width)  * 2 - 1;
+        const ndcY = -((clientY - rect.top)  / rect.height) * 2 + 1;
+        const near = new Vector3(ndcX, ndcY, -1).unproject(this.object);
+        const far  = new Vector3(ndcX, ndcY,  1).unproject(this.object);
+        const dir  = new Vector3().subVectors(far, near).normalize();
+        if (Math.abs(dir.y) < 1e-6) return null;
+        const t = -near.y / dir.y;
+        if (t < 0) return null;
+        return near.clone().addScaledVector(dir, t);
     }
 
     onPointerUp() {

@@ -41,9 +41,9 @@ export function updateSceneHelpers(siteSpan) {
   const divisions = gridSize / cellSize;
 
   // CAD Universe grid — ALWAYS True North, NEVER rotates
-  state.gridHelper = new THREE.GridHelper(gridSize, divisions, 0x7a9070, 0xa0b090);
-  state.gridHelper.material.opacity     = 0.9;
-  state.gridHelper.material.transparent = true;
+  state.gridHelper = new THREE.GridHelper(gridSize, divisions, 0x2a4a30, 0x4a6a50);
+  state.gridHelper.material.opacity     = 1.0;
+  state.gridHelper.material.transparent = false;
   state.gridHelper.visible = (state.currentMode === '2d');
   state.scene.add(state.gridHelper);
 
@@ -59,7 +59,7 @@ export function updateSceneHelpers(siteSpan) {
   const axisLen = siteSpan * 0.3;
   const makeLine = (end, color) => {
     const geom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), end]);
-    const line = new THREE.Line(geom, new THREE.LineBasicMaterial({ color, depthTest: false }));
+    const line = new THREE.Line(geom, new THREE.LineBasicMaterial({ color, depthTest: false, transparent: true, opacity: 1.0 }));
     line.renderOrder = 999;
     return line;
   };
