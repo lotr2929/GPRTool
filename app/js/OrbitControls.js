@@ -64,6 +64,9 @@ class OrbitControls extends EventDispatcher {
         this.rotateStart = new Vector2();
         this.rotateEnd = new Vector2();
         this.rotateDelta = new Vector2();
+        this.panStart = new Vector2();
+        this.panEnd   = new Vector2();
+        this.panDelta = new Vector2();
 
         // Event bindings
         this.domElement.addEventListener("pointerdown", (e) =>
@@ -79,6 +82,8 @@ class OrbitControls extends EventDispatcher {
     }
 
     update() {
+        this.target.add(this.panOffset);
+
         const offset = this.tempVec3;
 
         offset.copy(this.object.position).sub(this.target);
@@ -127,7 +132,10 @@ class OrbitControls extends EventDispatcher {
     onPointerDown(event) {
         event.preventDefault();
 
-        if (event.button === 0) {
+        if (event.button === 0 && event.shiftKey) {
+            this.state = "pan";
+            this.panStart.set(event.clientX, event.clientY);
+        } else if (event.button === 0) {
             this.state = "rotate";
             this.rotateStart.set(event.clientX, event.clientY);
         }
@@ -146,13 +154,27 @@ class OrbitControls extends EventDispatcher {
             this.rotateDelta
                 .subVectors(this.rotateEnd, this.rotateStart)
                 .multiplyScalar(this.rotateSpeed * 0.005);
-
             this.sphericalDelta.theta -= this.rotateDelta.x;
             this.sphericalDelta.phi -= this.rotateDelta.y;
-
             this.rotateStart.copy(this.rotateEnd);
+        } else if (this.state === "pan") {
+            this.panEnd.set(event.clientX, event.clientY);
+            this.panDelta.subVectors(this.panEnd, this.panStart);
+            this._pan(this.panDelta.x, this.panDelta.y);
+            this.panStart.copy(this.panEnd);
         }
         this.update();
+    }
+
+    _pan(deltaX, deltaY) {
+        const el = this.domElement;
+        const dist = this.object.position.distanceTo(this.target);
+        const scale = dist * Math.tan((this.object.fov / 2) * Math.PI / 180) * 2 / el.clientHeight;
+        const right = new Vector3().setFromMatrixColumn(this.object.matrix, 0);
+        const up    = new Vector3().setFromMatrixColumn(this.object.matrix, 1);
+        right.multiplyScalar(-deltaX * scale * this.panSpeed);
+        up.multiplyScalar(deltaY * scale * this.panSpeed);
+        this.panOffset.add(right).add(up);
     }
 
     onPointerUp() {

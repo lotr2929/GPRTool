@@ -183,17 +183,6 @@
     state.controls3D.maxPolarAngle      = Math.PI * 0.85;
     state.controls3D.mouseButtons       = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
 
-    // Shift+left-click = pan in 3D
-    // capture:true fires BEFORE OrbitControls sees the event
-    state.renderer.domElement.addEventListener('pointerdown', e => {
-      if (state.currentMode !== '3d') return;
-      state.controls3D.mouseButtons.LEFT = (e.button === 0 && e.shiftKey)
-        ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
-    }, { capture: true });
-    state.renderer.domElement.addEventListener('pointerup', () => {
-      state.controls3D.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
-    }, { capture: true });
-
     state.controls3D.touches            = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
 
     const controls2D = { update: () => {}, saveState: () => {}, target: new THREE.Vector3() };
