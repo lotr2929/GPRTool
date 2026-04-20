@@ -47,6 +47,17 @@ export function updateSceneHelpers(siteSpan) {
   state.gridHelper.visible = (state.currentMode === '2d');
   state.scene.add(state.gridHelper);
 
+  // Minor grid — subdivisions within major cells
+  const minorDivs = state.manualMinorDivisions ?? 0;
+  if (minorDivs >= 2) {
+    const totalMinorDivisions = divisions * minorDivs;
+    state.gridHelperMinor = new THREE.GridHelper(gridSize, totalMinorDivisions, 0x3a5a40, 0x3a5a40);
+    state.gridHelperMinor.material.opacity     = 0.4;
+    state.gridHelperMinor.material.transparent = true;
+    state.gridHelperMinor.visible = (state.currentMode === '2d');
+    state.scene.add(state.gridHelperMinor);
+  }
+
   if (state.designGridManager) {
     state.designGridManager.setHorizontalExtent(gridSize / 2);
     state.designGridManager.setHorizontalSpacing(

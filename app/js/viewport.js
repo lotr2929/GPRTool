@@ -291,13 +291,15 @@ export function updateGridVisibility(forceMode) {
   const hasDN     = (getDesignNorthAngle() ?? 0) !== 0;
   const showDG    = inView && hasDN  && !!state.designGridManager?.grids?.size;
   const showCAD   = inView && !showDG;
-  if (state.gridHelper) state.gridHelper.visible = showCAD;
+  if (state.gridHelper)      state.gridHelper.visible      = showCAD;
+  if (state.gridHelperMinor) state.gridHelperMinor.visible = showCAD;
   if (state.designGridManager) state.designGridManager.setVisible(showDG);
 }
 
 export function setGridVisible(v) {
   if (!v) {
-    if (state.gridHelper) state.gridHelper.visible = false;
+    if (state.gridHelper)      state.gridHelper.visible      = false;
+    if (state.gridHelperMinor) state.gridHelperMinor.visible = false;
     if (state.designGridManager) state.designGridManager.setVisible(false);
   } else {
     updateGridVisibility();

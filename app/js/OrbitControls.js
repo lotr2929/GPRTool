@@ -157,30 +157,24 @@ class OrbitControls extends EventDispatcher {
             this.sphericalDelta.phi -= this.rotateDelta.y;
             this.rotateStart.copy(this.rotateEnd);
         } else if (this.state === "pan") {
-            // Project current mouse onto ground plane; slide target so
-            // the world point stays under the cursor.
-            const curr = this._screenToGround(event.clientX, event.clientY);
-            if (this._panGround && curr) {
-                const delta = this._panGround.clone().sub(curr);
-                this.target.add(delta);
-                this._panGround = this._screenToGround(event.clientX, event.clientY);
-            }
+            this.panEnd.set(event.clientX, event.clientY);
+            this.panDelta.subVectors(this.panEnd, this.panStart);
+            this._pan(this.panDelta.x, this.panDelta.y);
+            this.panStart.copy(this.panEnd);
         }
         this.update();
     }
 
-    // Project a screen point onto the Y=0 ground plane via camera ray
-    _screenToGround(clientX, clientY) {
-        const rect = this.domElement.getBoundingClientRect();
-        const ndcX =  ((clientX - rect.left) / rect.width)  * 2 - 1;
-        const ndcY = -((clientY - rect.top)  / rect.height) * 2 + 1;
-        const near = new Vector3(ndcX, ndcY, -1).unproject(this.object);
-        const far  = new Vector3(ndcX, ndcY,  1).unproject(this.object);
-        const dir  = new Vector3().subVectors(far, near).normalize();
-        if (Math.abs(dir.y) < 1e-6) return null;
-        const t = -near.y / dir.y;
-        if (t < 0) return null;
-        return near.clone().addScaledVector(dir, t);
+    // Slide target in the XZ ground plane along camera-relative axes.
+    // Right = camera X axis. Forward = worldUp × right (stays horizontal).
+    _pan(deltaX, deltaY) {
+        const dist = this.object.position.distanceTo(this.target);
+        const scale = dist * Math.tan(this.object.fov * Math.PI / 360)
+                      * 2 / this.domElement.clientHeight * this.panSpeed;
+        const right   = new Vector3().setFromMatrixColumn(this.object.matrix, 0);
+        const forward = new Vector3().crossVectors(right, new Vector3(0, 1, 0)).normalize();
+        this.target.addScaledVector(right,   -deltaX * scale);
+        this.target.addScaledVector(forward,  deltaY * scale);
     }
 
     onPointerUp() {
