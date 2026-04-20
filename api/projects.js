@@ -44,7 +44,7 @@ export default async function handler(req, res) {
   // ── LIST ────────────────────────────────────────────────────────────────
   if (req.method === 'GET' && action === 'list') {
     const { ok, data, status } = await sbFetch(
-      'gpr_projects?select=id,site_name,dxf_filename,file_size_bytes,has_boundary,wgs84_lat,wgs84_lng,created_at,updated_at&order=updated_at.desc'
+      'gpr_projects?select=id,folder,site_name,dxf_filename,file_size_bytes,has_boundary,wgs84_lat,wgs84_lng,created_at,updated_at&order=updated_at.desc'
     );
     if (!ok) return res.status(status).json({ error: 'Failed to list projects', detail: data });
     return res.status(200).json({ projects: data });
@@ -67,6 +67,7 @@ export default async function handler(req, res) {
     if (!site_name || !gpr_data) return res.status(400).json({ error: 'site_name and gpr_data required' });
 
     const payload = {
+      folder:       body.folder ?? 'GPR Projects',
       site_name, dxf_filename, gpr_data, file_size_bytes,
       has_boundary: !!has_boundary, wgs84_lat, wgs84_lng,
       updated_at: new Date().toISOString(),
@@ -96,6 +97,15 @@ export default async function handler(req, res) {
     const { ok, status } = await sbFetch(`gpr_projects?id=eq.${id}`, { method: 'DELETE' });
     if (!ok) return res.status(status).json({ error: 'Delete failed' });
     return res.status(200).json({ deleted: id });
+  }
+
+  // ── DELETE UNTITLED ──────────────────────────────────────────────────────
+  if (req.method === 'POST' && action === 'delete-untitled') {
+    const { ok, status, data } = await sbFetch(
+      `gpr_projects?site_name=eq.Untitled Site`, { method: 'DELETE' }
+    );
+    if (!ok) return res.status(status).json({ error: 'Delete failed', detail: data });
+    return res.status(200).json({ deleted: true });
   }
 
   return res.status(400).json({ error: 'Unknown action' });

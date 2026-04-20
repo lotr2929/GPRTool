@@ -11,7 +11,7 @@
     import {
       createInitialGPR, addBoundaryToGPR, openGPR, downloadGPR, getActiveGPRBlob,
     } from './gpr-file.js';
-    import { initProjects, showProjectsModal, saveProject, loadProject } from './projects.js';
+    import { initProjects, showProjectsModal, saveProject, loadProject, showSaveProjectDialog } from './projects.js';
     // ── DESIGN WORLD (grids, north angle) — never mixes with Real World ────────
     import { initSiteSelection }    from './site-selection.js';
     import { initCADMapperImport, buildLayerPanel, parseCadmapperDXF } from './cadmapper-import.js';
@@ -894,19 +894,10 @@
 
 
     /* ============================================================
-       OPEN GPR FILE — Recent Projects modal
+       OPEN PROJECT — File menu → Open Project…
     ============================================================ */
-    document.getElementById('openGPRBtn').addEventListener('click', () => {
-      showProjectsModal(async (file) => {
-        showFeedback('Opening project\u2026', 0);
-        try {
-          await openGPRFile(file);
-        } catch (err) {
-          console.error('[GPR open]', err);
-          showFeedback('Failed to open project: ' + err.message);
-        }
-      });
-    });
+    // openGPRBtn removed from left panel — access via File menu only
+    // openGPRFile() is a named function used by the modal callback below
 
     // ── Named function so both the modal callback and any future callers can use it ──
     async function openGPRFile(file) {
@@ -1320,7 +1311,14 @@
         else if (action === 'north-pointer')       { toggleNorthPoint(); toggleGizmo3D(); }
         else if (action === 'north-reset')         resetNorthPos();
         // Note: toggleNorthPoint / resetNorthPos imported from north-point-2d.js
+        else if (action === 'open-project')        showProjectsModal(async (file) => { try { await openGPRFile(file); } catch(e) { showFeedback('Failed to open: ' + e.message); } });
+        else if (action === 'new-project')         _newProject();
+        else if (action === 'save')                _saveCurrentProject();
+        else if (action === 'save-as')             _saveAsProject();
+        else if (action === 'import-osm')          document.getElementById('importOSMBtn')?.click();
+        else if (action === 'import-cadmapper')    document.getElementById('importCADMapperBtn')?.click();
         else if (action === 'import-model')        document.getElementById('import3DModelBtn')?.click();
+        else if (action === 'download-report')     showFeedback('Download GPR Report \u2014 coming soon');
         else    showFeedback(`${action} \u2014 coming soon`);
       }));
 
@@ -1473,17 +1471,17 @@
               },
               dxfFile,
             });
-            // ── Auto-save to Supabase project repository ───────────────
+            // ── Save Project dialog ────────────────────────────────────
             try {
               const blob = await getActiveGPRBlob();
               if (blob) {
-                saveProject(blob, {
-                  site_name:      siteName,
-                  dxf_filename:   dxfFile?.name ?? null,
-                  has_boundary:   false,
-                  wgs84_lat:      anchor.lat,
-                  wgs84_lng:      anchor.lng,
-                }).catch(e => console.warn('[GPR] Supabase save failed:', e));
+                await showSaveProjectDialog({
+                  blob,
+                  defaultName: siteName,
+                  lat: anchor.lat,
+                  lng: anchor.lng,
+                  dxfFilename: dxfFile?.name ?? null,
+                });
               }
             } catch (_) { /* non-critical */ }
             buildBoundaryPanel(wgs84Bounds, false);
@@ -1496,6 +1494,48 @@
           showFeedback(`Context loaded \u2014 ${Object.keys(layerGroups).length} layers: ${Object.keys(layerGroups).join(', ')}`);
         }
     };  // end onLayersLoaded
+
+    // ── Project actions wired from File menu ──────────────────────────────
+    async function _newProject() {
+      if (state.cadmapperGroup || state.importedModel) {
+        if (!confirm('Save current project before starting a new one?')) {
+          document.getElementById('clearSiteBtn')?.click();
+          return;
+        }
+        await _saveCurrentProject();
+      }
+      document.getElementById('clearSiteBtn')?.click();
+    }
+
+    async function _saveCurrentProject() {
+      const blob = await getActiveGPRBlob().catch(() => null);
+      if (!blob) { showFeedback('Nothing to save — import a site first.'); return; }
+      const anchor = getRealWorldAnchor();
+      if (!confirm('Save — overwrite current project?')) return;
+      try {
+        await saveProject(blob, {
+          id:           state._activeProjectId ?? undefined,
+          site_name:    state._activeProjectName ?? 'Untitled Site',
+          has_boundary: !!state.siteBoundaryLine,
+          wgs84_lat:    anchor?.lat,
+          wgs84_lng:    anchor?.lng,
+        });
+        showFeedback('Project saved.');
+      } catch (e) { showFeedback('Save failed: ' + e.message); }
+    }
+
+    async function _saveAsProject() {
+      const blob = await getActiveGPRBlob().catch(() => null);
+      if (!blob) { showFeedback('Nothing to save — import a site first.'); return; }
+      const anchor = getRealWorldAnchor();
+      await showSaveProjectDialog({
+        blob,
+        defaultName: state._activeProjectName ?? 'Untitled Site',
+        lat: anchor?.lat,
+        lng: anchor?.lng,
+        dxfFilename: null,
+      });
+    }
 
     initCADMapperImport({ THREE, onLayersLoaded });
     initOSMImport({ THREE, onLayersLoaded });

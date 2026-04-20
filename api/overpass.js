@@ -52,9 +52,13 @@ export default async function handler(req, res) {
     try {
       const upstream = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'GPRTool/1.0 (green-plot-ratio research tool; contact@gprtool.app)',
+          'Accept': 'application/json',
+        },
         body: 'data=' + encodeURIComponent(query),
-        signal: AbortSignal.timeout(55000), // Vercel max 60s; leave margin
+        signal: AbortSignal.timeout(55000),
       });
       if (!upstream.ok) {
         lastErr = new Error(`Overpass ${url} returned ${upstream.status}`);
