@@ -40,18 +40,19 @@ async function extractGPRContents(gpr_data_b64) {
     const binary = Buffer.from(gpr_data_b64, 'base64');
     const contents = [];
     let offset = 0;
-    while (offset < binary.length - 4) {
-      const sig = binary.readUInt32LE(offset);
-      if (sig !== 0x04034b50) break; // local file header signature
-      const compSize   = binary.readUInt32LE(offset + 18);
-      const uncompSize = binary.readUInt32LE(offset + 22);
-      const nameLen    = binary.readUInt16LE(offset + 26);
-      const extraLen   = binary.readUInt16LE(offset + 28);
-      const name       = binary.slice(offset + 30, offset + 30 + nameLen).toString('utf8');
+    while (offset < binary.length - 30) {
+      // Local file header: PK\x03\x04
+      if (binary[offset]!==0x50||binary[offset+1]!==0x4B||binary[offset+2]!==0x03||binary[offset+3]!==0x04) break;
+      const compSize   = binary[offset+18] | (binary[offset+19]<<8) | (binary[offset+20]<<16) | (binary[offset+21]<<24);
+      const uncompSize = binary[offset+22] | (binary[offset+23]<<8) | (binary[offset+24]<<16) | (binary[offset+25]<<24);
+      const nameLen    = binary[offset+26] | (binary[offset+27]<<8);
+      const extraLen   = binary[offset+28] | (binary[offset+29]<<8);
+      const name       = binary.slice(offset+30, offset+30+nameLen).toString('utf8');
       if (!name.endsWith('/')) contents.push({ name, size_bytes: uncompSize });
       offset += 30 + nameLen + extraLen + compSize;
+      if (compSize === 0 && !name.endsWith('/')) break; // safety: avoid infinite loop on empty files
     }
-    return contents;
+    return contents.length ? contents : null;
   } catch { return null; }
 }
 
