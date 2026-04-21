@@ -66,7 +66,14 @@
       showCesiumView();
     }).catch(err => console.warn('[Cesium init]', err));
 
-    // ── Import from Cesium ─────────────────────────────────────────────────
+    // ── Advanced section toggle ────────────────────────────────────────────
+    document.getElementById('advanced-toggle')?.addEventListener('click', () => {
+      const body  = document.getElementById('advanced-body');
+      const arrow = document.getElementById('advanced-arrow');
+      const open  = body.style.display === 'none';
+      body.style.display  = open ? 'block' : 'none';
+      arrow.style.transform = open ? 'rotate(0deg)' : 'rotate(-90deg)';
+    });
     // Uses the current Cesium camera position as the site anchor.
     // Fetches OSM data for that location, saves .gpr with source:'cesium'.
     document.getElementById('importCesiumBtn')?.addEventListener('click', _importFromCesium);
