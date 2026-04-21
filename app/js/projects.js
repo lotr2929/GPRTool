@@ -175,10 +175,6 @@ export function showSaveProjectDialog({ blob, blobGetter, defaultName, lat, lng,
           <div class="spd-row" data-id="${p.id}" data-name="${p.site_name.replace(/"/g,'&quot;')}"
             style="display:flex;align-items:center;gap:10px;padding:8px 14px;
             cursor:pointer;border-bottom:1px solid var(--chrome-border);">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"
-              stroke="var(--accent-mid,#4a8a4a)" stroke-width="1.3">
-              <path d="M2 3h4l1.5 2H14v8H2V3z"/>
-            </svg>
             <span style="flex:1;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
               ${p.site_name}</span>
             <span style="font-size:10px;color:var(--text-secondary);">
@@ -186,13 +182,13 @@ export function showSaveProjectDialog({ blob, blobGetter, defaultName, lat, lng,
           </div>`).join('')
         : `<div style="padding:20px;text-align:center;font-size:12px;color:var(--text-secondary);">
             No existing projects</div>`;
-      // Re-wire row clicks
+            // Re-wire row clicks
       listEl.querySelectorAll('.spd-row').forEach(row => {
         row.addEventListener('click', () => {
           listEl.querySelectorAll('.spd-row').forEach(r => r.style.background = '');
           selectedId = row.dataset.id;
           nameInput.value = row.dataset.name;
-          row.style.background = 'var(--accent-dark,#1e3d1e)';
+          row.style.background = 'rgba(74,138,74,0.18)'; // light green highlight
         });
       });
     }).catch(() => {

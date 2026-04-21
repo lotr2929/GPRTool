@@ -60,21 +60,13 @@
     initUI();
     initGeo({ onMapCleared: () => setGridVisible(state.currentMode === '2d') });
 
-    // ── Cesium viewer — boots asynchronously; tiles load in background ────
+    // ── Cesium viewer — boots asynchronously; globe sits still on load ────
     initCesiumViewer('cesium-container').then(() => {
       showCesiumView();
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          pos => flyToSite(pos.coords.latitude, pos.coords.longitude, 800),
-          ()  => flyToSite(-31.9505, 115.8605, 800),
-          { timeout: 6000, maximumAge: 300000 }
-        );
-      } else {
-        flyToSite(-31.9505, 115.8605, 800);
-      }
+      // No auto-fly on load — user decides where to go via geo-bar or Locate Site
     }).catch(err => console.warn('[Cesium init]', err));
 
-    // ── Geo-bar — shown on first load, requests location permission ────────
+    // ── Geo-bar — shown only when location permission not yet decided ──────
     (function initGeoBar() {
       const bar     = document.getElementById('geo-bar');
       const msg     = document.getElementById('geo-bar-msg');
@@ -84,9 +76,19 @@
       const closeBtn= document.getElementById('geo-bar-close');
       if (!bar) return;
 
-      // Show bar only if location not already granted
+      // Only show bar when permission is 'prompt' — not granted, not denied
       navigator.permissions?.query({ name: 'geolocation' }).then(perm => {
-        if (perm.state === 'granted') return; // already have it — Cesium already flew there
+        if (perm.state !== 'prompt') {
+          // Already granted — fly there silently, no bar needed
+          if (perm.state === 'granted') {
+            navigator.geolocation.getCurrentPosition(
+              pos => flyToSite(pos.coords.latitude, pos.coords.longitude, 800),
+              () => {},
+              { timeout: 6000, maximumAge: 300000 }
+            );
+          }
+          return;
+        }
         bar.style.display = 'flex';
       }).catch(() => bar.style.display = 'flex'); // fallback if permissions API unavailable
 
@@ -1633,16 +1635,19 @@
 
           buildBoundaryPanel(wgs84Bounds, false, !dxfFile ? _startCesiumBoundaryDraw : null);
 
-          // ── OSM path: fly Cesium to site; CADMapper stays in Three.js ────
+          // ── OSM path: Cesium stays visible; CADMapper uses Three.js ────
           if (!dxfFile && anchor) {
-            showCesiumView();
+            // Keep Cesium visible — fly to site location
             flyToSite(anchor.lat, anchor.lng, 350);
             setStage('locate', 'done', `\u2713 ${siteName}`);
             setStage('extract', 'pending', 'Switch to 2D and extract site');
+            showFeedback('Site loaded \u2014 Extract Site Segment when ready');
           } else {
+            // CADMapper — Three.js canvas
             showThreeJSView();
             setStage('locate', 'done', `\u2713 ${siteName}`);
             setStage('extract', 'pending', 'Switch to 2D and extract site');
+            showFeedback('Project saved \u2014 Extract Site Segment when ready');
           }
         } else {
           showFeedback(`Context loaded \u2014 ${Object.keys(layerGroups ?? {}).length} layers`);
