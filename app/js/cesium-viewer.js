@@ -90,13 +90,48 @@ export async function initCesiumViewer(containerId) {
   // Resize Cesium canvas when window resizes
   window.addEventListener('resize', () => _viewer?.resize());
 
-  // Inject HUD overlay
+  // Altitude readout only — no HUD buttons
+  _viewer.scene.postRender.addEventListener(_updateAltitude);
+
+  // Auto-rotate globe on startup
+  _startAutoRotate();
+
+  // Inject minimal HUD (altitude only)
   _injectHUD();
 
-  // Live altitude readout
-  _viewer.scene.postRender.addEventListener(_updateHUD);
+  // Stop auto-rotate on any user interaction
+  _viewer.scene.canvas.addEventListener('mousedown', () => { _autoRotating = false; }, { once: false });
+  _viewer.scene.canvas.addEventListener('wheel',     () => { _autoRotating = false; }, { once: false });
 
   return _viewer;
+}
+
+// ── Auto-rotate ───────────────────────────────────────────────────────────
+let _autoRotating = true;
+
+function _startAutoRotate() {
+  if (!_viewer) return;
+  _viewer.clock.shouldAnimate = true;
+  _viewer.scene.postRender.addEventListener(() => {
+    if (!_autoRotating) return;
+    _viewer.camera.rotateRight(0.0008);
+  });
+}
+
+/** Stop auto-rotate (called when user interacts with the globe). */
+export function stopAutoRotate() {
+  _autoRotating = false;
+}
+
+function _updateAltitude() {
+  const el = document.getElementById('cesium-alt');
+  if (!el || !_viewer) return;
+  const pos = _viewer.camera.positionCartographic;
+  if (!pos) return;
+  const alt = pos.height;
+  el.textContent = alt < 1000
+    ? `Alt ${alt.toFixed(0)} m`
+    : `Alt ${(alt / 1000).toFixed(2)} km`;
 }
 
 function _injectHUD() {
@@ -104,36 +139,14 @@ function _injectHUD() {
   const hud = document.createElement('div');
   hud.id = 'cesium-hud';
   hud.style.cssText = `
-    position:absolute; bottom:36px; right:16px; z-index:10;
+    position:absolute; bottom:12px; right:16px; z-index:10;
     display:flex; gap:6px; align-items:center;
-    background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.15);
-    border-radius:6px; padding:5px 10px; pointer-events:all;
-    font:11px/1.4 'Segoe UI',sans-serif; color:#ccc;
+    pointer-events:none;
+    font:11px/1.4 'Segoe UI',sans-serif; color:rgba(255,255,255,0.6);
   `;
-  hud.innerHTML = `
-    <span id="cesium-alt" style="min-width:80px; color:#90c890;"></span>
-    <button id="cesium-btn-2d" title="Top-down 2D view" style="
-      background:rgba(255,255,255,0.12);color:#fff;border:none;
-      border-radius:3px;padding:3px 10px;font-size:11px;cursor:pointer;">
-      2D / Top
-    </button>
-    <button id="cesium-btn-street" title="Street level view" style="
-      background:rgba(255,255,255,0.12);color:#fff;border:none;
-      border-radius:3px;padding:3px 10px;font-size:11px;cursor:pointer;">
-      Street Level
-    </button>
-  `;
+  hud.innerHTML = `<span id="cesium-alt"></span>`;
   document.getElementById('cesium-container')?.appendChild(hud);
-  document.getElementById('cesium-btn-2d')?.addEventListener('click', setCesium2D);
-  document.getElementById('cesium-btn-street')?.addEventListener('click', setCesiumStreetLevel);
 }
-
-function _updateHUD() {
-  const el = document.getElementById('cesium-alt');
-  if (!el || !_viewer) return;
-  const pos = _viewer.camera.positionCartographic;
-  if (!pos) return;
-  const alt = pos.height;
   el.textContent = alt < 1000
     ? `Alt ${alt.toFixed(0)} m`
     : `Alt ${(alt / 1000).toFixed(2)} km`;

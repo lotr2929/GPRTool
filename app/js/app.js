@@ -1494,7 +1494,7 @@
           ? manualGridSpacing
           : (rawCell < 50 ? 50 : rawCell < 100 ? 100 : rawCell < 250 ? 250 : 500);
         if (state.dgSpacing === null) state.dgSpacing = cellSize;
-        if (state.dgMinorDivisions === null) state.dgMinorDivisions = 0;
+        if (state.dgMinorDivisions === null) state.dgMinorDivisions = 10; // 10 subdivisions
 
         state.designGridManager.initHorizontal(
           state.dgSpacing, state.dgMinorDivisions, 5000, new THREE.Vector3(0, 0, 0)
@@ -1536,7 +1536,7 @@
           }, 500);
         }
 
-        // ── Create initial .gpr file ───────────────────────────────────────
+        // ── Create .gpr eagerly in background (non-blocking) ─────────────
         if (hasRealWorldAnchor()) {
           const anchor   = getRealWorldAnchor();
           const siteName = dxfFile
@@ -1545,42 +1545,44 @@
               ? `OSM — ${osmAddress}`
               : 'Untitled Site';
           state._activeProjectName = siteName;
-          setPipelineStatus('Saving project\u2026', 'busy');
+          setPipelineStatus('Ready to save', 'idle');
 
-          // ── Show save dialog IMMEDIATELY — .gpr creation runs lazily on Save ──
-          // blobGetter is called only when user clicks Save, not before.
-          showSaveProjectDialog({
-            blobGetter: async () => {
-              await createInitialGPR({
-                siteName,
-                reference: {
-                  utm_zone:       anchor.zone,
-                  utm_easting:    anchor.easting,
-                  utm_northing:   anchor.northing,
-                  utm_hemisphere: anchor.hemisphere,
-                  wgs84_lat:      anchor.lat,
-                  wgs84_lng:      anchor.lng,
-                  scene_offset_x: centre.x,
-                  scene_offset_z: centre.z,
-                  site_span_m:    siteSpan,
-                },
-                design: {
-                  design_north_angle: 0,
-                  grid_spacing_m:     cellSize,
-                  minor_divisions:    0,
-                },
-                dxfFile,
-                osmGeoJSON,
-              });
-              return getActiveGPRBlob();
+          // Build .gpr ZIP in background — don't await, doesn't block UI
+          createInitialGPR({
+            siteName,
+            reference: {
+              utm_zone:       anchor.zone,
+              utm_easting:    anchor.easting,
+              utm_northing:   anchor.northing,
+              utm_hemisphere: anchor.hemisphere,
+              wgs84_lat:      anchor.lat,
+              wgs84_lng:      anchor.lng,
+              scene_offset_x: centre.x,
+              scene_offset_z: centre.z,
+              site_span_m:    siteSpan,
             },
-            defaultName: siteName,
-            lat: anchor.lat,
-            lng: anchor.lng,
-            dxfFilename: dxfFile?.name ?? null,
-          }).then(saved => {
-            setPipelineStatus(saved ? '\u2713 Project saved' : 'Ready', saved ? 'done' : 'idle');
-          }).catch(() => setPipelineStatus('Save failed', 'error'));
+            design: {
+              design_north_angle: 0,
+              grid_spacing_m:     cellSize,
+              minor_divisions:    10,
+            },
+            dxfFile,
+            osmGeoJSON,
+          }).then(() => {
+            // .gpr is ready — show save dialog immediately
+            // Dialog closes instantly on Save; Supabase upload runs in background
+            showSaveProjectDialog({
+              blobGetter: () => getActiveGPRBlob(),
+              defaultName: siteName,
+              lat: anchor.lat,
+              lng: anchor.lng,
+              dxfFilename: dxfFile?.name ?? null,
+            }).then(saved => {
+              setPipelineStatus(saved ? '\u2713 Saved' : 'Ready', saved ? 'done' : 'idle');
+            }).catch(() => {});
+          }).catch(err => {
+            console.warn('[GPR] .gpr creation failed:', err);
+          });
 
           buildBoundaryPanel(wgs84Bounds, false, !dxfFile ? _startCesiumBoundaryDraw : null);
 

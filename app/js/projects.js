@@ -215,10 +215,12 @@ export function showSaveProjectDialog({ blob, blobGetter, defaultName, lat, lng,
       saveBtn.disabled = true; saveBtn.textContent = 'Saving\u2026';
       errEl.style.display = 'none';
       try {
-        // Resolve blob — either direct or via lazy getter (blobGetter runs .gpr creation)
+        // Resolve blob — either direct or via lazy getter
         const resolvedBlob = blob ?? (blobGetter ? await blobGetter() : null);
         if (!resolvedBlob) throw new Error('No project data to save');
-        await saveProject(resolvedBlob, {
+        // Close dialog immediately — Supabase upload runs in background
+        close(true);
+        saveProject(resolvedBlob, {
           id:           overId ?? undefined,
           site_name:    name,
           folder:       'GPR Projects',
@@ -226,8 +228,7 @@ export function showSaveProjectDialog({ blob, blobGetter, defaultName, lat, lng,
           has_boundary: false,
           wgs84_lat:    lat,
           wgs84_lng:    lng,
-        });
-        close(true);
+        }).catch(e => console.warn('[GPR] Background save failed:', e));
       } catch (e) {
         saveBtn.disabled = false; saveBtn.textContent = 'Save';
         errEl.textContent = 'Save failed: ' + e.message;
