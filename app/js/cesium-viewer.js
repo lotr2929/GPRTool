@@ -154,23 +154,27 @@ export const isCesiumReady   = () => _ready;
 // ── Exclusive render state switching ──────────────────────────────────────
 // Cesium and Three.js are two separate rendering states — never both visible.
 
-/** Activate Cesium — hide Three.js canvas completely. */
+/** Activate Cesium — hide Three.js canvas and design overlays. */
 export function showCesiumView() {
   const cesiumEl = document.getElementById('cesium-container');
   const canvas   = document.getElementById('three-canvas');
+  const np       = document.getElementById('np-container');
   if (cesiumEl) cesiumEl.style.display = 'block';
   if (canvas)   canvas.style.display   = 'none';
+  if (np)       np.style.display       = 'none';
 }
 
-/** Activate Three.js — hide Cesium completely. */
+/** Activate Three.js — hide Cesium, show design overlays. */
 export function showThreeJSView() {
   const cesiumEl = document.getElementById('cesium-container');
   const canvas   = document.getElementById('three-canvas');
+  const np       = document.getElementById('np-container');
   if (cesiumEl) cesiumEl.style.display = 'none';
   if (canvas) {
     canvas.style.display = 'block';
-    window.dispatchEvent(new Event('resize')); // recalculate renderer dimensions
+    window.dispatchEvent(new Event('resize'));
   }
+  if (np) np.style.display = 'block';
 }
 
 // ── Camera view presets ───────────────────────────────────────────────────

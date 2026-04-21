@@ -17,33 +17,19 @@
         </div>
         <div class="section-body">
 
-          <!-- Stage 1: Locate Site -->
+          <!-- Stage 1 -->
           <div class="pipeline-stage" id="stage-locate" data-stage="pending">
-            <div class="stage-indicator">
-              <span class="stage-num">1</span>
-              <div class="stage-info">
-                <span class="stage-label">Locate Site</span>
-                <span class="stage-status" id="stage-locate-status">Set a location to begin</span>
-              </div>
-            </div>
-            <button class="command-btn stage-btn" id="importOSMBtn" title="Search address and fetch OSM map data">
-              <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c-2 2-3 4-3 6s1 4 3 6M8 2c2 2 3 4 3 6s-1 4-3 6"/></svg>
-              Set Location&#8230;
+            <button class="command-btn stage-btn" id="importOSMBtn">
+              <span class="stage-num-inline">1</span>
+              <span id="stage-locate-status">Locate Site&#8230;</span>
             </button>
           </div>
 
-          <!-- Stage 2: Extract Site Segment -->
+          <!-- Stage 2 -->
           <div class="pipeline-stage" id="stage-extract" data-stage="locked">
-            <div class="stage-indicator">
-              <span class="stage-num">2</span>
-              <div class="stage-info">
-                <span class="stage-label">Extract Site Segment</span>
-                <span class="stage-status" id="stage-extract-status">Complete stage 1 first</span>
-              </div>
-            </div>
-            <button class="command-btn stage-btn" id="extractSiteBtn" disabled title="Switch to 2D and draw a rectangle to extract the site segment">
-              <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="2" width="12" height="12" rx="1"/><path d="M5 2v12M11 2v12M2 5h12M2 11h12"/></svg>
-              Extract Segment&#8230;
+            <button class="command-btn stage-btn" id="extractSiteBtn" disabled>
+              <span class="stage-num-inline">2</span>
+              <span id="stage-extract-status">Extract Segment&#8230;</span>
             </button>
           </div>
 
@@ -68,8 +54,7 @@
             </div>
           </div>
 
-          <!-- Clear Site — shown only when site is loaded -->
-          <button class="command-btn btn-danger" id="clearSiteBtn" style="display:none;margin-top:6px;" title="Remove current site and all content">
+          <button class="command-btn btn-danger" id="clearSiteBtn" style="display:none;margin-top:6px;" title="Remove current site">
             <svg class="tool-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 3l10 10M13 3L3 13"/></svg>
             Clear Site
           </button>
@@ -196,15 +181,13 @@
 
   <!-- Center: Viewport -->
   <main id="viewport" class="viewport">
-    <!-- Cesium viewer — Google Photorealistic 3D Tiles (z-index 1, background) -->
-    <div id="cesium-container" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;"></div>
-    <!-- Three.js canvas — CADMapper design overlays (z-index 2, above Cesium) -->
-    <canvas id="three-canvas" style="position:absolute;inset:0;width:100%;height:100%;display:block;z-index:2;"></canvas>
+    <!-- Cesium viewer — starts visible, Three.js hidden until OSM loads -->
+    <div id="cesium-container" style="position:absolute;inset:0;width:100%;height:100%;"></div>
+    <!-- Three.js canvas — hidden until OSM/CADMapper geometry is ready -->
+    <canvas id="three-canvas" style="position:absolute;inset:0;width:100%;height:100%;display:none;"></canvas>
 
-    <!-- North Point 2D compass
-         #np-container : position + size only — NEVER rotated
-         #np-rotator   : rotation only — NEVER positioned -->
-    <div id="np-container" title="North Point — drag to move, corner-drag to resize">
+    <!-- North Point 2D compass — only shown in Three.js mode -->
+    <div id="np-container" title="North Point — drag to move, corner-drag to resize" style="display:none;">
       <div id="np-rotator">
         <svg viewBox="0 0 64 72" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
           <!-- Housing: circle + cardinal ticks. Rotates with designNorthAngle. -->

@@ -593,9 +593,23 @@ body {
 
 /* ── Pipeline stages (left panel) ────────────────────────────────────── */
 .pipeline-stage {
-  padding: 8px 0 10px;
-  border-bottom: 1px solid var(--chrome-border);
+  padding: 4px 0;
 }
+.stage-num-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--accent-mid, #4a8a4a);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.pipeline-stage[data-stage="locked"]   .stage-btn { opacity: 0.4; pointer-events: none; }
+.pipeline-stage[data-stage="done"]     .stage-num-inline { background: var(--accent-dark, #2d6b2d); }
+.pipeline-stage[data-stage="active"]   .stage-btn { border-color: var(--accent-mid,#4a8a4a); }
 .pipeline-stage:last-of-type { border-bottom: none; }
 
 .stage-indicator {

@@ -93,6 +93,7 @@ export function setStage(stageId, stageState, statusText) {
   if (el) el.dataset.state = stageState;
   const btn = el?.querySelector('.stage-btn');
   if (btn) btn.disabled = (stageState === 'locked');
+  // Update button label text (stage-X-status is now inside the button)
   const statusEl = document.getElementById(`stage-${stageId}-status`);
   if (statusEl && statusText !== undefined) statusEl.textContent = statusText;
 }
