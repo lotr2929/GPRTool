@@ -591,34 +591,6 @@ body {
 .pipeline-status[data-state="error"] { background: rgba(220,80,80,0.18);  color: #e06060; border: 1px solid rgba(220,80,80,0.35); }
 .pipeline-status[data-state="idle"]  { background: rgba(255,255,255,0.07); color: #aaa;  border: 1px solid rgba(255,255,255,0.12); }
 
-/* ── Geolocation notification bar ────────────────────────────────────── */
-#geo-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 16px;
-  background: var(--chrome-dark, #1e3d1e);
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-  font-size: 11px;
-  color: rgba(255,255,255,0.85);
-  flex-wrap: wrap;
-  position: relative;
-  z-index: 50;
-}
-#geo-bar button {
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 3px;
-  color: #fff;
-  font-size: 11px;
-  padding: 3px 10px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-#geo-bar button:hover { background: rgba(255,255,255,0.22); }
-#geo-bar #geo-bar-allow { background: rgba(74,138,74,0.5); border-color: rgba(74,138,74,0.7); }
-#geo-bar #geo-bar-close { background: none; border: none; color: rgba(255,255,255,0.4); font-size: 14px; padding: 0 4px; }
-
 /* ── Pipeline stages (left panel) ────────────────────────────────────── */
 .pipeline-stage {
   padding: 8px 0 10px;

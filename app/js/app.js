@@ -60,66 +60,11 @@
     initUI();
     initGeo({ onMapCleared: () => setGridVisible(state.currentMode === '2d') });
 
-    // ── Cesium viewer — boots asynchronously; globe sits still on load ────
+    // ── Cesium viewer — globe on load, no auto-fly, no permissions ────────
+    // User navigates manually or via Locate Site → Set Location modal.
     initCesiumViewer('cesium-container').then(() => {
       showCesiumView();
-      // No auto-fly on load — user decides where to go via geo-bar or Locate Site
     }).catch(err => console.warn('[Cesium init]', err));
-
-    // ── Geo-bar — shown only when location permission not yet decided ──────
-    (function initGeoBar() {
-      const bar     = document.getElementById('geo-bar');
-      const msg     = document.getElementById('geo-bar-msg');
-      const input   = document.getElementById('geo-bar-input');
-      const goBtn   = document.getElementById('geo-bar-go');
-      const allowBtn= document.getElementById('geo-bar-allow');
-      const closeBtn= document.getElementById('geo-bar-close');
-      if (!bar) return;
-
-      // Only show bar when permission is 'prompt' — not granted, not denied
-      navigator.permissions?.query({ name: 'geolocation' }).then(perm => {
-        if (perm.state !== 'prompt') {
-          // Already granted — fly there silently, no bar needed
-          if (perm.state === 'granted') {
-            navigator.geolocation.getCurrentPosition(
-              pos => flyToSite(pos.coords.latitude, pos.coords.longitude, 800),
-              () => {},
-              { timeout: 6000, maximumAge: 300000 }
-            );
-          }
-          return;
-        }
-        bar.style.display = 'flex';
-      }).catch(() => bar.style.display = 'flex'); // fallback if permissions API unavailable
-
-      const dismiss = () => { bar.style.display = 'none'; };
-
-      allowBtn.addEventListener('click', () => {
-        navigator.geolocation.getCurrentPosition(pos => {
-          flyToSite(pos.coords.latitude, pos.coords.longitude, 800);
-          dismiss();
-        }, () => { msg.textContent = 'Location access denied.'; setTimeout(dismiss, 2000); });
-      });
-
-      goBtn.addEventListener('click', async () => {
-        const q = input.value.trim();
-        if (!q) return;
-        try {
-          const res  = await fetch(`/api/geocode?address=${encodeURIComponent(q)}`);
-          const data = await res.json();
-          if (data.results?.length) {
-            const { lat, lng } = data.results[0];
-            flyToSite(lat, lng, 500);
-            dismiss();
-          } else {
-            msg.textContent = 'Address not found.';
-          }
-        } catch { msg.textContent = 'Search failed.'; }
-      });
-
-      input.addEventListener('keydown', e => { if (e.key === 'Enter') goBtn.click(); });
-      closeBtn.addEventListener('click', dismiss);
-    })();
 
     // ── Import from Cesium ─────────────────────────────────────────────────
     // Uses the current Cesium camera position as the site anchor.
@@ -1558,6 +1503,10 @@
         fit3DCamera(new THREE.Box3().setFromObject(state.cadmapperGroup));
         switchMode('3d');
 
+        // ── Switch viewport: Cesium → Three.js now that geometry is ready ─
+        // For both OSM and CADMapper: Three.js canvas takes over once geometry is built.
+        showThreeJSView();
+
         document.getElementById('empty-props').style.display       = 'none';
         document.getElementById('clearSiteBtn').style.display      = 'block';
         document.getElementById('left-panel').classList.add('site-imported');
@@ -1635,20 +1584,10 @@
 
           buildBoundaryPanel(wgs84Bounds, false, !dxfFile ? _startCesiumBoundaryDraw : null);
 
-          // ── OSM path: Cesium stays visible; CADMapper uses Three.js ────
-          if (!dxfFile && anchor) {
-            // Keep Cesium visible — fly to site location
-            flyToSite(anchor.lat, anchor.lng, 350);
-            setStage('locate', 'done', `\u2713 ${siteName}`);
-            setStage('extract', 'pending', 'Switch to 2D and extract site');
-            showFeedback('Site loaded \u2014 Extract Site Segment when ready');
-          } else {
-            // CADMapper — Three.js canvas
-            showThreeJSView();
-            setStage('locate', 'done', `\u2713 ${siteName}`);
-            setStage('extract', 'pending', 'Switch to 2D and extract site');
-            showFeedback('Project saved \u2014 Extract Site Segment when ready');
-          }
+          // ── Stage indicators ──────────────────────────────────────────
+          setStage('locate', 'done', `\u2713 ${siteName}`);
+          setStage('extract', 'pending', 'Switch to 2D and extract site');
+          showFeedback('Site loaded \u2014 Extract Segment when ready');
         } else {
           showFeedback(`Context loaded \u2014 ${Object.keys(layerGroups ?? {}).length} layers`);
         }

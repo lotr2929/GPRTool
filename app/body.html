@@ -1,16 +1,4 @@
 <!-- Main Content Area -->
-<!-- Geolocation notification bar — shown once on load, just below header -->
-<div id="geo-bar" style="display:none;">
-  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="5"/><line x1="8" y1="1" x2="8" y2="4"/><line x1="8" y1="12" x2="8" y2="15"/><line x1="1" y1="8" x2="4" y2="8"/><line x1="12" y1="8" x2="15" y2="8"/></svg>
-  <span id="geo-bar-msg">Allow location access to open the map at your current location?</span>
-  <input id="geo-bar-input" type="text" placeholder="Or type an address&#8230;" autocomplete="off"
-    style="flex:1;min-width:180px;max-width:320px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:3px;color:#fff;font-size:11px;padding:3px 8px;outline:none;"
-    onkeydown="if(event.key==='Enter')document.getElementById('geo-bar-go').click()">
-  <button id="geo-bar-go">Go</button>
-  <button id="geo-bar-allow">Allow location</button>
-  <button id="geo-bar-close" title="Close">&#x2715;</button>
-</div>
-
 <div id="main-container">
 
   <!-- Left Panel: Tools -->
