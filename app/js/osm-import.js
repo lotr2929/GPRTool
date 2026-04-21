@@ -19,6 +19,7 @@
 import { setRealWorldAnchor, utmToWGS84, wgs84ToScene, wgs84ToUTM } from './real-world.js';
 import { state } from './state.js';
 import { buildLayerPanel } from './cadmapper-import.js';
+import { startLocationPick, stopLocationPick } from './cesium-viewer.js';
 
 // ── Layer config — mirrors cadmapper-import.js LAYER_CONFIG ──────────────
 const LAYER_CONFIG = {
@@ -46,69 +47,72 @@ let _callbacks = null;
 let THREE      = null;  // set from callbacks at init, used by all geometry builders
 
 // ── Modal HTML ────────────────────────────────────────────────────────────
-// Simplified: no embedded Google Maps picker — Cesium IS the map now.
-// User enters address or clicks coordinates, then imports.
+// Non-blocking top bar — Cesium 3D scene remains fully visible and clickable
+// underneath. User clicks the 3D scene to pick their site location.
 const MODAL_HTML = `
 <div id="osm-overlay" style="
-  display:none; position:fixed; inset:0; z-index:1100;
-  background:rgba(0,0,0,0.55); align-items:flex-start; justify-content:center;
-  padding-top:80px;">
+  display:none; position:fixed; top:52px; left:0; right:0; z-index:1100;
+  pointer-events:none;">
 
   <div style="
-    background:var(--chrome-panel,#2a2a2a); border:1px solid var(--chrome-border);
-    border-radius:8px; padding:20px 24px; min-width:480px; max-width:560px;
-    box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+    pointer-events:all;
+    margin:0 auto; max-width:720px;
+    background:var(--chrome-dark,#1e3d1e);
+    border:1px solid rgba(255,255,255,0.15);
+    border-top:none; border-radius:0 0 8px 8px;
+    padding:10px 16px 12px;
+    box-shadow:0 6px 24px rgba(0,0,0,0.5);">
 
-    <!-- Header -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#90c890" stroke-width="1.4">
+    <!-- Row 1: title + close -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#90c890" stroke-width="1.4">
         <circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c-2 2-3 4-3 6s1 4 3 6M8 2c2 2 3 4 3 6s-1 4-3 6"/>
       </svg>
-      <h3 style="margin:0;font-size:13px;font-weight:600;color:var(--text-primary,#eee);">Import from OpenStreetMap</h3>
-      <button id="osm-close" style="margin-left:auto;background:none;border:none;
-        color:var(--text-secondary,#aaa);cursor:pointer;font-size:18px;line-height:1;">&#x2715;</button>
+      <span style="font-size:12px;font-weight:600;color:#fff;">Import from OpenStreetMap</span>
+      <span id="osm-pick-hint" style="font-size:11px;color:#90c890;flex:1;">
+        &#8595; Click anywhere on the 3D map to set site location
+      </span>
+      <button id="osm-close" style="background:none;border:none;color:rgba(255,255,255,0.5);
+        cursor:pointer;font-size:18px;line-height:1;padding:0 4px;">&#x2715;</button>
     </div>
 
-    <!-- Address search -->
-    <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <!-- Row 2: address search + coords + radius + import -->
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <input id="osm-address" type="text" placeholder="Search address\u2026"
-        style="flex:1;background:var(--chrome-input,#fff);border:1px solid var(--chrome-border);
-        border-radius:4px;color:var(--text-primary,#222);font-size:12px;padding:6px 10px;outline:none;"
+        style="flex:2;min-width:160px;background:rgba(255,255,255,0.1);
+        border:1px solid rgba(255,255,255,0.25);border-radius:4px;
+        color:#fff;font-size:12px;padding:5px 10px;outline:none;"
         onkeydown="if(event.key==='Enter') document.getElementById('osm-search-btn').click()">
-      <button id="osm-search-btn" style="background:var(--accent-mid,#4a8a4a);color:#fff;border:none;
-        border-radius:4px;font-size:12px;padding:6px 14px;cursor:pointer;">Search</button>
-    </div>
+      <button id="osm-search-btn" style="background:rgba(255,255,255,0.15);color:#fff;border:none;
+        border-radius:4px;font-size:11px;padding:5px 12px;cursor:pointer;white-space:nowrap;">
+        Search
+      </button>
 
-    <!-- Coordinates + radius -->
-    <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-size:11px;color:var(--text-secondary,#aaa);">Lat</span>
+      <div style="display:flex;align-items:center;gap:5px;">
+        <span style="font-size:10px;color:rgba(255,255,255,0.5);">Lat</span>
         <input id="osm-lat" type="number" step="any" placeholder="\u2014"
-          style="width:110px;background:var(--chrome-input,#fff);border:1px solid var(--chrome-border);
-          border-radius:4px;color:var(--text-primary,#222);font-size:11px;padding:5px 8px;outline:none;">
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span style="font-size:11px;color:var(--text-secondary,#aaa);">Lng</span>
+          style="width:100px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);
+          border-radius:4px;color:#fff;font-size:11px;padding:4px 8px;outline:none;">
+        <span style="font-size:10px;color:rgba(255,255,255,0.5);">Lng</span>
         <input id="osm-lng" type="number" step="any" placeholder="\u2014"
-          style="width:120px;background:var(--chrome-input,#fff);border:1px solid var(--chrome-border);
-          border-radius:4px;color:var(--text-primary,#222);font-size:11px;padding:5px 8px;outline:none;">
+          style="width:110px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);
+          border-radius:4px;color:#fff;font-size:11px;padding:4px 8px;outline:none;">
       </div>
+
       <select id="osm-radius" style="font-size:11px;background:var(--chrome-input,#fff);
-        border:1px solid var(--chrome-border);border-radius:4px;padding:5px 8px;
+        border:1px solid var(--chrome-border);border-radius:4px;padding:4px 8px;
         color:var(--text-primary,#222);outline:none;">
         <option value="250">250 m</option>
         <option value="500" selected>500 m</option>
         <option value="750">750 m</option>
         <option value="1000">1 km</option>
       </select>
-    </div>
 
-    <!-- Status + Import -->
-    <div style="display:flex;align-items:center;gap:12px;">
-      <span id="osm-status" style="font-size:11px;color:#90c890;flex:1;"></span>
+      <span id="osm-status" style="font-size:11px;color:#90c890;min-width:120px;"></span>
+
       <button id="osm-import-btn" style="
         background:var(--accent-mid,#4a8a4a);color:#fff;border:none;
-        border-radius:4px;font-size:12px;padding:7px 20px;cursor:pointer;">
+        border-radius:4px;font-size:12px;padding:6px 18px;cursor:pointer;white-space:nowrap;">
         Import
       </button>
     </div>
@@ -128,14 +132,22 @@ export function initOSMImport(callbacks) {
 }
 
 function openModal() {
-  setStatus('Enter an address or paste coordinates, then click Import.');
-  document.getElementById('osm-overlay').style.display = 'flex';
+  document.getElementById('osm-overlay').style.display = 'block';
+  // Activate Cesium click-to-pick — clicking on the 3D scene sets lat/lng
+  startLocationPick(({ lat, lng }) => {
+    document.getElementById('osm-lat').value = lat.toFixed(7);
+    document.getElementById('osm-lng').value = lng.toFixed(7);
+    setStatus('Location set \u2014 select radius and click Import.');
+    const hint = document.getElementById('osm-pick-hint');
+    if (hint) hint.textContent = `\u2713 ${lat.toFixed(5)}, ${lng.toFixed(5)} \u2014 click again to reposition`;
+  });
 }
 function closeModal() {
   document.getElementById('osm-overlay').style.display = 'none';
+  stopLocationPick();
 }
 
-// ── Address search using Nominatim ───────────────────────────────────────
+// ── Address search using Nominatim — flies Cesium to result ──────────────
 async function searchAddress() {
   const q = document.getElementById('osm-address').value.trim();
   if (!q) return;
@@ -147,7 +159,10 @@ async function searchAddress() {
     const lat = parseFloat(data[0].lat), lng = parseFloat(data[0].lon);
     document.getElementById('osm-lat').value = lat.toFixed(7);
     document.getElementById('osm-lng').value = lng.toFixed(7);
-    setStatus(`Found: ${data[0].display_name.slice(0, 60)}\u2026 — click Import.`);
+    // Fly the Cesium viewer to the result so user can confirm visually
+    const { flyToSite } = await import('./cesium-viewer.js');
+    flyToSite(lat, lng, 400);
+    setStatus(`Found \u2014 click the 3D map to refine, or Import now.`);
   } catch (err) {
     setStatus('Search failed: ' + err.message);
   }

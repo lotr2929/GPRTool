@@ -47,7 +47,7 @@
     import { updateSceneHelpers, showGridSpacingPopup, majorCellSize } from './grid.js';
     import { initGeo, latlonToMetres, extractCoordinates, computeBBox, computePolygonArea, computePolygonPerimeter, loadMapTiles, clearMapTiles } from './geo.js';
     import { initUI, showFeedback } from './ui.js';
-    import { initCesiumViewer, getCesiumViewer, flyToSite, showLotBoundary, clearLotBoundary as cesiumClearLotBoundary, isCesiumReady, showCesiumView, showThreeJSView, startBoundaryPick } from './cesium-viewer.js';
+    import { initCesiumViewer, getCesiumViewer, flyToSite, showLotBoundary, clearLotBoundary as cesiumClearLotBoundary, isCesiumReady, showCesiumView, showThreeJSView, startBoundaryPick, stopLocationPick } from './cesium-viewer.js';
 
     /* ============================================================
        LOAD HEADER + BODY
@@ -61,7 +61,11 @@
     initGeo({ onMapCleared: () => setGridVisible(state.currentMode === '2d') });
 
     // ── Cesium viewer — boots asynchronously; tiles load in background ────
-    initCesiumViewer('cesium-container').catch(err =>
+    initCesiumViewer('cesium-container').then(() => {
+      // Start in Cesium view — show Perth as the default location
+      showCesiumView();
+      flyToSite(-31.9505, 115.8605, 800); // Perth CBD
+    }).catch(err =>
       console.warn('[Cesium init]', err)
     );
     // initSurfaces wired after fitSurfaceCamera etc. are defined (below)

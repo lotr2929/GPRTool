@@ -294,3 +294,48 @@ export function onCameraChange(callback) {
     callback(getCameraHeading());
   });
 }
+
+// ── Location pick (OSM import modal) ─────────────────────────────────────
+// When the OSM import modal is open, a single click on the Cesium scene
+// fires the callback with { lat, lng } and places a marker.
+
+let _locationPickHandler = null;
+let _locationMarker      = null;
+
+/**
+ * Activate one-shot location pick — next click on the Cesium scene
+ * fires callback({ lat, lng }) and places a green marker.
+ * Remains active (not one-shot) until stopLocationPick() is called.
+ */
+export function startLocationPick(callback) {
+  if (!_viewer) return;
+  stopLocationPick();
+  _viewer.container.style.cursor = 'crosshair';
+  _locationPickHandler = new Cesium.ScreenSpaceEventHandler(_viewer.scene.canvas);
+  _locationPickHandler.setInputAction(e => {
+    const pos = _pickCartesian(e.position);
+    if (!pos) return;
+    const carto = Cesium.Cartographic.fromCartesian(pos);
+    const lat   = Cesium.Math.toDegrees(carto.latitude);
+    const lng   = Cesium.Math.toDegrees(carto.longitude);
+    // Place / move marker
+    if (_locationMarker) _viewer.entities.remove(_locationMarker);
+    _locationMarker = _viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(lng, lat),
+      point: {
+        pixelSize: 12,
+        color: Cesium.Color.fromCssColorString('#4a8a4a'),
+        outlineColor: Cesium.Color.WHITE,
+        outlineWidth: 2,
+        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+      },
+    });
+    callback({ lat, lng });
+  }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+}
+
+export function stopLocationPick() {
+  if (_locationPickHandler) { _locationPickHandler.destroy(); _locationPickHandler = null; }
+  if (_viewer) _viewer.container.style.cursor = '';
+  if (_locationMarker) { _viewer.entities.remove(_locationMarker); _locationMarker = null; }
+}
