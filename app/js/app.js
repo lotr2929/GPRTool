@@ -66,13 +66,13 @@
       showCesiumView();
     }).catch(err => console.warn('[Cesium init]', err));
 
-    // ── Advanced section toggle ────────────────────────────────────────────
+    // ── Advanced section toggle (footer, expands upward) ──────────────────
     document.getElementById('advanced-toggle')?.addEventListener('click', () => {
       const body  = document.getElementById('advanced-body');
       const arrow = document.getElementById('advanced-arrow');
       const open  = body.style.display === 'none';
-      body.style.display  = open ? 'block' : 'none';
-      arrow.style.transform = open ? 'rotate(0deg)' : 'rotate(-90deg)';
+      body.style.display    = open ? 'block' : 'none';
+      arrow.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
     });
     // Uses the current Cesium camera position as the site anchor.
     // Fetches OSM data for that location, saves .gpr with source:'cesium'.
@@ -1512,11 +1512,10 @@
         );
 
         fit3DCamera(new THREE.Box3().setFromObject(state.cadmapperGroup));
-        switchMode('3d');
 
-        // ── Switch viewport: Cesium → Three.js now that geometry is ready ─
-        // For both OSM and CADMapper: Three.js canvas takes over once geometry is built.
+        // ── Switch viewport FIRST — canvas must be visible before switchMode ─
         showThreeJSView();
+        switchMode('3d');
 
         document.getElementById('empty-props').style.display       = 'none';
         document.getElementById('clearSiteBtn').style.display      = 'block';
@@ -1558,42 +1557,41 @@
           state._activeProjectName = siteName;
           setPipelineStatus('Ready to save', 'idle');
 
-          // Build .gpr ZIP in background — don't await, doesn't block UI
-          createInitialGPR({
-            siteName,
-            reference: {
-              utm_zone:       anchor.zone,
-              utm_easting:    anchor.easting,
-              utm_northing:   anchor.northing,
-              utm_hemisphere: anchor.hemisphere,
-              wgs84_lat:      anchor.lat,
-              wgs84_lng:      anchor.lng,
-              scene_offset_x: centre.x,
-              scene_offset_z: centre.z,
-              site_span_m:    siteSpan,
+          // ── Show save dialog immediately — ZIP is created lazily on Save ──────
+          // blobGetter is called ONLY when the user clicks Save, not before.
+          // This means the dialog appears instantly after import with no waiting.
+          showSaveProjectDialog({
+            blobGetter: async () => {
+              await createInitialGPR({
+                siteName,
+                reference: {
+                  utm_zone:       anchor.zone,
+                  utm_easting:    anchor.easting,
+                  utm_northing:   anchor.northing,
+                  utm_hemisphere: anchor.hemisphere,
+                  wgs84_lat:      anchor.lat,
+                  wgs84_lng:      anchor.lng,
+                  scene_offset_x: centre.x,
+                  scene_offset_z: centre.z,
+                  site_span_m:    siteSpan,
+                },
+                design: {
+                  design_north_angle: 0,
+                  grid_spacing_m:     cellSize,
+                  minor_divisions:    10,
+                },
+                dxfFile,
+                osmGeoJSON,
+              });
+              return getActiveGPRBlob();
             },
-            design: {
-              design_north_angle: 0,
-              grid_spacing_m:     cellSize,
-              minor_divisions:    10,
-            },
-            dxfFile,
-            osmGeoJSON,
-          }).then(() => {
-            // .gpr is ready — show save dialog immediately
-            // Dialog closes instantly on Save; Supabase upload runs in background
-            showSaveProjectDialog({
-              blobGetter: () => getActiveGPRBlob(),
-              defaultName: siteName,
-              lat: anchor.lat,
-              lng: anchor.lng,
-              dxfFilename: dxfFile?.name ?? null,
-            }).then(saved => {
-              setPipelineStatus(saved ? '\u2713 Saved' : 'Ready', saved ? 'done' : 'idle');
-            }).catch(() => {});
-          }).catch(err => {
-            console.warn('[GPR] .gpr creation failed:', err);
-          });
+            defaultName: siteName,
+            lat: anchor.lat,
+            lng: anchor.lng,
+            dxfFilename: dxfFile?.name ?? null,
+          }).then(saved => {
+            setPipelineStatus(saved ? '\u2713 Saved' : 'Ready', saved ? 'done' : 'idle');
+          }).catch(() => {});
 
           buildBoundaryPanel(wgs84Bounds, false, !dxfFile ? _startCesiumBoundaryDraw : null);
 
