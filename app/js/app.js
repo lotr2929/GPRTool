@@ -47,7 +47,7 @@
     import { updateSceneHelpers, showGridSpacingPopup, majorCellSize } from './grid.js';
     import { initGeo, latlonToMetres, extractCoordinates, computeBBox, computePolygonArea, computePolygonPerimeter, loadMapTiles, clearMapTiles } from './geo.js';
     import { initUI, showFeedback } from './ui.js';
-    import { initCesiumViewer, getCesiumViewer, flyToSite, showLotBoundary, clearLotBoundary as cesiumClearLotBoundary, isCesiumReady, showCesiumView, showThreeJSView, startBoundaryPick, stopLocationPick } from './cesium-viewer.js';
+    import { initCesiumViewer, getCesiumViewer, flyToSite, showLotBoundary, clearLotBoundary as cesiumClearLotBoundary, isCesiumReady, showCesiumView, showThreeJSView, startBoundaryPick, stopLocationPick, setCesium2D, setCesiumStreetLevel, getCameraPosition, resetCesiumView } from './cesium-viewer.js';
 
     /* ============================================================
        LOAD HEADER + BODY
@@ -68,6 +68,27 @@
     }).catch(err =>
       console.warn('[Cesium init]', err)
     );
+
+    // ── Import from Cesium ─────────────────────────────────────────────────
+    // Uses the current Cesium camera position as the site anchor.
+    // Fetches OSM data for that location, saves .gpr with source:'cesium'.
+    document.getElementById('importCesiumBtn')?.addEventListener('click', _importFromCesium);
+
+    async function _importFromCesium() {
+      const pos = getCameraPosition();
+      if (!pos) { showFeedback('Cesium not ready yet', 2000); return; }
+      // Use camera lat/lng as the site centre
+      const lat = pos.lat, lng = pos.lng;
+      showFeedback('Using Cesium view as site — fetching OSM context\u2026', 0);
+      // Populate the OSM modal coords and trigger import
+      // (reuses the existing Overpass pipeline for OSM data + .gpr creation)
+      document.getElementById('osm-overlay').style.display = 'block';
+      document.getElementById('osm-lat').value = lat.toFixed(7);
+      document.getElementById('osm-lng').value = lng.toFixed(7);
+      document.getElementById('osm-address').value = `Cesium view (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+      // Auto-trigger import after brief pause so user can see what's happening
+      setTimeout(() => document.getElementById('osm-import-btn')?.click(), 600);
+    }
     // initSurfaces wired after fitSurfaceCamera etc. are defined (below)
 
     /* ── ui.js handles: clock, alarm, showFeedback, section collapse ─── */
@@ -893,6 +914,7 @@
       document.getElementById('gpr-value').textContent               = '\u2014';
       document.getElementById('boundary-section')?.remove();
       clearLotBoundary();
+      resetCesiumView();   // reset Cesium to Perth overview, clear markers
       showFeedback('Site cleared');
     });
 
@@ -1326,6 +1348,7 @@
         else if (action === 'save')                _saveCurrentProject();
         else if (action === 'save-as')             _saveAsProject();
         else if (action === 'import-osm')          document.getElementById('importOSMBtn')?.click();
+        else if (action === 'import-cesium')       document.getElementById('importCesiumBtn')?.click();
         else if (action === 'import-cadmapper')    document.getElementById('importCADMapperBtn')?.click();
         else if (action === 'import-model')        document.getElementById('import3DModelBtn')?.click();
         else if (action === 'download-report')     showFeedback('Download GPR Report \u2014 coming soon');

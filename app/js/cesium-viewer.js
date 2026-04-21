@@ -90,11 +90,137 @@ export async function initCesiumViewer(containerId) {
   // Resize Cesium canvas when window resizes
   window.addEventListener('resize', () => _viewer?.resize());
 
+  // Inject HUD overlay
+  _injectHUD();
+
+  // Live altitude readout
+  _viewer.scene.postRender.addEventListener(_updateHUD);
+
   return _viewer;
+}
+
+function _injectHUD() {
+  if (document.getElementById('cesium-hud')) return;
+  const hud = document.createElement('div');
+  hud.id = 'cesium-hud';
+  hud.style.cssText = `
+    position:absolute; bottom:36px; right:16px; z-index:10;
+    display:flex; gap:6px; align-items:center;
+    background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.15);
+    border-radius:6px; padding:5px 10px; pointer-events:all;
+    font:11px/1.4 'Segoe UI',sans-serif; color:#ccc;
+  `;
+  hud.innerHTML = `
+    <span id="cesium-alt" style="min-width:80px; color:#90c890;"></span>
+    <button id="cesium-btn-2d" title="Top-down 2D view" style="
+      background:rgba(255,255,255,0.12);color:#fff;border:none;
+      border-radius:3px;padding:3px 10px;font-size:11px;cursor:pointer;">
+      2D / Top
+    </button>
+    <button id="cesium-btn-street" title="Street level view" style="
+      background:rgba(255,255,255,0.12);color:#fff;border:none;
+      border-radius:3px;padding:3px 10px;font-size:11px;cursor:pointer;">
+      Street Level
+    </button>
+  `;
+  document.getElementById('cesium-container')?.appendChild(hud);
+  document.getElementById('cesium-btn-2d')?.addEventListener('click', setCesium2D);
+  document.getElementById('cesium-btn-street')?.addEventListener('click', setCesiumStreetLevel);
+}
+
+function _updateHUD() {
+  const el = document.getElementById('cesium-alt');
+  if (!el || !_viewer) return;
+  const pos = _viewer.camera.positionCartographic;
+  if (!pos) return;
+  const alt = pos.height;
+  el.textContent = alt < 1000
+    ? `Alt ${alt.toFixed(0)} m`
+    : `Alt ${(alt / 1000).toFixed(2)} km`;
 }
 
 export const getCesiumViewer = () => _viewer;
 export const isCesiumReady   = () => _ready;
+
+// ── Camera view presets ───────────────────────────────────────────────────
+
+/** Switch to top-down 2D-style view at current lat/lng. */
+export function setCesium2D() {
+  if (!_viewer) return;
+  const pos = _viewer.camera.positionCartographic;
+  _viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromRadians(pos.longitude, pos.latitude, 800),
+    orientation: { heading: 0, pitch: Cesium.Math.toRadians(-90), roll: 0 },
+    duration: 1.2,
+  });
+}
+
+/**
+ * Drop to street level at the current camera lat/lng.
+ * Pitches camera near-horizontal at ~2 m above ground.
+ */
+export function setCesiumStreetLevel() {
+  if (!_viewer) return;
+  const pos = _viewer.camera.positionCartographic;
+  // Sample terrain height at current position, then position 2m above it
+  const carto = new Cesium.Cartographic(pos.longitude, pos.latitude);
+  Cesium.sampleTerrainMostDetailed(
+    _viewer.terrainProvider, [carto]
+  ).then(updated => {
+    const groundAlt = (updated[0]?.height ?? 0) + 2;
+    _viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromRadians(pos.longitude, pos.latitude, groundAlt),
+      orientation: {
+        heading: _viewer.camera.heading,
+        pitch:   Cesium.Math.toRadians(-5),
+        roll:    0,
+      },
+      duration: 1.5,
+    });
+  }).catch(() => {
+    // Fallback if terrain sampling unavailable — use fixed 5m altitude
+    _viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromRadians(pos.longitude, pos.latitude, 5),
+      orientation: {
+        heading: _viewer.camera.heading,
+        pitch:   Cesium.Math.toRadians(-5),
+        roll:    0,
+      },
+      duration: 1.5,
+    });
+  });
+}
+
+/**
+ * Get current camera position as WGS84.
+ * @returns {{ lat: number, lng: number, alt: number }}
+ */
+export function getCameraPosition() {
+  if (!_viewer) return null;
+  const pos = _viewer.camera.positionCartographic;
+  return {
+    lat: Cesium.Math.toDegrees(pos.latitude),
+    lng: Cesium.Math.toDegrees(pos.longitude),
+    alt: pos.height,
+  };
+}
+
+/**
+ * Reset Cesium to the default Perth overview.
+ * Called by Clear Site / New Project.
+ */
+export function resetCesiumView() {
+  stopLocationPick();
+  cesiumClearLotBoundary_internal();
+  if (_viewer) flyToSite(-31.9505, 115.8605, 800);
+}
+
+function cesiumClearLotBoundary_internal() {
+  if (_viewer && _lotBoundaryEntity) {
+    _viewer.entities.remove(_lotBoundaryEntity);
+    _lotBoundaryEntity = null;
+  }
+}
 
 // ── View toggling ─────────────────────────────────────────────────────────
 // GPRTool runs two renderers: Cesium (OSM / real-world context) and Three.js
