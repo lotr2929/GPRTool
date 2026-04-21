@@ -159,9 +159,11 @@ export function showCesiumView() {
   const cesiumEl = document.getElementById('cesium-container');
   const canvas   = document.getElementById('three-canvas');
   const np       = document.getElementById('np-container');
+  const toggle   = document.querySelector('.mode-toggle-container');
   if (cesiumEl) cesiumEl.style.display = 'block';
   if (canvas)   canvas.style.display   = 'none';
   if (np)       np.style.display       = 'none';
+  if (toggle)   toggle.style.display   = 'none';
 }
 
 /** Activate Three.js — hide Cesium, show design overlays. */
@@ -169,12 +171,14 @@ export function showThreeJSView() {
   const cesiumEl = document.getElementById('cesium-container');
   const canvas   = document.getElementById('three-canvas');
   const np       = document.getElementById('np-container');
+  const toggle   = document.querySelector('.mode-toggle-container');
   if (cesiumEl) cesiumEl.style.display = 'none';
   if (canvas) {
     canvas.style.display = 'block';
     window.dispatchEvent(new Event('resize'));
   }
-  if (np) np.style.display = 'block';
+  if (np)     np.style.display     = 'block';
+  if (toggle) toggle.style.display = 'flex';
 }
 
 // ── Camera view presets ───────────────────────────────────────────────────
