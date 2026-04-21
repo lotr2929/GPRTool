@@ -595,6 +595,53 @@ function osmToGeoJSON(osmData) {
   return { type: 'FeatureCollection', features };
 }
 
+// ── Browser-side Overpass cache (IndexedDB) ───────────────────────────────
+// Keyed by bbox+radius hash. TTL 24 hours.
+// Survives page reloads and Vercel cold starts — unlike the server-side Map.
+const _IDB_NAME  = 'gprtool_overpass_cache';
+const _IDB_STORE = 'queries';
+const _CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+function _openCacheDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(_IDB_NAME, 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(_IDB_STORE, { keyPath: 'key' });
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
+function _bboxKey(bbox, radius) {
+  return `${bbox.south.toFixed(4)},${bbox.west.toFixed(4)},${bbox.north.toFixed(4)},${bbox.east.toFixed(4)},${radius}`;
+}
+
+async function _getCached(key) {
+  try {
+    const db  = await _openCacheDB();
+    const req = db.transaction(_IDB_STORE).objectStore(_IDB_STORE).get(key);
+    return await new Promise((res, rej) => {
+      req.onsuccess = e => {
+        const r = e.target.result;
+        if (r && r.expires > Date.now()) res(r.data);
+        else res(null);
+      };
+      req.onerror = e => rej(e.target.error);
+    });
+  } catch { return null; }
+}
+
+async function _setCached(key, data) {
+  try {
+    const db = await _openCacheDB();
+    await new Promise((res, rej) => {
+      const tx = db.transaction(_IDB_STORE, 'readwrite');
+      tx.objectStore(_IDB_STORE).put({ key, data, expires: Date.now() + _CACHE_TTL });
+      tx.oncomplete = res;
+      tx.onerror    = e => rej(e.target.error);
+    });
+  } catch { /* non-critical */ }
+}
+
 // ── Run import ────────────────────────────────────────────────────────────
 async function runImport() {
   const lat    = parseFloat(document.getElementById('osm-lat').value);
@@ -621,11 +668,18 @@ async function runImport() {
     setRealWorldAnchor(zone, easting, northing);
 
     // Compute WGS84 bounding box directly from lat/lng + radius
-    const bbox = latLngToBbox(lat, lng, radius);
+    const bbox    = latLngToBbox(lat, lng, radius);
+    const cacheKey = _bboxKey(bbox, radius);
 
-    // Fetch OSM data
-    setStatus('Fetching OSM data\u2026');
-    const osmData = await fetchOverpass(buildOverpassQuery(bbox));
+    // Check browser cache first — avoids Overpass entirely for known areas
+    let osmData = await _getCached(cacheKey);
+    if (osmData) {
+      setStatus('Loaded from cache \u2014 building geometry\u2026');
+    } else {
+      setStatus('Fetching OSM data\u2026');
+      osmData = await fetchOverpass(buildOverpassQuery(bbox));
+      await _setCached(cacheKey, osmData); // save for next time
+    }
     setStatus('Building geometry\u2026');
     const layerGroups = buildLayerGroups(osmData, THREE);
 
@@ -638,40 +692,105 @@ async function runImport() {
     const osmGeoJSON  = osmToGeoJSON(osmData);
     _callbacks.onLayersLoaded(layerGroups, null, addressVal || null, osmGeoJSON);
 
-    // Terrain + contours: disabled pending optimisation (causes main thread freeze)
-    // TODO: move to Web Worker or add a separate "Load Terrain" button
-    /*
-    fetchTerrainMesh(bbox, THREE).then(terrainResult => {
-      if (!terrainResult?.mesh || !state.cadmapperGroup) return;
-      const { mesh: terrainGeom, points: terrainPts } = terrainResult;
-      const terrainGroup = new THREE.Group();
-      terrainGroup.name = 'topography';
-      terrainGroup.add(new THREE.Mesh(terrainGeom,
-        new THREE.MeshBasicMaterial({
-          color: LAYER_CONFIG.topography.color, transparent: false,
-          side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 1,
-        })));
-      terrainGroup.add(new THREE.LineSegments(
-        new THREE.EdgesGeometry(terrainGeom, 10),
-        new THREE.LineBasicMaterial({ color: 0xa09070, opacity: 0.4, transparent: true })));
-      state.cadmapperGroup.add(terrainGroup);
-      buildLayerPanel({ topography: terrainGroup });
-
-      setTimeout(() => {
-        const contourGroup = buildContourLines(terrainPts, 4, THREE);
-        if (contourGroup && state.cadmapperGroup) {
-          state.cadmapperGroup.add(contourGroup);
-          buildLayerPanel({ contours: contourGroup });
-        }
-      }, 200);
-    }).catch(err => console.warn('[terrain background]', err));
-    */
+    // ── Terrain + contours via Web Worker (non-blocking) ──────────────────
+    _runTerrainWorker(bbox, zone);
 
   } catch (err) {
     setStatus('Import failed: ' + err.message, true);
     console.error('[OSM import]', err);
   } finally {
     btn.disabled = false; btn.style.opacity = '1';
+  }
+}
+
+// ── Terrain Web Worker launcher ───────────────────────────────────────────
+function _runTerrainWorker(bbox, zone) {
+  if (typeof Worker === 'undefined') return;
+  const { getRealWorldAnchor } = _callbacks;
+  const anchor = typeof getRealWorldAnchor === 'function' ? getRealWorldAnchor() : null;
+  const anchorX = anchor?.easting  ?? 0;
+  const anchorY = anchor?.northing ?? 0;
+
+  const worker = new Worker(new URL('./terrain-worker.js', import.meta.url), { type: 'module' });
+  worker.postMessage({ bbox, zoom: 14, intervalM: 5, zone, anchorX, anchorY });
+
+  worker.onmessage = ({ data: msg }) => {
+    if (msg.type === 'progress') {
+      console.log('[terrain]', msg.msg);
+    } else if (msg.type === 'done') {
+      _buildTerrainFromWorker(msg.terrainPoints, msg.contourSegments);
+      worker.terminate();
+    } else if (msg.type === 'error') {
+      console.warn('[terrain worker]', msg.message);
+      worker.terminate();
+    }
+  };
+  worker.onerror = e => { console.warn('[terrain worker error]', e); worker.terminate(); };
+}
+
+function _buildTerrainFromWorker(points, contourSegments) {
+  if (!_callbacks?.THREE || !state?.cadmapperGroup) return;
+  const T = _callbacks.THREE;
+
+  // ── Terrain mesh ─────────────────────────────────────────────────────
+  const xs   = [...new Set(points.map(p => Math.round(p.x*10)/10))].sort((a,b)=>a-b);
+  const ys   = [...new Set(points.map(p => Math.round(p.y*10)/10))].sort((a,b)=>a-b);
+  const grid = new Map();
+  for (const p of points) grid.set(`${Math.round(p.x*10)/10},${Math.round(p.y*10)/10}`, p.ele);
+
+  const verts = [], indices = [], idxMap = new Map();
+  let vi = 0;
+  for (let iy = 0; iy < ys.length; iy++) {
+    for (let ix = 0; ix < xs.length; ix++) {
+      const ele = grid.get(`${xs[ix]},${ys[iy]}`);
+      if (ele === undefined) continue;
+      verts.push(xs[ix], ele, -ys[iy]); // y→z (north=-Z convention)
+      idxMap.set(`${ix},${iy}`, vi++);
+    }
+  }
+  for (let iy = 0; iy < ys.length-1; iy++) {
+    for (let ix = 0; ix < xs.length-1; ix++) {
+      const a=idxMap.get(`${ix},${iy}`), b=idxMap.get(`${ix+1},${iy}`);
+      const c=idxMap.get(`${ix},${iy+1}`), d=idxMap.get(`${ix+1},${iy+1}`);
+      if (a==null||b==null||c==null||d==null) continue;
+      indices.push(a,b,c, b,d,c);
+    }
+  }
+
+  if (indices.length) {
+    const geom = new T.BufferGeometry();
+    geom.setAttribute('position', new T.BufferAttribute(new Float32Array(verts), 3));
+    geom.setIndex(indices);
+    geom.computeVertexNormals();
+    const cfg  = { color: 0xc8b890 };
+    const mesh = new T.Mesh(geom, new T.MeshBasicMaterial({
+      color: cfg.color, side: T.DoubleSide,
+      polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 1,
+    }));
+    const terrainGroup = new T.Group();
+    terrainGroup.name = 'topography';
+    terrainGroup.add(mesh);
+    state.cadmapperGroup.add(terrainGroup);
+    buildLayerPanel({ topography: terrainGroup });
+  }
+
+  // ── Contour lines ─────────────────────────────────────────────────────
+  if (contourSegments.length >= 6) {
+    const vBuf = new Float32Array(contourSegments.length);
+    for (let i = 0; i < contourSegments.length; i += 6) {
+      // [x0,y0,ele, x1,y1,ele] → Three.js [x, ele, -y]
+      vBuf[i]   = contourSegments[i];   vBuf[i+1] = contourSegments[i+2]; vBuf[i+2] = -contourSegments[i+1];
+      vBuf[i+3] = contourSegments[i+3]; vBuf[i+4] = contourSegments[i+5]; vBuf[i+5] = -contourSegments[i+4];
+    }
+    const geom = new T.BufferGeometry();
+    geom.setAttribute('position', new T.BufferAttribute(vBuf, 3));
+    const contourGroup = new T.Group();
+    contourGroup.name  = 'contours';
+    contourGroup.position.y = 0.015;
+    contourGroup.add(new T.LineSegments(geom,
+      new T.LineBasicMaterial({ color: 0xa08860, opacity: 0.7, transparent: true })));
+    state.cadmapperGroup.add(contourGroup);
+    buildLayerPanel({ contours: contourGroup });
   }
 }
 

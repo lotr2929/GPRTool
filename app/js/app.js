@@ -62,12 +62,18 @@
 
     // ── Cesium viewer — boots asynchronously; tiles load in background ────
     initCesiumViewer('cesium-container').then(() => {
-      // Start in Cesium view — show Perth as the default location
       showCesiumView();
-      flyToSite(-31.9505, 115.8605, 800); // Perth CBD
-    }).catch(err =>
-      console.warn('[Cesium init]', err)
-    );
+      // Try geolocation first; fall back to Perth CBD
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => flyToSite(pos.coords.latitude, pos.coords.longitude, 800),
+          ()  => flyToSite(-31.9505, 115.8605, 800),
+          { timeout: 6000, maximumAge: 300000 }
+        );
+      } else {
+        flyToSite(-31.9505, 115.8605, 800);
+      }
+    }).catch(err => console.warn('[Cesium init]', err));
 
     // ── Import from Cesium ─────────────────────────────────────────────────
     // Uses the current Cesium camera position as the site anchor.
@@ -1630,7 +1636,7 @@
     }
 
     initCADMapperImport({ THREE, onLayersLoaded });
-    initOSMImport({ THREE, onLayersLoaded });
+    initOSMImport({ THREE, onLayersLoaded, getRealWorldAnchor });
 
     showFeedback('GPRTool ready', 2000);
   
