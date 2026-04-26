@@ -8,11 +8,11 @@
  *   POST /api/projects?action=delete — delete a project by id
  *
  * Storage: Supabase table `gpr_projects`
- * Env vars: GPRTOOL_SUPABASE_URL, GPRTOOL_SUPABASE_KEY
+ * Env vars: GPRTOOL_SUPABASE_URL, GPRTOOL_SUPABASE_PUBLISHABLE_KEY
  */
 
 const SB_URL = process.env.GPRTOOL_SUPABASE_URL;
-const SB_KEY = process.env.GPRTOOL_SUPABASE_KEY;
+const SB_KEY = process.env.GPRTOOL_SUPABASE_PUBLISHABLE_KEY;
 
 function sbHeaders() {
   return {

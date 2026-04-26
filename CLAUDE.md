@@ -1,4 +1,12 @@
 # CLAUDE.md -- GPRTool
+_First read: C:\_myProjects\CLAUDE.md (master standing instructions)._
+
+## Coordinate law (non-negotiable)
+North = NEGATIVE Z in Three.js. Always.
+- wgs84ToScene(): sc.z < 0 for points north of anchor
+- buildFlatPolygon()/buildBuilding(): shape Y = -sc.z after rotateX(-PI/2)
+- CADMapper: new THREE.Vector3(p.x, p.z, -p.y)
+- Any comment saying "+Z = north" is WRONG -- delete it
 
 ## Before you do anything
 
