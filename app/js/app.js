@@ -47,7 +47,7 @@
     import { updateSceneHelpers, showGridSpacingPopup, majorCellSize } from './grid.js';
     import { initGeo, latlonToMetres, extractCoordinates, computeBBox, computePolygonArea, computePolygonPerimeter, loadMapTiles, clearMapTiles } from './geo.js';
     import { initUI, showFeedback, setPipelineStatus, setStage } from './ui.js';
-    import { initCesiumViewer, getCesiumViewer, flyToSite, showLotBoundary, clearLotBoundary as cesiumClearLotBoundary, isCesiumReady, showCesiumView, showThreeJSView, startBoundaryPick, stopLocationPick, setCesium2D, setCesiumStreetLevel, getCameraPosition, resetCesiumView } from './cesium-viewer.js';
+    import { initCesiumViewer, getCesiumViewer, flyToSite, showLotBoundary, clearLotBoundary as cesiumClearLotBoundary, isCesiumReady, showCesiumView, showThreeJSView, startBoundaryPick, stopLocationPick, setCesium2D, setCesium3D, setCesiumViewMode, isCesiumActive, setCesiumStreetLevel, getCameraPosition, resetCesiumView } from './cesium-viewer.js';
 
     /* ============================================================
        LOAD HEADER + BODY
@@ -731,6 +731,18 @@
     document.querySelectorAll('.mode-btn').forEach(btn =>
       btn.addEventListener('click', () => {
         const mode = btn.dataset.mode;
+
+        // ── Cesium dispatch ───────────────────────────────────────────────
+        // When Cesium is the active render surface, the same toggle controls
+        // Cesium's 2D/3D camera (top-down vs perspective), not Three.js mode.
+        // setCesiumViewMode also updates .active on the buttons.
+        if (isCesiumActive()) {
+          setCesiumViewMode(mode);
+          showFeedback(`Cesium ${mode.toUpperCase()} view`);
+          return;
+        }
+
+        // ── Three.js path (unchanged) ─────────────────────────────────────
         if (mode === state.currentMode) {
           // Reset current view to default
           if (mode === '2d') {

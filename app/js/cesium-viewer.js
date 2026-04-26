@@ -39,11 +39,12 @@ let _onBoundaryPoint   = null;
 let _onBoundaryDone    = null;
 let _pickHandler       = null;
 
-// Site / view-mode state — used to show/hide the viewport 2D/3D toggle pill.
+// Site / view-mode state — drives the existing .mode-toggle-container
+// (the same toggle Three.js uses, reused for Cesium 2D/3D).
 // _siteLocated flips true on first successful flyToSite or click-pick;
 // reset by resetCesiumView (Clear Site / New Project).
 let _siteLocated = false;
-let _viewMode    = '3D';   // '2D' | '3D'
+let _viewMode    = '3d';   // '2d' | '3d' — matches state.currentMode convention
 
 // ── Init ──────────────────────────────────────────────────────────────────
 
@@ -146,59 +147,39 @@ function _injectHUD() {
   hud.id = 'cesium-hud';
   hud.style.cssText = `
     position:absolute; bottom:12px; right:16px; z-index:10;
-    display:flex; gap:8px; align-items:center;
+    display:flex; gap:6px; align-items:center;
+    pointer-events:none;
     font:11px/1.4 'Segoe UI',sans-serif; color:rgba(255,255,255,0.6);
   `;
-  hud.innerHTML = `<span id="cesium-alt" style="pointer-events:none;"></span>`;
+  hud.innerHTML = `<span id="cesium-alt"></span>`;
   document.getElementById('cesium-container')?.appendChild(hud);
-  _injectViewToggle();
 }
 
-// 2D/3D toggle pill — overlaid on the Cesium viewport, sibling of the altitude
-// readout inside #cesium-hud. Hidden until the user has located a site
-// (_siteLocated). Stays visible until Clear Site (resetCesiumView).
-// Label shows the TARGET mode: in 3D the button reads "2D" (= click to go 2D).
-function _injectViewToggle() {
-  if (document.getElementById('cesium-view-toggle')) return;
-  const btn = document.createElement('button');
-  btn.id    = 'cesium-view-toggle';
-  btn.type  = 'button';
-  btn.title = 'Toggle 2D / 3D view';
-  btn.textContent = '2D';
-  btn.style.cssText = `
-    display:none; pointer-events:auto;
-    background: var(--chrome-panel, rgba(40,40,40,0.85));
-    color: var(--text-primary, #fff);
-    border: 1px solid var(--chrome-border, rgba(255,255,255,0.25));
-    border-radius: 14px;
-    font: 600 11px/1 'Segoe UI', sans-serif;
-    padding: 5px 12px;
-    cursor: pointer;
-  `;
-  btn.addEventListener('click', () => {
-    if (_viewMode === '3D') {
-      setCesium2D();
-      _viewMode      = '2D';
-      btn.textContent = '3D';
-    } else {
-      setCesium3D();
-      _viewMode      = '3D';
-      btn.textContent = '2D';
-    }
-  });
-  document.getElementById('cesium-hud')?.appendChild(btn);
-}
+// ── 2D/3D toggle reuse ────────────────────────────────────────────────────
+// We do NOT inject our own button. The existing `.mode-toggle-container`
+// (defined in body.html, styled in styles.css) is reused for Cesium too;
+// app.js's click handler branches on isCesiumActive() and dispatches to
+// setCesiumViewMode() instead of the Three.js switchMode() when appropriate.
 
 function _showViewToggle() {
-  const btn = document.getElementById('cesium-view-toggle');
-  if (btn) btn.style.display = 'inline-block';
+  const el = document.querySelector('.mode-toggle-container');
+  if (el) el.style.display = 'flex';
+  _syncViewToggleActive();
 }
 
 function _hideViewToggle() {
-  const btn = document.getElementById('cesium-view-toggle');
-  if (btn) btn.style.display = 'none';
-  _viewMode = '3D';
-  if (btn) btn.textContent = '2D';
+  const el = document.querySelector('.mode-toggle-container');
+  if (el) el.style.display = 'none';
+  _viewMode = '3d';
+}
+
+// Reflect _viewMode on the .mode-btn .active class. Used only while Cesium
+// is the active view; Three.js path manages .active via its own switchMode.
+function _syncViewToggleActive() {
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    const isActive = (btn.dataset.mode || '').toLowerCase() === _viewMode;
+    btn.classList.toggle('active', isActive);
+  });
 }
 
 export const getCesiumViewer = () => _viewer;
@@ -218,8 +199,18 @@ export function showCesiumView() {
   if (cesiumEl) cesiumEl.style.display = 'block';
   if (canvas)   canvas.style.display   = 'none';
   if (np)       np.style.display       = 'none';
-  if (toggle)   toggle.style.display   = 'none';
   if (gizmo)    gizmo.style.display    = 'none';
+  // Toggle reuse: keep visible if a Cesium site has been located, else hide.
+  // app.js's mode-btn click handler dispatches Cesium-vs-Three.js based on
+  // isCesiumActive(), so we leave the same DOM element in place.
+  if (toggle) {
+    if (_siteLocated) {
+      toggle.style.display = 'flex';
+      _syncViewToggleActive();
+    } else {
+      toggle.style.display = 'none';
+    }
+  }
 }
 
 /** Activate Three.js — hide Cesium only. NPoint modules manage their own visibility. */
@@ -261,6 +252,27 @@ export function setCesium3D() {
     orientation: { heading: 0, pitch: Cesium.Math.toRadians(-35), roll: 0 },
     duration: 1.2,
   });
+}
+
+/** Public: dispatch the existing .mode-toggle-container button click to
+ *  Cesium when Cesium is the active view. Called from app.js's mode-btn
+ *  handler. Keeps the .active class on the buttons in sync. */
+export function setCesiumViewMode(mode) {
+  if (!_viewer) return;
+  const m = (mode || '').toLowerCase();
+  if (m !== '2d' && m !== '3d') return;
+  if (m === '2d') setCesium2D();
+  else            setCesium3D();
+  _viewMode = m;
+  _syncViewToggleActive();
+}
+
+/** Public: is the Cesium viewport currently the visible render surface?
+ *  Used by app.js to decide whether the .mode-btn click should dispatch
+ *  to Cesium (this) or to Three.js (existing switchMode). */
+export function isCesiumActive() {
+  const el = document.getElementById('cesium-container');
+  return !!el && getComputedStyle(el).display !== 'none';
 }
 
 /**
