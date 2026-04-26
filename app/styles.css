@@ -702,11 +702,12 @@ body {
 .mode-btn[data-mode="2d"]::before {
   content: "";
   display: block;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1.5' y='1.5' width='13' height='13' fill='none' stroke='%23555' stroke-width='1.5'/%3E%3C/svg%3E");
   background-size: contain;
   background-repeat: no-repeat;
+  background-position: center;
 }
 
 .mode-btn[data-mode="2d"].active::before {
@@ -716,11 +717,12 @@ body {
 .mode-btn[data-mode="3d"]::before {
   content: "";
   display: block;
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpolygon points='9,1 17,5.5 17,12.5 9,17 1,12.5 1,5.5' fill='none' stroke='%23555' stroke-width='1.4' stroke-linejoin='round'/%3E%3Cline x1='9' y1='17' x2='9' y2='9' stroke='%23555' stroke-width='1.2'/%3E%3Cline x1='1' y1='5.5' x2='9' y2='9' stroke='%23555' stroke-width='1.2'/%3E%3Cline x1='17' y1='5.5' x2='9' y2='9' stroke='%23555' stroke-width='1.2'/%3E%3C/svg%3E");
   background-size: contain;
   background-repeat: no-repeat;
+  background-position: center;
 }
 
 .mode-btn[data-mode="3d"].active::before {

@@ -1026,7 +1026,10 @@
        VIEW CONTROLS
     ============================================================ */
     document.getElementById('fitSiteBtn').addEventListener('click', () => {
-      const target = state.importedModel || state.siteBoundaryLine;
+      // For OSM imports: prefer the buildings layer (clipped to radius)
+      // over the full cadmapperGroup (which can include km-long highways/railways).
+      const buildings = state.cadmapperGroup?.children.find(c => c.name === 'buildings');
+      const target = state.importedModel || state.siteBoundaryLine || buildings || state.cadmapperGroup;
       if (!target) { showFeedback('No model or site loaded'); return; }
       const box = new THREE.Box3().setFromObject(target);
       if (state.currentMode === '2d') fit2DCamera(box); else fit3DCamera(box);

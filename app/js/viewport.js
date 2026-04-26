@@ -246,9 +246,15 @@ export function switchMode(mode) {
     if (state.gridHelper) state.gridHelper.visible = true;
     if (state.axesHelper) state.axesHelper.visible = true;
     if (state.axesYLine)  state.axesYLine.visible  = true;
+    // Prefer buildings layer over full cadmapperGroup for OSM imports
+    // (cadmapperGroup may include km-long highways/railways that blow up the bbox)
+    const buildings = state.cadmapperGroup?.children.find(c => c.name === 'buildings');
     const target = state.importedModel
       ? new THREE.Box3().setFromObject(state.importedModel)
-      : (state.siteBoundaryLine ? new THREE.Box3().setFromObject(state.siteBoundaryLine) : null);
+      : (state.siteBoundaryLine ? new THREE.Box3().setFromObject(state.siteBoundaryLine)
+      : (buildings              ? new THREE.Box3().setFromObject(buildings)
+      : (state.cadmapperGroup   ? new THREE.Box3().setFromObject(state.cadmapperGroup)
+      : null)));
     if (target) fit3DCamera(target);
     document.getElementById('status-mode').textContent = '3D';
     showFeedback('3D View \u2014 click a surface to select it');
