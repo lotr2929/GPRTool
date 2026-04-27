@@ -31,11 +31,11 @@ for /f "usebackq tokens=1,* delims==" %%A in ("deploy.env") do (
 )
 if not defined PROJECT_NAME set PROJECT_NAME=project
 
-echo 
+echo. 
 echo =============================
-echo     GPRTool Deployment 
+echo     GPRTool Deploying... 
 echo =============================
-echo 
+echo. 
 
 REM -- Bump service-worker version (only if SW_PREFIX set and file exists)
 if defined SW_PREFIX if exist service-worker.js (
@@ -93,6 +93,6 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 
-echo 
+echo. 
 if defined DEPLOY_URL (echo Live: %DEPLOY_URL%) else (echo Done.)
 pause

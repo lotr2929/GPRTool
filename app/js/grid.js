@@ -17,10 +17,7 @@ import { getDesignNorthAngle } from './north-point-2d.js';
 // ── Auto major cell size ──────────────────────────────────────────────────
 
 export function majorCellSize() {
-  const rawCell = state._lastSiteSpan / 10;
-  return state.manualGridSpacing
-    ? state.manualGridSpacing
-    : (rawCell < 50 ? 50 : rawCell < 100 ? 100 : rawCell < 250 ? 250 : 500);
+  return state.manualGridSpacing ?? 500;
 }
 
 // ── Scene helpers (grid + axes) ───────────────────────────────────────────
@@ -34,10 +31,7 @@ export function updateSceneHelpers(siteSpan) {
   state.axesYLine = null;
 
   const gridSize = 10000;
-  const rawCell  = siteSpan / 10;
-  const cellSize = state.manualGridSpacing
-    ? state.manualGridSpacing
-    : (rawCell < 50 ? 50 : rawCell < 100 ? 100 : rawCell < 250 ? 250 : 500);
+  const cellSize = state.manualGridSpacing ?? 500;
   const divisions = gridSize / cellSize;
 
   // CAD Universe grid — ALWAYS True North, NEVER rotates
@@ -48,7 +42,7 @@ export function updateSceneHelpers(siteSpan) {
   state.scene.add(state.gridHelper);
 
   // Minor grid — subdivisions within major cells
-  const minorDivs = state.manualMinorDivisions ?? 0;
+  const minorDivs = state.manualMinorDivisions ?? 10;
   if (minorDivs >= 2) {
     const totalMinorDivisions = divisions * minorDivs;
     state.gridHelperMinor = new THREE.GridHelper(gridSize, totalMinorDivisions, 0x3a5a40, 0x3a5a40);

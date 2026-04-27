@@ -13,6 +13,8 @@
  *   showProjectsModal()         → opens Recent Projects UI
  */
 
+import { setPipelineStatus, showFeedback } from './ui.js';
+
 const API = '/api/projects';
 
 // ── Blob ↔ base64 helpers ─────────────────────────────────────────────────
@@ -202,8 +204,7 @@ export function showSaveProjectDialog({ blob, blobGetter, defaultName, lat, lng,
     overlay.querySelector('#spd-cancel').addEventListener('click', () => close(false));
 
     overlay.querySelector('#spd-save').addEventListener('click', async () => {
-      const name    = nameInput.value.trim() || defaultName;
-      const saveBtn = overlay.querySelector('#spd-save');
+      const name = nameInput.value.trim() || defaultName;
 
       // Check if name matches an existing project (case-insensitive)
       const match = existing.find(p => p.site_name.toLowerCase() === name.toLowerCase());
@@ -212,28 +213,29 @@ export function showSaveProjectDialog({ blob, blobGetter, defaultName, lat, lng,
       // Confirmation only when overwriting
       if (overId && !confirm(`Overwrite "${name}"?`)) return;
 
-      saveBtn.disabled = true; saveBtn.textContent = 'Saving\u2026';
-      errEl.style.display = 'none';
-      try {
-        // Resolve blob — either direct or via lazy getter
-        const resolvedBlob = blob ?? (blobGetter ? await blobGetter() : null);
-        if (!resolvedBlob) throw new Error('No project data to save');
-        // Close dialog immediately — Supabase upload runs in background
-        close(true);
-        saveProject(resolvedBlob, {
-          id:           overId ?? undefined,
-          site_name:    name,
-          folder:       'GPR Projects',
-          dxf_filename: dxfFilename,
-          has_boundary: false,
-          wgs84_lat:    lat,
-          wgs84_lng:    lng,
-        }).catch(e => console.warn('[GPR] Background save failed:', e));
-      } catch (e) {
-        saveBtn.disabled = false; saveBtn.textContent = 'Save';
-        errEl.textContent = 'Save failed: ' + e.message;
-        errEl.style.display = 'block';
-      }
+      // Close dialog immediately — ZIP creation + Supabase upload run in background
+      close(true);
+      setPipelineStatus('Saving\u2026', 'busy');
+      (async () => {
+        try {
+          const resolvedBlob = blob ?? (blobGetter ? await blobGetter() : null);
+          if (!resolvedBlob) throw new Error('No project data to save');
+          await saveProject(resolvedBlob, {
+            id:           overId ?? undefined,
+            site_name:    name,
+            folder:       'GPR Projects',
+            dxf_filename: dxfFilename,
+            has_boundary: false,
+            wgs84_lat:    lat,
+            wgs84_lng:    lng,
+          });
+          setPipelineStatus('\u2713 Saved', 'done');
+        } catch (e) {
+          console.warn('[GPR] Background save failed:', e);
+          setPipelineStatus('\u2717 Save failed', 'error');
+          showFeedback('Save failed: ' + e.message, 6000);
+        }
+      })();
     });
 
     nameInput.focus(); nameInput.select();

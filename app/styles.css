@@ -671,7 +671,7 @@ body {
   top: 10px;
   right: 10px;
   display: flex;
-  background: rgba(46, 90, 72, 0.18);
+  background: #b8c8be;
   border: 1px solid var(--chrome-border);
   border-radius: 4px;
   overflow: hidden;
@@ -684,8 +684,9 @@ body {
   border: none;
   padding: 0;
   cursor: pointer;
-  width: 34px;
+  width: 36px;
   height: 28px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -702,24 +703,24 @@ body {
 .mode-btn[data-mode="2d"]::before {
   content: "";
   display: block;
-  width: 22px;
-  height: 22px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='4' y='4' width='16' height='16' fill='none' stroke='%23555' stroke-width='2'/%3E%3C/svg%3E");
+  width: 24px;
+  height: 24px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='5' y='5' width='14' height='14' fill='none' stroke='%23f5ecd6' stroke-width='2'/%3E%3C/svg%3E");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 }
 
 .mode-btn[data-mode="2d"].active::before {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='4' y='4' width='16' height='16' fill='none' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='5' y='5' width='14' height='14' fill='none' stroke='%23fff' stroke-width='2'/%3E%3C/svg%3E");
 }
 
 .mode-btn[data-mode="3d"]::before {
   content: "";
   display: block;
-  width: 22px;
-  height: 22px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpolygon points='12,4 20,8 20,16 12,20 4,16 4,8' fill='none' stroke='%23555' stroke-width='2' stroke-linejoin='round'/%3E%3Cline x1='12' y1='12' x2='12' y2='20' stroke='%23555' stroke-width='2'/%3E%3Cline x1='4' y1='8' x2='12' y2='12' stroke='%23555' stroke-width='2'/%3E%3Cline x1='20' y1='8' x2='12' y2='12' stroke='%23555' stroke-width='2'/%3E%3C/svg%3E");
+  width: 24px;
+  height: 24px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpolygon points='12,4 20,8 20,16 12,20 4,16 4,8' fill='none' stroke='%23f5ecd6' stroke-width='2' stroke-linejoin='round'/%3E%3Cline x1='12' y1='12' x2='12' y2='20' stroke='%23f5ecd6' stroke-width='2'/%3E%3Cline x1='4' y1='8' x2='12' y2='12' stroke='%23f5ecd6' stroke-width='2'/%3E%3Cline x1='20' y1='8' x2='12' y2='12' stroke='%23f5ecd6' stroke-width='2'/%3E%3C/svg%3E");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;

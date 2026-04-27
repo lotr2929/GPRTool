@@ -1605,7 +1605,9 @@
             lng: anchor.lng,
             dxfFilename: dxfFile?.name ?? null,
           }).then(saved => {
-            setPipelineStatus(saved ? '\u2713 Saved' : 'Ready', saved ? 'done' : 'idle');
+            // Dialog now manages its own pipeline-status during background save.
+            // Only handle the "skipped/cancelled" case here.
+            if (!saved) setPipelineStatus('Ready', 'idle');
           }).catch(() => {});
 
           buildBoundaryPanel(wgs84Bounds, false, !dxfFile ? _startCesiumBoundaryDraw : null);
