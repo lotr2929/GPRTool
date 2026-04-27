@@ -180,6 +180,8 @@ function _syncViewToggleActive() {
     const isActive = (btn.dataset.mode || '').toLowerCase() === _viewMode;
     btn.classList.toggle('active', isActive);
   });
+  const statusMode = document.getElementById('status-mode');
+  if (statusMode) statusMode.textContent = _viewMode.toUpperCase();
 }
 
 export const getCesiumViewer = () => _viewer;
