@@ -32,9 +32,9 @@ for /f "usebackq tokens=1,* delims==" %%A in ("deploy.env") do (
 if not defined PROJECT_NAME set PROJECT_NAME=project
 
 echo. 
-echo =============================
-echo     GPRTool Deploying... 
-echo =============================
+echo ===========================================================
+echo                    GPRTool Deploying... 
+echo ===========================================================
 echo. 
 
 REM -- Bump service-worker version (only if SW_PREFIX set and file exists)
@@ -94,5 +94,9 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo. 
-if defined DEPLOY_URL (echo Live: %DEPLOY_URL%) else (echo Done.)
+if defined DEPLOY_URL (
+    powershell -NoProfile -Command "Write-Host 'Live: %DEPLOY_URL%' -ForegroundColor Green"
+) else (
+    echo Done.
+)
 pause
