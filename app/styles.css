@@ -693,10 +693,6 @@ body {
   transition: background 0.15s;
 }
 
-.mode-btn + .mode-btn {
-  border-left: 1px solid var(--chrome-border);
-}
-
 .mode-btn:hover { background: var(--chrome-panel-alt); }
 .mode-btn.active { background: var(--accent); }
 

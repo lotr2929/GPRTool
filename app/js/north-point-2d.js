@@ -540,15 +540,11 @@ export function getGlobalNorthAngle() { return globalNorthAngle; }
 export function resetDesignNorth() { applyDesignNorth(0); }
 
 export function setNorthPointMode(mode) {
-  // '3d': hide DOM widget — gizmo takes over; '2d': restore per saved preference
+  // '3d': hide DOM widget — gizmo takes over; '2d': always show in 2D
   if (!npEl) return;
   if (mode === '3d') {
     npEl.style.display = 'none';
   } else {
-    try {
-      const saved = JSON.parse(localStorage.getItem(NP_KEY));
-      if (saved && saved.visible === false) return; // user explicitly hid it
-    } catch {}
     npEl.style.display = '';
   }
 }
