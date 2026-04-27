@@ -95,7 +95,7 @@ if %ERRORLEVEL% NEQ 0 (
 
 echo. 
 if defined DEPLOY_URL (
-    powershell -NoProfile -Command "Write-Host 'Live: %DEPLOY_URL%' -ForegroundColor Green"
+    powershell -NoProfile -Command "Write-Host 'Live: ' -NoNewline; Write-Host '%DEPLOY_URL%' -ForegroundColor Green -Underline"
 ) else (
     echo Done.
 )

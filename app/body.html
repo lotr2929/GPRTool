@@ -220,8 +220,19 @@
       <div id="np-ctx-hide">Hide North Point</div>
     </div>
     <div class="mode-toggle-container" style="display:none;">
-      <button class="mode-btn active" data-mode="2d" title="2D View (right-click for options)"></button>
-      <button class="mode-btn" data-mode="3d" title="3D View"></button>
+      <button class="mode-btn active" data-mode="2d" title="2D View (right-click for options)">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="5" y="5" width="14" height="14"/>
+        </svg>
+      </button>
+      <button class="mode-btn" data-mode="3d" title="3D View">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+          <polygon points="12,4 20,8 20,16 12,20 4,16 4,8"/>
+          <line x1="12" y1="12" x2="12" y2="20"/>
+          <line x1="4"  y1="8"  x2="12" y2="12"/>
+          <line x1="20" y1="8"  x2="12" y2="12"/>
+        </svg>
+      </button>
     </div>
     <div id="mode-2d-menu" class="mode-context-menu" style="display:none">
       <button class="mode-context-item active" data-canvas="ortho">
