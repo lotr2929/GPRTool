@@ -14,6 +14,7 @@
  */
 
 import { setPipelineStatus, showFeedback } from './ui.js';
+import { isLocalFolderSupported, pickLocalSaveFile, writeBlobToHandle } from './local-folder.js';
 
 const API = '/api/projects';
 
@@ -210,17 +211,34 @@ export function showSaveProjectDialog({ blob, blobGetter, defaultName, lat, lng,
       const match = existing.find(p => p.site_name.toLowerCase() === name.toLowerCase());
       const overId = selectedId ?? match?.id ?? null;
 
-      // Confirmation only when overwriting
-      if (overId && !confirm(`Overwrite "${name}"?`)) return;
+      // Confirmation only when overwriting an existing Supabase project
+      if (overId && !confirm(`Overwrite "${name}" in cloud?`)) return;
 
-      // Close dialog immediately — ZIP creation + Supabase upload run in background
+      // STEP 1 (must run in user-gesture): open Save-As for local copy.
+      // If unsupported (non-Chromium browser), fileHandle stays null and we
+      // skip local write but still save to Supabase.
+      let fileHandle = null;
+      if (isLocalFolderSupported()) {
+        try {
+          fileHandle = await pickLocalSaveFile(name);
+        } catch (e) {
+          console.warn('[GPR] local file picker error:', e);
+          showFeedback('Local file picker error: ' + e.message, 4000);
+          return; // abort — per spec, cancel/fail aborts entire save
+        }
+        // User cancelled the Save-As dialog → abort entire save
+        if (!fileHandle) return;
+      }
+
+      // STEP 2: close dialog, run Supabase + local write in parallel
       close(true);
       setPipelineStatus('Saving\u2026', 'busy');
       (async () => {
         try {
           const resolvedBlob = blob ?? (blobGetter ? await blobGetter() : null);
           if (!resolvedBlob) throw new Error('No project data to save');
-          await saveProject(resolvedBlob, {
+
+          const supabaseTask = saveProject(resolvedBlob, {
             id:           overId ?? undefined,
             site_name:    name,
             folder:       'GPR Projects',
@@ -229,9 +247,24 @@ export function showSaveProjectDialog({ blob, blobGetter, defaultName, lat, lng,
             wgs84_lat:    lat,
             wgs84_lng:    lng,
           });
-          setPipelineStatus('\u2713 Saved', 'done');
+
+          const localTask = fileHandle
+            ? writeBlobToHandle(fileHandle, resolvedBlob)
+            : Promise.resolve(null);
+
+          const [supabase, local] = await Promise.allSettled([supabaseTask, localTask]);
+
+          if (supabase.status === 'rejected') throw supabase.reason;
+
+          if (fileHandle && local.status === 'rejected') {
+            console.warn('[GPR] local write failed:', local.reason);
+            setPipelineStatus('\u2713 Saved (cloud only)', 'done');
+            showFeedback('Saved to cloud \u2014 local write failed: ' + local.reason.message, 6000);
+          } else {
+            setPipelineStatus('\u2713 Saved', 'done');
+          }
         } catch (e) {
-          console.warn('[GPR] Background save failed:', e);
+          console.warn('[GPR] save failed:', e);
           setPipelineStatus('\u2717 Save failed', 'error');
           showFeedback('Save failed: ' + e.message, 6000);
         }
