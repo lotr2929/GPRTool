@@ -54,3 +54,10 @@ coverage/
 
 .vercel
 GPRTool Projects/
+
+# Demo / test geometry and reports — local only, not loaded by app
+_projects/
+
+# Local-only documentation and notes (CLAUDE.md, journals, design docs, transcripts)
+*.md
+*.docx
