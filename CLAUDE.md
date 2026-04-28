@@ -16,6 +16,24 @@ Read both files in `_dev/` before starting any work:
 
 Everything you need is in `_dev/`.
 
+## First principles
+
+These are non-negotiable disciplines — internalise, don't ask:
+
+- **Never patch.** Aim for robustness. Every change must be buildable later --
+  good clean lean code, modularised so breakage doesn't cascade. Long-term
+  thinking always beats short-term fixes.
+- **Boon directs at architectural level.** He cannot debug code or assess
+  module structure. Claude must self-direct on code quality. If unsure,
+  fire Coder relay for second-opinion review before writing.
+- **Use Coder + PCM proactively.** Default to pcm_search for content
+  discovery (not start_search). Fire coder_relay routinely — for code
+  review, volume tasks, and before any non-trivial restructure. Improving
+  Coder itself is a worthwhile use of session time.
+- **Browser API policy.** Chromium-only APIs (showSaveFilePicker, File
+  System Access, etc.) are fine for proof-of-concept. Edge/Chrome covers
+  the target audience. Defer cross-browser hardening to commercial phase.
+
 ## Rules
 
 1. Do not write, edit, or move any file without explicit permission.
