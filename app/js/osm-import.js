@@ -433,6 +433,8 @@ function _showPhaseA() {
 }
 
 function _showPhaseB() {
+  stopLocationPick();   // deactivate any active Cesium click handler
+  stopIdentifyPick();
   document.getElementById('osm-phase-a').style.display = 'none';
   document.getElementById('osm-phase-b').style.display = 'block';
   _updateCoordsDisplay();
@@ -1183,7 +1185,7 @@ function _runTerrainWorker(bbox, zone) {
         points: msg.terrainPoints,
         contourSegments: Array.from(msg.contourSegments),
       };
-      _buildTerrainFromWorker(msg.terrainPoints, msg.contourSegments).then(async () => {
+      _buildTerrainFromWorker(msg).then(async () => {
         state.terrainStatus = 'ready';
         state.terrainPayload = payload;
         window.dispatchEvent(new CustomEvent('terrain:status', { detail: { status: 'ready' } }));
@@ -1227,67 +1229,65 @@ function _runTerrainWorker(bbox, zone) {
   };
 }
 
-async function _buildTerrainFromWorker(points, contourSegments) {
-  console.log('[terrain] _buildTerrainFromWorker start — points:', points?.length,
-    'contourSegments:', contourSegments?.length,
-    'cadmapperGroup:', !!state?.cadmapperGroup, 'THREE:', !!_callbacks?.THREE);
-  if (!_callbacks?.THREE || !state?.cadmapperGroup) {
-    console.warn('[terrain] early return — missing THREE or cadmapperGroup');
-    return;
-  }
+async function _buildTerrainFromWorker(msg) {
+  const { terrainPoints: points, contourSegments,
+          gridWidth = 0, gridHeight = 0, tilesX = 1, tilesY = 1 } = msg;
+  if (!_callbacks?.THREE || !state?.cadmapperGroup) return;
+  if (!gridWidth || !gridHeight || !points?.length) return;
+
   const T = _callbacks.THREE;
-  // Yield to the browser between heavy phases so the main thread stays responsive.
-  // Without this, the synchronous build (~30s for a 500m radius) blocks all input
-  // and Edge raises "page isn't responding" — see N-93.
   const yieldFrame = () => new Promise(r => requestAnimationFrame(r));
 
-  // ── Phase 1: Grid lookup tables ──────────────────────────────────────
-  const xs   = [...new Set(points.map(p => Math.round(p.x*10)/10))].sort((a,b)=>a-b);
-  const ys   = [...new Set(points.map(p => Math.round(p.y*10)/10))].sort((a,b)=>a-b);
-  const grid = new Map();
-  for (const p of points) grid.set(`${Math.round(p.x*10)/10},${Math.round(p.y*10)/10}`, p.ele);
-  await yieldFrame();
+  // Pixel-index grid helper
+  // Tile layout: tilePromises built column-major (tx outer, ty inner)
+  // so tile index = tileIx * tilesY + tileIy
+  const TILE_GRID = Math.round(gridWidth / tilesX); // 64
+  function ptAt(globalIy, globalIx) {
+    const tileIy  = Math.floor(globalIy / TILE_GRID);
+    const tileIx  = Math.floor(globalIx / TILE_GRID);
+    const tileIdx = tileIx * tilesY + tileIy;
+    const localPy = globalIy % TILE_GRID;
+    const localPx = globalIx % TILE_GRID;
+    return points[tileIdx * TILE_GRID * TILE_GRID + localPy * TILE_GRID + localPx] || null;
+  }
 
-  // ── Phase 2: Vertex buffer ───────────────────────────────────────────
-  const verts = [], indices = [], idxMap = new Map();
+  // ── Phase 2: vertex buffer ────────────────────────────────────────────
+  // Use actual scene coordinates from each point; use grid index for connectivity
+  const verts = [];
+  const idxMap = new Map(); // gridIndex → vertexIndex
   let vi = 0;
-  for (let iy = 0; iy < ys.length; iy++) {
-    for (let ix = 0; ix < xs.length; ix++) {
-      const ele = grid.get(`${xs[ix]},${ys[iy]}`);
-      if (ele === undefined) continue;
-      verts.push(xs[ix], ele, -ys[iy]); // y→z (north=-Z convention)
-      idxMap.set(`${ix},${iy}`, vi++);
-    }
-  }
-  // Diagnostic: log first grid key vs first lookup key to detect format mismatch
-  const firstGridKey = grid.size ? grid.keys().next().value : 'empty';
-  const firstLookup  = xs.length && ys.length ? `${xs[0]},${ys[0]}` : 'no-xs-ys';
-  console.log('[terrain] phase2 — xs:', xs.length, 'ys:', ys.length,
-    'grid.size:', grid.size, 'verts:', verts.length,
-    'first grid key:', firstGridKey, '| first lookup:', firstLookup);
-  await yieldFrame();
-
-  // ── Phase 3: Index buffer ────────────────────────────────────────────
-  for (let iy = 0; iy < ys.length-1; iy++) {
-    for (let ix = 0; ix < xs.length-1; ix++) {
-      const a=idxMap.get(`${ix},${iy}`), b=idxMap.get(`${ix+1},${iy}`);
-      const c=idxMap.get(`${ix},${iy+1}`), d=idxMap.get(`${ix+1},${iy+1}`);
-      if (a==null||b==null||c==null||d==null) continue;
-      indices.push(a,b,c, b,d,c);
+  for (let giy = 0; giy < gridHeight; giy++) {
+    for (let gix = 0; gix < gridWidth; gix++) {
+      const pt = ptAt(giy, gix);
+      if (!pt) continue;
+      verts.push(pt.x, pt.ele, -pt.y); // Three.js: x=east, y=ele, z=-north
+      idxMap.set(giy * gridWidth + gix, vi++);
     }
   }
   await yieldFrame();
 
-  // ── Phase 4: Build mesh + attach ─────────────────────────────────────
-  console.log('[terrain] phase4 — indices:', indices.length, 'idxMap:', idxMap.size);
+  // ── Phase 3: index buffer ─────────────────────────────────────────────
+  const indices = [];
+  for (let giy = 0; giy < gridHeight - 1; giy++) {
+    for (let gix = 0; gix < gridWidth - 1; gix++) {
+      const a = idxMap.get( giy      * gridWidth + gix    );
+      const b = idxMap.get( giy      * gridWidth + gix + 1);
+      const c = idxMap.get((giy + 1) * gridWidth + gix    );
+      const d = idxMap.get((giy + 1) * gridWidth + gix + 1);
+      if (a == null || b == null || c == null || d == null) continue;
+      indices.push(a, b, c, b, d, c);
+    }
+  }
+  await yieldFrame();
+
+  // ── Phase 4: terrain mesh ─────────────────────────────────────────────
   if (indices.length) {
     const geom = new T.BufferGeometry();
     geom.setAttribute('position', new T.BufferAttribute(new Float32Array(verts), 3));
     geom.setIndex(indices);
     geom.computeVertexNormals();
-    const cfg  = { color: 0xc8b890 };
     const mesh = new T.Mesh(geom, new T.MeshBasicMaterial({
-      color: cfg.color, side: T.DoubleSide,
+      color: 0xc8b890, side: T.DoubleSide,
       polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 1,
     }));
     const terrainGroup = new T.Group();
@@ -1295,31 +1295,28 @@ async function _buildTerrainFromWorker(points, contourSegments) {
     terrainGroup.add(mesh);
     state.cadmapperGroup.add(terrainGroup);
     appendLayerToPanel('topography', terrainGroup);
-    console.log('[terrain] topography mesh added to scene and panel, children:', terrainGroup.children.length);
+    console.log('[terrain] mesh built — verts:', verts.length / 3, 'tris:', indices.length / 3);
   }
   await yieldFrame();
 
-  // ── Phase 5: Contour vertex buffer ───────────────────────────────────
-  if (contourSegments.length >= 6) {
+  // ── Phase 5/6: contour lines ──────────────────────────────────────────
+  if (contourSegments?.length >= 6) {
     const vBuf = new Float32Array(contourSegments.length);
     for (let i = 0; i < contourSegments.length; i += 6) {
-      // [x0,y0,ele, x1,y1,ele] → Three.js [x, ele, -y]
       vBuf[i]   = contourSegments[i];   vBuf[i+1] = contourSegments[i+2]; vBuf[i+2] = -contourSegments[i+1];
       vBuf[i+3] = contourSegments[i+3]; vBuf[i+4] = contourSegments[i+5]; vBuf[i+5] = -contourSegments[i+4];
     }
     await yieldFrame();
-
-    // ── Phase 6: Build contour geometry + attach ──────────────────────
     const geom = new T.BufferGeometry();
     geom.setAttribute('position', new T.BufferAttribute(vBuf, 3));
     const contourGroup = new T.Group();
-    contourGroup.name  = 'contours';
+    contourGroup.name = 'contours';
     contourGroup.position.y = 0.015;
     contourGroup.add(new T.LineSegments(geom,
       new T.LineBasicMaterial({ color: 0xa08860, opacity: 0.7, transparent: true })));
     state.cadmapperGroup.add(contourGroup);
     appendLayerToPanel('contours', contourGroup);
-    console.log('[terrain] contours added to scene and panel, children:', contourGroup.children.length);
+    console.log('[terrain] contours built — segments:', contourSegments.length / 6);
   }
 }
 

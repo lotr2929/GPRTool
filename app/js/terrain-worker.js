@@ -151,7 +151,9 @@ self.onmessage = async ({ data }) => {
     const txMax = lonToTileX(bbox.east,  zoom);
     const tyMin = latToTileY(bbox.north, zoom);
     const tyMax = latToTileY(bbox.south, zoom);
-    const totalTiles = (txMax - txMin + 1) * (tyMax - tyMin + 1);
+    const txCount = txMax - txMin + 1;
+    const tyCount = tyMax - tyMin + 1;
+    const totalTiles = txCount * tyCount;
 
     self.postMessage({ type: 'progress', stage: 'tiles', done: 0, total: totalTiles });
 
@@ -180,7 +182,14 @@ self.onmessage = async ({ data }) => {
 
     const contourSegments = await buildContours(points, intervalM);
 
-    self.postMessage({ type: 'done', terrainPoints: points, contourSegments });
+    // Grid dimensions for index-based mesh building in the main thread.
+    // fetchTile uses step=4 on 256×256 tiles → 64 grid points per tile side.
+    const TILE_GRID = 64; // 256 / 4
+    const gridWidth  = txCount * TILE_GRID;
+    const gridHeight = tyCount * TILE_GRID;
+
+    self.postMessage({ type: 'done', terrainPoints: points, contourSegments,
+                       gridWidth, gridHeight, tilesX: txCount, tilesY: tyCount });
   } catch (err) {
     self.postMessage({ type: 'error', message: err.message ?? String(err) });
   }
