@@ -1259,6 +1259,12 @@ async function _buildTerrainFromWorker(points, contourSegments) {
       idxMap.set(`${ix},${iy}`, vi++);
     }
   }
+  // Diagnostic: log first grid key vs first lookup key to detect format mismatch
+  const firstGridKey = grid.size ? grid.keys().next().value : 'empty';
+  const firstLookup  = xs.length && ys.length ? `${xs[0]},${ys[0]}` : 'no-xs-ys';
+  console.log('[terrain] phase2 — xs:', xs.length, 'ys:', ys.length,
+    'grid.size:', grid.size, 'verts:', verts.length,
+    'first grid key:', firstGridKey, '| first lookup:', firstLookup);
   await yieldFrame();
 
   // ── Phase 3: Index buffer ────────────────────────────────────────────
@@ -1273,6 +1279,7 @@ async function _buildTerrainFromWorker(points, contourSegments) {
   await yieldFrame();
 
   // ── Phase 4: Build mesh + attach ─────────────────────────────────────
+  console.log('[terrain] phase4 — indices:', indices.length, 'idxMap:', idxMap.size);
   if (indices.length) {
     const geom = new T.BufferGeometry();
     geom.setAttribute('position', new T.BufferAttribute(new Float32Array(verts), 3));
