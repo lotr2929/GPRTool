@@ -213,13 +213,24 @@ let _identifyMode = false;
 function _locateCallback({ lat, lng }) {
   document.getElementById('osm-lat').value = lat.toFixed(7);
   document.getElementById('osm-lng').value = lng.toFixed(7);
-
-  // Use hover tooltip label if it matches the clicked point, else fall back to coords.
-  const label = _getLastHoverLabel(lat, lng) || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  const label = _getLastHoverLabel(lat, lng) || null;
   state.siteCenter = { lat, lng, label };
-
-  closeModal(); // stops picks + removes tooltip
   window.dispatchEvent(new CustomEvent('site:located', { detail: { lat, lng, label } }));
+  // Transition directly to Phase B — user shouldn't have to click Step 2 separately
+  _showPhaseB();          // also calls stopLocationPick()
+  _stopHoverTooltip();    // no longer needed in Phase B
+  startLocationPick(_phaseBRepositionCallback); // re-enable click for repositioning
+}
+
+// Phase B repositioning: clicking the map updates coords and stays in Phase B
+function _phaseBRepositionCallback({ lat, lng }) {
+  document.getElementById('osm-lat').value = lat.toFixed(7);
+  document.getElementById('osm-lng').value = lng.toFixed(7);
+  const label = _getLastHoverLabel(lat, lng) || null;
+  if (state.siteCenter) state.siteCenter = { ...state.siteCenter, lat, lng, label: label || state.siteCenter.label };
+  else state.siteCenter = { lat, lng, label };
+  window.dispatchEvent(new CustomEvent('site:located', { detail: { lat, lng, label } }));
+  _updateCoordsDisplay();
 }
 
 function _setLocateMode() {
@@ -455,7 +466,9 @@ export function openImportModal() {
   document.getElementById('osm-lng').value = lng.toFixed(7);
   _openedFromStage2 = true;
   document.getElementById('osm-overlay').style.display = 'block';
-  _showPhaseB();
+  _showPhaseB(); // also calls stopLocationPick
+  _startHoverTooltip();                          // hover labels while repositioning
+  startLocationPick(_phaseBRepositionCallback);  // click to reposition
   const display = document.getElementById('osm-coords-display');
   if (display) display.textContent = label
     ? `${label}  \u2022  ${lat.toFixed(5)}, ${lng.toFixed(5)}`
@@ -1101,6 +1114,10 @@ async function runImport() {
         excludeAcceptAllOption: false,
       });
       state.activeFileHandle = handle;
+      // Update the site label to match the filename the user chose in the file picker.
+      // This drives the Step 1 panel label and the siteName used in onLayersLoaded.
+      const savedFilename = handle.name.replace(/\.gpr$/i, '').replace(/_/g, ' ').trim();
+      if (savedFilename) state.siteCenter = { ...(state.siteCenter || {}), label: savedFilename };
     } catch { /* user cancelled — continue without file handle */ }
   }
 
@@ -1125,8 +1142,10 @@ async function runImport() {
       throw new Error('No data returned \u2014 check coordinates or try a larger radius');
 
     closeModal();
+    // Re-read label — may have been updated by showSaveFilePicker filename
+    const finalLabel = state.siteCenter?.label || addressVal;
     const osmGeoJSON = osmToGeoJSON(osmData);
-    _callbacks.onLayersLoaded(layerGroups, null, addressVal, osmGeoJSON);
+    _callbacks.onLayersLoaded(layerGroups, null, finalLabel, osmGeoJSON);
   } catch (err) {
     setStatus('Import failed: ' + err.message, true);
     console.error('[OSM import]', err);
