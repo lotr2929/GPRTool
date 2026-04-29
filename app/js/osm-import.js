@@ -331,7 +331,11 @@ function _startHoverTooltip() {
 
       const rect = cesiumEl.getBoundingClientRect();
       const cart2 = new Cesium.Cartesian2(e.clientX - rect.left, e.clientY - rect.top);
-      const cartesian = viewer.camera.pickEllipsoid(cart2, viewer.scene.globe.ellipsoid);
+
+      // pickPosition uses the depth buffer — correct for oblique 3D views over buildings.
+      // Falls back to pickEllipsoid (ground plane) if depth pick fails (open sky).
+      let cartesian = viewer.scene.pickPosition(cart2);
+      if (!cartesian) cartesian = viewer.camera.pickEllipsoid(cart2, viewer.scene.globe.ellipsoid);
       if (!cartesian) { tt.style.display = 'none'; return; }
 
       const carto = Cesium.Cartographic.fromCartesian(cartesian);
@@ -1224,7 +1228,13 @@ function _runTerrainWorker(bbox, zone) {
 }
 
 async function _buildTerrainFromWorker(points, contourSegments) {
-  if (!_callbacks?.THREE || !state?.cadmapperGroup) return;
+  console.log('[terrain] _buildTerrainFromWorker start — points:', points?.length,
+    'contourSegments:', contourSegments?.length,
+    'cadmapperGroup:', !!state?.cadmapperGroup, 'THREE:', !!_callbacks?.THREE);
+  if (!_callbacks?.THREE || !state?.cadmapperGroup) {
+    console.warn('[terrain] early return — missing THREE or cadmapperGroup');
+    return;
+  }
   const T = _callbacks.THREE;
   // Yield to the browser between heavy phases so the main thread stays responsive.
   // Without this, the synchronous build (~30s for a 500m radius) blocks all input
@@ -1278,6 +1288,7 @@ async function _buildTerrainFromWorker(points, contourSegments) {
     terrainGroup.add(mesh);
     state.cadmapperGroup.add(terrainGroup);
     appendLayerToPanel('topography', terrainGroup);
+    console.log('[terrain] topography mesh added to scene and panel, children:', terrainGroup.children.length);
   }
   await yieldFrame();
 
@@ -1301,6 +1312,7 @@ async function _buildTerrainFromWorker(points, contourSegments) {
       new T.LineBasicMaterial({ color: 0xa08860, opacity: 0.7, transparent: true })));
     state.cadmapperGroup.add(contourGroup);
     appendLayerToPanel('contours', contourGroup);
+    console.log('[terrain] contours added to scene and panel, children:', contourGroup.children.length);
   }
 }
 
