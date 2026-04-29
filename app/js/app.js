@@ -1624,10 +1624,9 @@
           state._activeProjectName = siteName;
           setPipelineStatus('Ready to save', 'idle');
 
-          // ── Show save dialog immediately — ZIP is created lazily on Save ──────
-          // blobGetter is called ONLY when the user clicks Save, not before.
-          // This means the dialog appears instantly after import with no waiting.
-          showSaveProjectDialog({
+          // ── Show save dialog — skip if user already chose a file via showSaveFilePicker ──
+          if (!state.activeFileHandle) {
+            showSaveProjectDialog({
             blobGetter: async () => {
               await createInitialGPR({
                 siteName,
@@ -1661,6 +1660,7 @@
             // Only handle the "skipped/cancelled" case here.
             if (!saved) setPipelineStatus('Ready', 'idle');
           }).catch(() => {});
+          } // end if (!state.activeFileHandle)
 
           buildBoundaryPanel(wgs84Bounds, false, !dxfFile ? _startCesiumBoundaryDraw : null);
 

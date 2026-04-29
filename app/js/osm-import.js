@@ -338,9 +338,8 @@ function _startHoverTooltip() {
       const lat   = Cesium.Math.toDegrees(carto.latitude);
       const lng   = Cesium.Math.toDegrees(carto.longitude);
 
-      // Show coords immediately, then fetch label
-      tt.textContent    = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-      tt.style.display  = 'block';
+      // Hide until we have a real label from Nominatim
+      tt.style.display = 'none';
       tt._lastLat = lat; tt._lastLng = lng; tt._lastLabel = null;
 
       if (_abort) _abort.abort();
@@ -352,9 +351,12 @@ function _startHoverTooltip() {
         if (!res.ok) return;
         const data = await res.json();
         const lbl  = _formatNominatimLabel(data);
-        tt.textContent  = lbl;
-        tt._lastLabel   = lbl;
-      } catch { /* aborted or network — keep coords */ }
+        if (lbl) {
+          tt.textContent  = lbl;
+          tt.style.display = 'block';
+          tt._lastLabel   = lbl;
+        }
+      } catch { /* aborted or network error — stay hidden */ }
     }, 250);
   }
 
