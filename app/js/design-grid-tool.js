@@ -15,7 +15,7 @@ import * as THREE from 'three';
 import { state }              from './state.js';
 import { showFeedback }       from './ui.js';
 import { showGridSpacingPopup } from './grid.js';
-import { setDesignNorth }     from './north-state.js';
+import { setDesignNorth }     from './north-state.js';  // used by north_yaxis only
 import { animateCameraToGrid, switchMode, update2DCamera } from './viewport.js';
 import { updateDesignData }   from './gpr-file.js';
 
@@ -376,13 +376,11 @@ function _commitDesignGrid(origin, xAxis, yAxis, normal, surface, majorSpacing, 
     // Y-axis direction = Design North bearing
     const angle = _vectorToNorthAngle(yAxis);
     mgr.initHorizontal(spacing, minor, extent, origin);
-    setDesignNorth(angle);
-    // Move the axes indicator to the Design Origin so the designer sees (0,0,0) there
+    // Move axes Group to Design Origin — axesYLine is a child, moves automatically
     state.designOrigin = origin.clone();
     if (state.axesHelper) state.axesHelper.position.set(origin.x, 0.1, origin.z);
-    if (state.axesYLine)  state.axesYLine.position.set(origin.x, 0.1, origin.z);
     grid = mgr.grids.get('design-grid-horizontal');
-    showFeedback(`Design Grid set — ${spacing} m · Design North ${angle >= 0 ? '+' : ''}${angle.toFixed(1)}°`);
+    showFeedback(`Design Grid set — ${spacing} m`);
   }
 
   // Persist
@@ -393,28 +391,26 @@ function _commitDesignGrid(origin, xAxis, yAxis, normal, surface, majorSpacing, 
 
   if (!grid) return;
 
-  // Animate camera to face the grid, then switch to 2D with Y-axis pointing screen-up
-  animateCameraToGrid(grid, () => {
-    if (surface) {
+  if (surface) {
+    // Tilted surface: animate camera to face the surface plane, then enter 2D
+    animateCameraToGrid(grid, () => {
       state.selectedSurface = surface;
       state.canvasMode      = 'surface';
       mgr.activateSurfaceGrid(surface.id);
       switchMode('2d');
-      // Override camera up to align with grid Y-axis on this surface
       state.camera2D.up.copy(grid.yAxis).normalize();
       state.camera2D.lookAt(grid.origin);
       state.camera2D.updateProjectionMatrix();
-    } else {
-      // Horizontal grid: rotate the 2D viewport so grid Y-axis points screen-up.
-      // update2DCamera() sets camera2D.up = (sin(r), 0, -cos(r)).
-      // We need r = atan2(yAxis.x, -yAxis.z) so that up aligns with yAxis.
-      state.rotate2D = Math.atan2(yAxis.x, -yAxis.z);
-      switchMode('2d');
-      // switchMode may skip fit2DCamera for OSM scenes (no siteBoundaryLine/importedModel),
-      // so call update2DCamera explicitly to guarantee the rotation takes effect.
-      update2DCamera();
-    }
-  });
+    });
+  } else {
+    // Horizontal grid: no camera animation needed — just rotate 2D view.
+    // rotate2D = atan2(yAxis.x, -yAxis.z) aligns camera2D.up with the Y-axis.
+    state.rotate2D = Math.atan2(yAxis.x, -yAxis.z);
+    // Pan to Design Origin so it appears on screen
+    state.pan2D = { x: origin.x, z: origin.z };
+    switchMode('2d');
+    update2DCamera();
+  }
 }
 
 // ── Snap marker (green dot at snap point) ────────────────────────────────────
