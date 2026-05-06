@@ -9,7 +9,8 @@
       setSceneOffset, sceneToWGS84, wgs84ToScene,
     } from './real-world.js';
     import {
-      createInitialGPR, addBoundaryToGPR, openGPR, downloadGPR, getActiveGPRBlob, updateDesignData,
+      createInitialGPR, addBoundaryToGPR, openGPR, downloadGPR, getActiveGPRBlob,
+      updateDesignData, saveViewState,
     } from './gpr-file.js';
     import { initProjects, showProjectsModal, saveProject, loadProject, showSaveProjectDialog } from './projects.js';
     // ── DESIGN WORLD (grids, north angle) — never mixes with Real World ────────
@@ -43,7 +44,7 @@
     import { drawSiteBoundary, buildBoundaryPanel, clearLotBoundary, renderLotBoundary, buildLotBoundaryLayerRow, showSitePin, updateSitePinDOM,
          startBoundaryDraw, handleBoundaryClick, handleBoundaryDblClick, confirmBoundaryDraw, cancelBoundaryDraw,
          handleBoundaryMouseMove } from './site.js';
-    import { syncViewportBackground, update2DCamera, fit2DCamera, fit3DCamera, drawSurfaceCanvasOutline, clearSurfaceCanvasOutline, fitSurfaceCamera, switchMode, resizeToContainer, toggleAxes, updateGridVisibility, setGridVisible } from './viewport.js';
+    import { syncViewportBackground, update2DCamera, fit2DCamera, fit3DCamera, drawSurfaceCanvasOutline, clearSurfaceCanvasOutline, fitSurfaceCamera, switchMode, resizeToContainer, toggleAxes, updateGridVisibility, setGridVisible, captureViewState, restoreViewState } from './viewport.js';
     import { recalcGPR, updateClearBtn, addPlantInstance, removePlantInstance, updateInstanceCanopyArea, updateSurfaceListTag, renderSurfacePlantSchedule, renderPlantList, refreshModalStatus, openPlantModal, closePlantModal, placementTypeForCategory, substrateCapRadius, substrateCapLabel, radiusLimits, getSurfaceCentre, raycastSurface, worldToSurfaceUV, surfaceUVToWorld, canvasNDC, startPlacement, cancelPlacement, clearPreview, showCirclePreview, showPolygonPreview, commitCirclePlacement, commitPolygonPlacement, polygonArea, proxyMatForCategory, buildCircleProxy, buildPolygonProxy, removeProxyForInstance, clearAllProxies } from './plants.js';
     import { detectSurfaces, populateSurfacePanel, selectSurface, deselectSurface,
              hoverSurface, unhoverSurface, allSurfaceMeshes, getPointerNDC,
@@ -1082,8 +1083,13 @@
             if (state.axesHelper) state.axesHelper.position.set(o.x, 0.1, o.z);
             if (state.axesYLine)  state.axesYLine.position.set(o.x, 0.1, o.z);
           }
-          fit3DCamera(new THREE.Box3().setFromObject(state.cadmapperGroup));
-          switchMode('3d');
+          // Restore last saved view — if absent, fall back to fit3DCamera
+          if (data.view) {
+            restoreViewState(data.view);
+          } else {
+            fit3DCamera(new THREE.Box3().setFromObject(state.cadmapperGroup));
+            switchMode('3d');
+          }
           document.getElementById('empty-props').style.display  = 'none';
           document.getElementById('clearSiteBtn').style.display = 'block';
           document.getElementById('left-panel').classList.add('site-imported');
@@ -1113,8 +1119,12 @@
             design?.grid_spacing_m ?? 100, design?.minor_divisions ?? 0,
             5000, new THREE.Vector3(0, 0, 0)
           );
-          fit3DCamera(new THREE.Box3().setFromObject(state.cadmapperGroup));
-          switchMode('3d');
+          if (data.view) {
+            restoreViewState(data.view);
+          } else {
+            fit3DCamera(new THREE.Box3().setFromObject(state.cadmapperGroup));
+            switchMode('3d');
+          }
           document.getElementById('empty-props').style.display  = 'none';
           document.getElementById('clearSiteBtn').style.display = 'block';
           document.getElementById('left-panel').classList.add('site-imported');
@@ -1768,6 +1778,8 @@
           wgs84_lat:    anchor?.lat,
           wgs84_lng:    anchor?.lng,
         });
+        // Save view state so the project re-opens at exactly the current view
+        await saveViewState(captureViewState()).catch(() => {});
         showFeedback('Project saved.');
       } catch (e) { showFeedback('Save failed: ' + e.message); }
     }
@@ -1782,6 +1794,9 @@
         lat: anchor?.lat,
         lng: anchor?.lng,
         dxfFilename: null,
+        onSaved: async () => {
+          await saveViewState(captureViewState()).catch(() => {});
+        },
       });
     }
 

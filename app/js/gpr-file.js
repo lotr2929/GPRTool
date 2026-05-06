@@ -255,6 +255,24 @@ export async function updateDesignData(updates) {
   }
 }
 
+// ── View state persistence ────────────────────────────────────────────────
+
+/**
+ * Save the current viewport state into the active project's view.json.
+ * @param {Object} viewState — plain object from captureViewState() in viewport.js
+ */
+export async function saveViewState(viewState) {
+  if (!_activeZip || !_activeProjectId) return;
+  try {
+    _activeZip.file('view.json', JSON.stringify(viewState, null, 2));
+    const blob = await _activeZip.generateAsync({ type: 'blob', compression: 'DEFLATE',
+      compressionOptions: { level: 6 } });
+    await idbPut(_activeProjectId, blob);
+  } catch (e) {
+    console.warn('[GPR] saveViewState failed:', e.message);
+  }
+}
+
 // ── Open a .gpr file ──────────────────────────────────────────────────────
 
 /**
@@ -288,6 +306,11 @@ export async function openGPR(file) {
     ? JSON.parse(await osmContextFile.async('string'))
     : null;
 
+  const viewFile = zip.file('view.json');
+  const view = viewFile
+    ? JSON.parse(await viewFile.async('string'))
+    : null;
+
   const hasDXF = !!zip.file('context/cadmapper.dxf');
 
   // Store as active project
@@ -297,7 +320,7 @@ export async function openGPR(file) {
   _activeProjectId = id;
   _activeZip       = zip;
 
-  return { manifest, reference, design, boundary, terrain, osmContext, hasDXF, zip };
+  return { manifest, reference, design, boundary, terrain, osmContext, view, hasDXF, zip };
 }
 
 // ── Get DXF bytes from active project (for re-import) ────────────────────

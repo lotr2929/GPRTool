@@ -371,3 +371,67 @@ export function animateCameraToGrid(grid, onComplete) {
 
   requestAnimationFrame(step);
 }
+
+// ── View state capture and restore ───────────────────────────────────────
+
+/**
+ * Capture the current viewport state into a plain serialisable object.
+ * Call this just before saving a project.
+ */
+export function captureViewState() {
+  const v = {
+    mode:        state.currentMode,
+    pan2D:       { x: state.pan2D?.x ?? 0, z: state.pan2D?.z ?? 0 },
+    zoom2D:      state.zoom2D   ?? 1,
+    rotate2D:    state.rotate2D ?? 0,
+    base2DhalfH: state.base2DhalfH ?? null,
+    cam3D:       null,
+  };
+  if (state.camera3D && state.controls3D) {
+    v.cam3D = {
+      pos:    { x: state.camera3D.position.x, y: state.camera3D.position.y, z: state.camera3D.position.z },
+      target: { x: state.controls3D.target.x, y: state.controls3D.target.y, z: state.controls3D.target.z },
+    };
+  }
+  return v;
+}
+
+/**
+ * Restore a previously captured view state.
+ * Call this AFTER the scene is fully rebuilt (model + grids in place).
+ * @param {Object} v — plain object from captureViewState()
+ */
+export function restoreViewState(v) {
+  if (!v) return;
+
+  // Restore 3D camera position first (switchMode may need it)
+  if (v.cam3D && state.camera3D && state.controls3D) {
+    const p = v.cam3D.pos;
+    const t = v.cam3D.target;
+    state.camera3D.position.set(p.x, p.y, p.z);
+    state.controls3D.target.set(t.x, t.y, t.z);
+    state.controls3D.update();
+  }
+
+  // Restore 2D orthographic frustum size
+  if (v.base2DhalfH != null) {
+    state.base2DhalfH = v.base2DhalfH;
+    const aspect = state.container.clientWidth / (state.container.clientHeight || 1);
+    const h = v.base2DhalfH;
+    state.camera2D.left   = -h * aspect;
+    state.camera2D.right  =  h * aspect;
+    state.camera2D.top    =  h;
+    state.camera2D.bottom = -h;
+  }
+
+  // Switch to the saved mode (may call fit2DCamera which resets pan/zoom)
+  switchMode(v.mode ?? '3d');
+
+  // Re-apply pan/zoom/rotation AFTER switchMode so they are not overwritten
+  if (v.mode === '2d') {
+    if (v.pan2D)             state.pan2D    = { x: v.pan2D.x, z: v.pan2D.z };
+    if (v.zoom2D   != null)  state.zoom2D   = v.zoom2D;
+    if (v.rotate2D != null)  state.rotate2D = v.rotate2D;
+    update2DCamera();
+  }
+}

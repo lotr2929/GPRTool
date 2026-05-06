@@ -105,7 +105,7 @@ export async function deleteProject(id) {
 // Clicking an existing project fills the name field. Saving with a matching name
 // triggers a confirmation before overwriting.
 
-export function showSaveProjectDialog({ blob, blobGetter, defaultName, lat, lng, dxfFilename }) {
+export function showSaveProjectDialog({ blob, blobGetter, defaultName, lat, lng, dxfFilename, onSaved }) {
   // blobGetter: optional function returning Promise<Blob> — used when blob isn't ready yet
   // blob:       direct Blob — legacy path, still supported
   return new Promise(async (resolve) => {
@@ -301,6 +301,8 @@ export function showSaveProjectDialog({ blob, blobGetter, defaultName, lat, lng,
           } else {
             setPipelineStatus('\u2713 Saved', 'done');
           }
+          // Notify caller so it can persist view state into the active GPR
+          onSaved?.(resolvedBlob);
         } catch (e) {
           console.warn('[GPR] save failed:', e);
           setPipelineStatus('\u2717 Save failed', 'error');
