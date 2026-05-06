@@ -377,12 +377,19 @@ function _commitDesignGrid(origin, xAxis, yAxis, normal, surface, majorSpacing, 
     const angle = _vectorToNorthAngle(yAxis);
     mgr.initHorizontal(spacing, minor, extent, origin);
     setDesignNorth(angle);
+    // Move the axes indicator to the Design Origin so the designer sees (0,0,0) there
+    state.designOrigin = origin.clone();
+    if (state.axesHelper) state.axesHelper.position.set(origin.x, 0.1, origin.z);
+    if (state.axesYLine)  state.axesYLine.position.set(origin.x, 0.1, origin.z);
     grid = mgr.grids.get('design-grid-horizontal');
     showFeedback(`Design Grid set — ${spacing} m · Design North ${angle >= 0 ? '+' : ''}${angle.toFixed(1)}°`);
   }
 
   // Persist
-  updateDesignData({ surface_grids: mgr.serialise() }).catch(() => {});
+  updateDesignData({
+    surface_grids:  mgr.serialise(),
+    design_origin:  origin ? { x: origin.x, y: 0, z: origin.z } : null,
+  }).catch(() => {});
 
   if (!grid) return;
 

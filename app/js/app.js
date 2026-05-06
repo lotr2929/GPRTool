@@ -1075,6 +1075,13 @@
             5000, new THREE.Vector3(0, 0, 0)
           );
           if (design?.surface_grids) state.designGridManager.deserialise(design.surface_grids);
+          // Restore axes position to saved Design Origin
+          if (design?.design_origin) {
+            const o = design.design_origin;
+            state.designOrigin = new THREE.Vector3(o.x, 0, o.z);
+            if (state.axesHelper) state.axesHelper.position.set(o.x, 0.1, o.z);
+            if (state.axesYLine)  state.axesYLine.position.set(o.x, 0.1, o.z);
+          }
           fit3DCamera(new THREE.Box3().setFromObject(state.cadmapperGroup));
           switchMode('3d');
           document.getElementById('empty-props').style.display  = 'none';

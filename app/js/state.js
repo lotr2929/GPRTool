@@ -87,6 +87,7 @@ export const state = {
   // ── Design Grid tool ─────────────────────────────────────────────────────
   designToolState: 'idle',  // 'idle' | 'set_grid' | 'set_north'
   activeSurfaceId: null,    // surface.id | null — surface currently in grid mode
+  designOrigin:    null,    // THREE.Vector3 — current Design Grid origin (world space)
 
   // ── UI ───────────────────────────────────────────────────────────────────
   feedbackTimer: null,
