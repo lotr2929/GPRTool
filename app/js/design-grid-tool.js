@@ -226,7 +226,8 @@ export function handleDesignToolMouseMove(e) {
   if ((_toolState === 'grid_yaxis' || _toolState === 'north_yaxis') && _origin) {
     _snapPoint = _findSnapPoint(e, _surface);
     _updateSnapMarker(_snapPoint);
-    const pt = _snapPoint ?? _getClickPoint(e, _surface);
+    // Use snap point if available, else raycast to get a world position for the line tip
+    const pt = _snapPoint ?? _getClickPoint(e, _toolState === 'grid_yaxis' ? _surface : null);
     if (pt) _updatePrevLine(_origin, pt);
   }
 }
@@ -385,14 +386,24 @@ function _commitDesignGrid(origin, xAxis, yAxis, normal, surface, majorSpacing, 
 
   if (!grid) return;
 
-  // Animate camera to face the grid, then switch to 2D
+  // Animate camera to face the grid, then switch to 2D with Y-axis pointing screen-up
   animateCameraToGrid(grid, () => {
     if (surface) {
       state.selectedSurface = surface;
       state.canvasMode      = 'surface';
       mgr.activateSurfaceGrid(surface.id);
+      switchMode('2d');
+      // Override camera up to align with grid Y-axis on this surface
+      state.camera2D.up.copy(grid.yAxis).normalize();
+      state.camera2D.lookAt(grid.origin);
+      state.camera2D.updateProjectionMatrix();
+    } else {
+      // Horizontal grid: rotate the 2D viewport so grid Y-axis points screen-up.
+      // update2DCamera() sets camera2D.up = (sin(r), 0, -cos(r))
+      // We want (sin(r), 0, -cos(r)) == yAxis, so r = atan2(yAxis.x, -yAxis.z)
+      state.rotate2D = Math.atan2(yAxis.x, -yAxis.z);
+      switchMode('2d');
     }
-    switchMode('2d');
   });
 }
 

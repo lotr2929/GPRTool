@@ -623,8 +623,8 @@
     // Build flat list of all meshes mapped back to their surface
 
     state.renderer.domElement.addEventListener('pointermove', e => {
-      if (state.currentMode !== '3d' || !state.importedModel || state.pan2DActive) return;
       if (isDesignToolActive()) { handleDesignToolMouseMove(e); return; }
+      if (state.currentMode !== '3d' || !state.importedModel || state.pan2DActive) return;
       getPointerNDC(e);
       raycaster.setFromCamera(pointerNDC, camera3D);
       const meshMap = allSurfaceMeshes();
