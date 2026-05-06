@@ -1,92 +1,83 @@
 /*
- * design-grid-tool.js — Interactive commands: Set Design Grid, Set Design North
+ * design-grid-tool.js — Set Design Grid and Set Design North commands
  *
- * State machine for two-click placement:
- *   idle → await surface/origin → await Y-axis/direction → (spacing popup) → done
- *
- * Also owns persistent surface-grid mode:
- *   idle mode + dblclick surface → enter surface grid mode
- *   idle mode + dblclick outside → exit surface grid mode (stay 2D)
+ * Both commands share the same two-click state machine. _setNorthMode
+ * controls what happens at commit time:
+ *   false (Set Design Grid)  → creates/updates Design Grid, sets state.designGridAngle
+ *   true  (Set Design North) → calls setDesignNorth(), compass only, no grid change
  *
  * COORDINATE LAW: True North = Three.js -Z axis. Never invert.
  */
 
 import * as THREE from 'three';
-import { state }              from './state.js';
-import { showFeedback }       from './ui.js';
+import { state }               from './state.js';
+import { showFeedback }        from './ui.js';
 import { showGridSpacingPopup } from './grid.js';
-import { setDesignNorth }     from './north-state.js';  // used by north_yaxis only
+import { setDesignNorth }      from './north-state.js';
 import { animateCameraToGrid, switchMode, update2DCamera } from './viewport.js';
-import { updateDesignData }   from './gpr-file.js';
+import { updateDesignData }    from './gpr-file.js';
 
 const SNAP_RADIUS_PX = 20;
 
 // ── Tool state ────────────────────────────────────────────────────────────────
-// States:
-//   idle             — no command active
-//   grid_await       — Set Design Grid started; waiting for surface dblclick or ground click
-//   grid_origin      — surface captured; waiting for origin click on that surface
-//   grid_yaxis       — origin set; waiting for Y-axis direction click
-//   north_await      — Set Design North started; waiting for origin click
-//   north_yaxis      — north origin set; waiting for direction click
+let _setNorthMode = false;   // true = Set Design North; false = Set Design Grid
 
-let _toolState  = 'idle';
-let _surface    = null;   // captured surface (null = ground plane)
-let _origin     = null;   // THREE.Vector3 — first click (Design Origin)
-let _snapPoint  = null;   // THREE.Vector3 — nearest vertex within snap radius (or null)
-let _snapMarker = null;   // THREE.Mesh — green dot at snap position
-let _prevLine   = null;   // THREE.Line — direction preview from origin to mouse
+// Click state machine
+//   idle            — no command active
+//   await_origin    — waiting for first click (origin)
+//   await_direction — origin set; waiting for second click (direction)
+let _toolState = 'idle';
+
+let _surface   = null;   // captured surface (null = ground plane / north mode)
+let _origin    = null;   // THREE.Vector3 — first click
+let _snapPoint = null;   // THREE.Vector3 — nearest vertex within snap radius
+let _snapMarker = null;  // THREE.Mesh — green dot at snap position
+let _prevLine   = null;  // THREE.Line — direction preview
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-export function initDesignGridTool() {
-  // Nothing to initialise — state is module-level; called once after scene is ready
-}
+export function initDesignGridTool() {}  // reserved for future one-time setup
 
 export function startSetDesignGrid() {
+  _setNorthMode = false;
   _reset();
-  _toolState = 'grid_await';
-  showFeedback('Double-click a surface to set a surface grid, or click to set Design Origin', 0);
+  _toolState = 'await_origin';
+  showFeedback('Double-click a surface for a surface grid, or click to set Design Origin', 0);
   state.renderer.domElement.style.cursor = 'crosshair';
 }
 
 export function startSetDesignNorth() {
+  _setNorthMode = true;
   _reset();
-  _toolState = 'north_await';
-  showFeedback('Click to set Design Origin for Design North', 0);
+  _toolState = 'await_origin';
+  showFeedback('Click to set the Design North origin', 0);
   state.renderer.domElement.style.cursor = 'crosshair';
 }
 
 export function cancelDesignTool() { _reset(); }
 export function isDesignToolActive() { return _toolState !== 'idle'; }
 
-// ── Event handlers — called from app.js ───────────────────────────────────────
+// ── Event handlers ────────────────────────────────────────────────────────────
 
-/**
- * Handle dblclick on the viewport canvas.
- * Returns true if the event was consumed by the design tool.
- */
+/** Called from canvas dblclick. Returns true if event consumed. */
 export function handleDesignToolDblClick(e) {
-  // ── In grid_await: try surface capture ────────────────────────────────────
-  if (_toolState === 'grid_await') {
+  // Set Design Grid only: dblclick selects surface while awaiting origin
+  if (!_setNorthMode && _toolState === 'await_origin') {
     const surface = _hitTestSurface(e);
     if (surface) {
-      _surface   = surface;
-      _toolState = 'grid_origin';
+      _surface = surface;
       showFeedback('Click to set Design Origin on the surface', 0);
       return true;
     }
-    return false; // no surface hit — fall through to other handlers
+    return false;
   }
 
-  // ── In idle: surface grid activation / deactivation ───────────────────────
+  // Idle mode: surface grid activation / deactivation
   if (_toolState === 'idle') {
     const surface = _hitTestSurface(e);
-
     if (surface) {
       const mgr = state.designGridManager;
       if (mgr?.hasSurfaceGrid(surface.id)) {
-        // Activate the surface grid
         state.activeSurfaceId = surface.id;
         mgr.activateSurfaceGrid(surface.id);
         state.selectedSurface = surface;
@@ -94,16 +85,13 @@ export function handleDesignToolDblClick(e) {
         switchMode('2d');
         showFeedback(`Surface ${surface.id} grid active — double-click outside to exit`, 0);
       } else {
-        // No grid set yet — select surface only
         state.selectedSurface = surface;
         switchMode('2d');
-        showFeedback(`Surface ${surface.id} selected — Design > Set Design Grid to set a grid`, 0);
+        showFeedback(`Surface ${surface.id} selected — use Design > Set Design Grid`, 0);
       }
       return true;
     }
-
     if (state.activeSurfaceId !== null) {
-      // Double-click outside — exit surface grid mode, stay 2D
       state.activeSurfaceId = null;
       state.selectedSurface = null;
       state.designGridManager?.deactivateSurfaceGrid();
@@ -111,130 +99,144 @@ export function handleDesignToolDblClick(e) {
       return true;
     }
   }
-
   return false;
 }
 
-/**
- * Handle single click on the viewport canvas.
- * Returns true if the event was consumed by the design tool.
- */
+/** Called from canvas click. Returns true if event consumed. */
 export function handleDesignToolClick(e) {
   if (_toolState === 'idle') return false;
 
-  // ── grid_await: first click ───────────────────────────────────────────────
-  if (_toolState === 'grid_await') {
-    // If the click hits a surface, don't process it as a ground click —
-    // the user should double-click for surface mode.
-    const surface = _hitTestSurface(e);
-    if (surface) {
-      showFeedback('Double-click the surface to use it as the grid plane', 0);
-      return true; // consume but don't process
+  // ── First click: set origin ───────────────────────────────────────────────
+  if (_toolState === 'await_origin') {
+    // For Set Design Grid: if user single-clicks a surface, remind them to double-click
+    if (!_setNorthMode) {
+      const surface = _hitTestSurface(e);
+      if (surface && !_surface) {
+        showFeedback('Double-click the surface to use it as the grid plane', 0);
+        return true;
+      }
     }
-    // Ground plane origin
-    const pt = _getClickPoint(e, null);
-    if (!pt) return false;
-    _origin    = (_snapPoint ?? pt).clone();
-    _toolState = 'grid_yaxis';
-    _clearSnapMarker();
-    showFeedback('Click to set Y-axis direction (Design North of this grid)', 0);
-    return true;
-  }
-
-  // ── grid_origin: click on surface to set origin ───────────────────────────
-  if (_toolState === 'grid_origin') {
     const pt = _getClickPoint(e, _surface);
     if (!pt) return false;
     _origin    = (_snapPoint ?? pt).clone();
-    _toolState = 'grid_yaxis';
+    _toolState = 'await_direction';
     _clearSnapMarker();
-    showFeedback('Click to set Y-axis direction (Design North of this grid)', 0);
+    const hint = _setNorthMode
+      ? 'Click to set Design North direction from origin'
+      : 'Click to set Y-axis direction of the Design Grid';
+    showFeedback(hint, 0);
     return true;
   }
 
-  // ── grid_yaxis: second click — sets Y-axis, opens spacing popup ───────────
-  if (_toolState === 'grid_yaxis') {
+  // ── Second click: set direction ──────────────────────────────────────────
+  if (_toolState === 'await_direction') {
     const pt = _getClickPoint(e, _surface);
     if (!pt) return false;
     const target = (_snapPoint ?? pt).clone();
-
     const yAxis  = _computeAxisDir(_origin, target, _surface);
-    const normal = _surface ? _surface.normal.clone().normalize()
-                            : new THREE.Vector3(0, 1, 0);
-    // xAxis is perpendicular to yAxis in the surface plane
-    const xAxis  = new THREE.Vector3().crossVectors(yAxis, normal).normalize();
+    const angle  = _vectorToNorthAngle(yAxis);
 
-    // Capture before reset
-    const o = _origin.clone();
-    const x = xAxis.clone();
-    const y = yAxis.clone();
-    const n = normal.clone();
-    const s = _surface;
-
-    _reset(); // clear tool state before popup opens
-
-    showGridSpacingPopup(e.clientX, e.clientY, (maj, min) => {
-      _commitDesignGrid(o, x, y, n, s, maj ?? 100, min ?? 0);
-    });
-    return true;
-  }
-
-  // ── north_await: first click — sets Design North origin ──────────────────
-  if (_toolState === 'north_await') {
-    const pt = _getClickPoint(e, null);
-    if (!pt) return false;
-    _origin    = (_snapPoint ?? pt).clone();
-    _toolState = 'north_yaxis';
-    _clearSnapMarker();
-    showFeedback('Click to set Design North direction from origin', 0);
-    return true;
-  }
-
-  // ── north_yaxis: second click — sets direction, applies Design North ──────
-  if (_toolState === 'north_yaxis') {
-    const pt = _getClickPoint(e, null);
-    if (!pt) return false;
-    const target = (_snapPoint ?? pt).clone();
-    const dir    = _computeAxisDir(_origin, target, null);
-    const angle  = _vectorToNorthAngle(dir);
-    setDesignNorth(angle);
-    showFeedback(`Design North set — ${angle >= 0 ? '+' : ''}${angle.toFixed(1)}°`);
-    updateDesignData({ design_north_angle: angle }).catch(() => {});
-    _reset();
+    if (_setNorthMode) {
+      // Set Design North only — compass updated, grid unchanged
+      setDesignNorth(angle);
+      const label = _formatAngle(angle);
+      showFeedback(`Design North set — ${label} from True North`);
+      // Make the compass visible if hidden
+      if (state.northPointEl) state.northPointEl.style.display = '';
+      updateDesignData({ design_north_angle: angle }).catch(() => {});
+      _reset();
+    } else {
+      // Set Design Grid — capture then reset before popup opens
+      const o = _origin.clone();
+      const n = _surface ? _surface.normal.clone().normalize() : new THREE.Vector3(0, 1, 0);
+      const x = new THREE.Vector3().crossVectors(yAxis, n).normalize();
+      const s = _surface;
+      _reset();
+      showGridSpacingPopup(e.clientX, e.clientY, (maj, min) => {
+        _commitDesignGrid(o, x, yAxis, n, s, maj ?? 100, min ?? 0, angle);
+      });
+    }
     return true;
   }
 
   return false;
 }
 
-/**
- * Handle pointermove on the viewport canvas.
- * Shows snap indicator and direction preview line.
- */
+/** Called from canvas pointermove. Updates snap indicator and preview line. */
 export function handleDesignToolMouseMove(e) {
   if (_toolState === 'idle') return;
 
-  // Origin selection phases: show snap dot
-  if (_toolState === 'grid_await' || _toolState === 'grid_origin' || _toolState === 'north_await') {
+  if (_toolState === 'await_origin') {
     _snapPoint = _findSnapPoint(e, _surface);
     _updateSnapMarker(_snapPoint);
     _clearPrevLine();
     return;
   }
 
-  // Direction selection phases: show snap dot + preview line from origin
-  if ((_toolState === 'grid_yaxis' || _toolState === 'north_yaxis') && _origin) {
+  if (_toolState === 'await_direction' && _origin) {
     _snapPoint = _findSnapPoint(e, _surface);
     _updateSnapMarker(_snapPoint);
-    // Use snap point if available, else raycast to get a world position for the line tip
-    const pt = _snapPoint ?? _getClickPoint(e, _toolState === 'grid_yaxis' ? _surface : null);
+    const pt = _snapPoint ?? _getClickPoint(e, _setNorthMode ? null : _surface);
     if (pt) _updatePrevLine(_origin, pt);
   }
 }
 
-// ── Private helpers ───────────────────────────────────────────────────────────
+// ── Commit Design Grid ────────────────────────────────────────────────────────
 
-/** Reset all tool state and remove 3D indicators. */
+function _commitDesignGrid(origin, xAxis, yAxis, normal, surface, majorSpacing, minorDivisions, angle) {
+  const mgr = state.designGridManager;
+  if (!mgr) return;
+
+  const spacing = majorSpacing ?? 100;
+  const minor   = minorDivisions ?? 0;
+  const extent  = 5000;
+  let   grid;
+
+  if (surface) {
+    mgr.addSurfaceGrid(surface.id, { origin, xAxis, normal, majorSpacing: spacing, minorDivisions: minor, extent });
+    state.activeSurfaceId = surface.id;
+    grid = mgr.grids.get(`surface-${surface.id}`);
+    showFeedback(`Surface grid set — ${spacing} m`);
+  } else {
+    // Horizontal model grid
+    state.designGridAngle = angle;                          // drives animation loop rotation
+    state.designOrigin    = origin.clone();
+    mgr.initHorizontal(spacing, minor, extent, origin);
+    // Compass NOT affected — only Set Design North touches the compass
+    if (state.axesHelper) state.axesHelper.position.set(origin.x, 0.1, origin.z);
+    grid = mgr.grids.get('design-grid-horizontal');
+    showFeedback(`Design Grid set — ${spacing} m`);
+  }
+
+  updateDesignData({
+    surface_grids:      mgr.serialise(),
+    design_origin:      origin ? { x: origin.x, y: 0, z: origin.z } : null,
+    design_grid_angle:  angle,
+  }).catch(() => {});
+
+  if (!grid) return;
+
+  if (surface) {
+    animateCameraToGrid(grid, () => {
+      state.selectedSurface = surface;
+      state.canvasMode      = 'surface';
+      mgr.activateSurfaceGrid(surface.id);
+      switchMode('2d');
+      state.camera2D.up.copy(grid.yAxis).normalize();
+      state.camera2D.lookAt(grid.origin);
+      state.camera2D.updateProjectionMatrix();
+    });
+  } else {
+    // No animation for horizontal — just rotate 2D view and pan to origin
+    state.rotate2D = Math.atan2(yAxis.x, -yAxis.z);
+    state.pan2D    = { x: origin.x, z: origin.z };
+    switchMode('2d');
+    update2DCamera();
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
 function _reset() {
   _toolState = 'idle';
   _surface   = null;
@@ -246,7 +248,6 @@ function _reset() {
   showFeedback('');
 }
 
-/** Raycast against all surface meshes; return the surface hit or null. */
 function _hitTestSurface(e) {
   if (!state.surfaces?.length) return null;
   const canvas = state.renderer.domElement;
@@ -255,15 +256,13 @@ function _hitTestSurface(e) {
     ((e.clientX - rect.left) / rect.width)  *  2 - 1,
     -((e.clientY - rect.top)  / rect.height) *  2 + 1,
   );
-  const rc = new THREE.Raycaster();
+  const rc   = new THREE.Raycaster();
   rc.setFromCamera(ndc, state.camera);
-  const meshes = state.surfaces.map(s => s.mesh).filter(Boolean);
-  const hits   = rc.intersectObjects(meshes, false);
+  const hits = rc.intersectObjects(state.surfaces.map(s => s.mesh).filter(Boolean), false);
   if (!hits.length) return null;
   return state.surfaces.find(s => s.mesh === hits[0].object) ?? null;
 }
 
-/** Raycast to a 3D world point — against the surface mesh or the ground plane. */
 function _getClickPoint(e, surface) {
   const canvas = state.renderer.domElement;
   const rect   = canvas.getBoundingClientRect();
@@ -275,10 +274,8 @@ function _getClickPoint(e, surface) {
   rc.setFromCamera(ndc, state.camera);
 
   if (surface) {
-    // Try mesh hit first
     const hits = rc.intersectObject(surface.mesh, false);
     if (hits.length) return hits[0].point;
-    // Fallback: intersect the surface plane
     const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(
       surface.normal.clone().normalize(), surface.centre,
     );
@@ -286,31 +283,24 @@ function _getClickPoint(e, surface) {
     return rc.ray.intersectPlane(plane, pt) ? pt : null;
   }
 
-  // Ground plane Y = 0
   const ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   const pt     = new THREE.Vector3();
   return rc.ray.intersectPlane(ground, pt) ? pt : null;
 }
 
-/**
- * Find the nearest vertex within SNAP_RADIUS_PX of the mouse position.
- * Searches the given surface's mesh (or all surface meshes if surface is null).
- * Returns a Vector3 in world space, or null if none within radius.
- */
 function _findSnapPoint(e, surface) {
   const canvas = state.renderer.domElement;
   const rect   = canvas.getBoundingClientRect();
-  const sx     = e.clientX - rect.left;
-  const sy     = e.clientY - rect.top;
-  const cam    = state.camera;
+  const sx = e.clientX - rect.left;
+  const sy = e.clientY - rect.top;
+  const cam = state.camera;
 
   const meshes = surface ? [surface.mesh]
-                         : state.surfaces.map(s => s.mesh).filter(Boolean);
+                         : state.surfaces?.map(s => s.mesh).filter(Boolean) ?? [];
 
   const v    = new THREE.Vector3();
   const proj = new THREE.Vector3();
-  let best   = null;
-  let bestD  = Infinity;
+  let best = null, bestD = Infinity;
 
   for (const mesh of meshes) {
     const pos = mesh.geometry?.attributes?.position;
@@ -318,9 +308,9 @@ function _findSnapPoint(e, surface) {
     for (let i = 0; i < pos.count; i++) {
       v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
       proj.copy(v).project(cam);
-      if (proj.z > 1) continue; // behind camera
-      const px = ( proj.x *  0.5 + 0.5) * canvas.clientWidth;
-      const py = (-proj.y *  0.5 + 0.5) * canvas.clientHeight;
+      if (proj.z > 1) continue;
+      const px = ( proj.x * 0.5 + 0.5) * canvas.clientWidth;
+      const py = (-proj.y * 0.5 + 0.5) * canvas.clientHeight;
       const d  = Math.hypot(sx - px, sy - py);
       if (d < SNAP_RADIUS_PX && d < bestD) { bestD = d; best = v.clone(); }
     }
@@ -328,92 +318,28 @@ function _findSnapPoint(e, surface) {
   return best;
 }
 
-/**
- * Compute the Y-axis direction (normalised vector in the plane).
- * The plane is the surface plane, or the horizontal ground plane.
- * Fallback: True North (-Z axis) if the direction vector is degenerate.
- */
 function _computeAxisDir(origin, target, surface) {
-  const normal = surface ? surface.normal.clone().normalize()
-                         : new THREE.Vector3(0, 1, 0);
+  const normal = surface ? surface.normal.clone().normalize() : new THREE.Vector3(0, 1, 0);
   const dir = target.clone().sub(origin);
-  if (dir.length() < 1e-6) return new THREE.Vector3(0, 0, -1); // True North fallback
-  // Project onto plane: remove the component along the normal
+  if (dir.length() < 1e-6) return new THREE.Vector3(0, 0, -1);
   dir.addScaledVector(normal, -dir.dot(normal));
   if (dir.length() < 1e-6) return new THREE.Vector3(0, 0, -1);
   return dir.normalize();
 }
 
-/**
- * Convert a world-space direction vector to a bearing angle from True North.
- * True North = Three.js -Z. East = +X.
- * Returns degrees clockwise from True North (positive = east, negative = west).
- */
 function _vectorToNorthAngle(dir) {
-  // atan2(east, north) = atan2(+X, -Z)  → clockwise from True North
   return Math.atan2(dir.x, -dir.z) * 180 / Math.PI;
 }
 
-/** Commit a new Design Grid (surface or model-level) and animate to it. */
-function _commitDesignGrid(origin, xAxis, yAxis, normal, surface, majorSpacing, minorDivisions) {
-  const mgr = state.designGridManager;
-  if (!mgr) return;
-
-  const spacing = majorSpacing ?? 100;
-  const minor   = minorDivisions ?? 0;
-  const extent  = 5000;
-
-  let grid;
-
-  if (surface) {
-    // Per-surface Design Grid
-    mgr.addSurfaceGrid(surface.id, { origin, xAxis, normal, majorSpacing: spacing, minorDivisions: minor, extent });
-    state.activeSurfaceId = surface.id;
-    grid = mgr.grids.get(`surface-${surface.id}`);
-    showFeedback(`Surface ${surface.id} Design Grid set — ${spacing} m`);
-  } else {
-    // Model-level Design Grid (horizontal)
-    // Y-axis direction = Design North bearing
-    const angle = _vectorToNorthAngle(yAxis);
-    mgr.initHorizontal(spacing, minor, extent, origin);
-    // Move axes Group to Design Origin — axesYLine is a child, moves automatically
-    state.designOrigin = origin.clone();
-    if (state.axesHelper) state.axesHelper.position.set(origin.x, 0.1, origin.z);
-    grid = mgr.grids.get('design-grid-horizontal');
-    showFeedback(`Design Grid set — ${spacing} m`);
-  }
-
-  // Persist
-  updateDesignData({
-    surface_grids:  mgr.serialise(),
-    design_origin:  origin ? { x: origin.x, y: 0, z: origin.z } : null,
-  }).catch(() => {});
-
-  if (!grid) return;
-
-  if (surface) {
-    // Tilted surface: animate camera to face the surface plane, then enter 2D
-    animateCameraToGrid(grid, () => {
-      state.selectedSurface = surface;
-      state.canvasMode      = 'surface';
-      mgr.activateSurfaceGrid(surface.id);
-      switchMode('2d');
-      state.camera2D.up.copy(grid.yAxis).normalize();
-      state.camera2D.lookAt(grid.origin);
-      state.camera2D.updateProjectionMatrix();
-    });
-  } else {
-    // Horizontal grid: no camera animation needed — just rotate 2D view.
-    // rotate2D = atan2(yAxis.x, -yAxis.z) aligns camera2D.up with the Y-axis.
-    state.rotate2D = Math.atan2(yAxis.x, -yAxis.z);
-    // Pan to Design Origin so it appears on screen
-    state.pan2D = { x: origin.x, z: origin.z };
-    switchMode('2d');
-    update2DCamera();
-  }
+function _formatAngle(deg) {
+  const abs = Math.abs(deg);
+  const dir = deg >= 0 ? 'E' : 'W';
+  const d   = Math.floor(abs);
+  const m   = Math.round((abs - d) * 60);
+  return m === 0 ? `${d}° ${dir}` : `${d}°${m}' ${dir}`;
 }
 
-// ── Snap marker (green dot at snap point) ────────────────────────────────────
+// ── Snap marker ───────────────────────────────────────────────────────────────
 
 function _updateSnapMarker(point) {
   _clearSnapMarker();
@@ -435,7 +361,7 @@ function _clearSnapMarker() {
   }
 }
 
-// ── Direction preview line (from origin to mouse) ────────────────────────────
+// ── Direction preview line ────────────────────────────────────────────────────
 
 function _updatePrevLine(origin, target) {
   _clearPrevLine();

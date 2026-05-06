@@ -85,9 +85,11 @@ export const state = {
   osmGeoJSON:  null,     // WGS84 GeoJSON FeatureCollection from last OSM import
 
   // ── Design Grid tool ─────────────────────────────────────────────────────
-  designToolState: 'idle',  // 'idle' | 'set_grid' | 'set_north'
-  activeSurfaceId: null,    // surface.id | null — surface currently in grid mode
-  designOrigin:    null,    // THREE.Vector3 — current Design Grid origin (world space)
+  designToolState:  'idle',   // 'idle' | 'set_grid' | 'set_north'
+  activeSurfaceId:  null,     // surface.id | null — surface currently in grid mode
+  designOrigin:     null,     // THREE.Vector3 — current Design Grid origin (world space)
+  designGridAngle:  0,        // degrees — Y-axis bearing of Design Grid (independent of Design North)
+  _gprInitParams:   null,     // stored after import so late Save can create the GPR
 
   // ── UI ───────────────────────────────────────────────────────────────────
   feedbackTimer: null,

@@ -901,11 +901,11 @@
       const _dn    = getDesignNorthAngle();
       const _dnRad = (_dn ?? 0) * Math.PI / 180;
 
-      // Axes: rotate with Design North (shows the design coordinate system)
-      if (state.axesHelper) state.axesHelper.rotation.y = -_dnRad;
-
-      // Design Grid: rotate group to match Design North (cheap matrix op, no geometry rebuild)
-      if (designGridManager) state.designGridManager.setHorizontalRotation(-_dnRad);
+      // Axes and Design Grid rotate with the Design Grid Y-axis angle (set by Set Design Grid).
+      // This is INDEPENDENT of Design North (which only affects the compass).
+      const _gridRad = (state.designGridAngle ?? 0) * Math.PI / 180;
+      if (state.axesHelper) state.axesHelper.rotation.y = -_gridRad;
+      if (designGridManager) state.designGridManager.setHorizontalRotation(-_gridRad);
 
       // Switch between CAD grid and Design Grid based on whether Design North is set
       updateGridVisibility();
@@ -1647,6 +1647,14 @@
         const siteSpan = Math.max(size.x, size.z);
         updateSceneHelpers(siteSpan);
 
+        // Centre axes on model — without this they sit at world (0,0,0) which
+        // may be in the sea or far from the buildings for OSM imports.
+        // state.designOrigin overrides this if a Design Grid is already set.
+        const modelCentre = new THREE.Vector3();
+        new THREE.Box3().setFromObject(state.cadmapperGroup).getCenter(modelCentre);
+        const axesOrigin = state.designOrigin ?? modelCentre;
+        if (state.axesHelper) state.axesHelper.position.set(axesOrigin.x, 0.1, axesOrigin.z);
+
         const rawCell  = siteSpan / 10;
         const cellSize = manualGridSpacing
           ? manualGridSpacing
@@ -1702,6 +1710,10 @@
               ? `OSM — ${osmAddress}`
               : 'Untitled Site';
           state._activeProjectName = siteName;
+          // Store init params so a late Save can create the GPR even if user skipped the dialog
+          state._gprInitParams = {
+            siteName, anchor, cellSize, dxfFile, osmGeoJSON: state.osmGeoJSON, centre, siteSpan,
+          };
           setPipelineStatus('Ready to save', 'idle');
 
           // ── Show save dialog — skip if user already chose a file via showSaveFilePicker ──
@@ -1768,7 +1780,8 @@
 
     async function _saveCurrentProject() {
       const blob = await getActiveGPRBlob().catch(() => null);
-      if (!blob) { showFeedback('Nothing to save — import a site first.'); return; }
+      // No active project yet (first save after import) — treat as Save As
+      if (!blob) { await _saveAsProject(); return; }
       const anchor = getRealWorldAnchor();
       try {
         await saveProject(blob, {
