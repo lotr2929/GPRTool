@@ -325,33 +325,33 @@ export class DesignGridManager {
    */
   initHorizontal(majorSpacing, minorDivisions, extent, origin) {
     const THREE = this.THREE;
-
-    // True North xAxis in Three.js Y-up coords = (0,0,-1)
-    const xAxis  = new THREE.Vector3(0, 0, -1);
+    const xAxis  = new THREE.Vector3(0, 0, -1);   // True North in Three.js coords
     const normal = new THREE.Vector3(0, 1,  0);
+    const worldOrigin = origin ? origin.clone() : new THREE.Vector3(0, 0, 0);
 
-    // Lift Design Grid 5cm above Y=0 to prevent Z-fighting with the CAD
-    // grid (THREE.GridHelper) and terrain surfaces which also live at Y=0.
-    const org = origin ? origin.clone() : new THREE.Vector3(0, 0, 0);
-    org.y = 0.05;
+    // Always rebuild so that a new Design Origin is applied immediately
+    if (this.grids.has(HORIZONTAL_ID)) this.removeGrid(HORIZONTAL_ID);
 
-    if (this.grids.has(HORIZONTAL_ID)) {
-      const g = this.grids.get(HORIZONTAL_ID);
-      g.setSpacing(majorSpacing, minorDivisions);
-      g.setExtent(extent);
-    } else {
-      this.addGrid({
-        id:             HORIZONTAL_ID,
-        label:          'Design Grid',
-        origin:         org,
-        xAxis,
-        normal,
-        majorSpacing,
-        minorDivisions,
-        extent,
-      });
-      this._activeId = HORIZONTAL_ID;
-    }
+    // Build geometry centred at local (0, 0.05, 0) — the group's position
+    // handles world placement.  Rotating the group around its local Y axis
+    // then keeps the grid centred on the Design Origin as Design North changes.
+    const localOrigin = new THREE.Vector3(0, 0.05, 0);
+    this.addGrid({
+      id:             HORIZONTAL_ID,
+      label:          'Design Grid',
+      origin:         localOrigin,
+      xAxis,
+      normal,
+      majorSpacing,
+      minorDivisions,
+      extent,
+    });
+
+    // Translate group to the Design Origin in world space
+    const grid = this.grids.get(HORIZONTAL_ID);
+    if (grid) grid.group.position.set(worldOrigin.x, 0, worldOrigin.z);
+
+    this._activeId = HORIZONTAL_ID;
   }
 
   /**

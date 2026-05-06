@@ -16,7 +16,7 @@ import { state }              from './state.js';
 import { showFeedback }       from './ui.js';
 import { showGridSpacingPopup } from './grid.js';
 import { setDesignNorth }     from './north-state.js';
-import { animateCameraToGrid, switchMode } from './viewport.js';
+import { animateCameraToGrid, switchMode, update2DCamera } from './viewport.js';
 import { updateDesignData }   from './gpr-file.js';
 
 const SNAP_RADIUS_PX = 20;
@@ -399,10 +399,13 @@ function _commitDesignGrid(origin, xAxis, yAxis, normal, surface, majorSpacing, 
       state.camera2D.updateProjectionMatrix();
     } else {
       // Horizontal grid: rotate the 2D viewport so grid Y-axis points screen-up.
-      // update2DCamera() sets camera2D.up = (sin(r), 0, -cos(r))
-      // We want (sin(r), 0, -cos(r)) == yAxis, so r = atan2(yAxis.x, -yAxis.z)
+      // update2DCamera() sets camera2D.up = (sin(r), 0, -cos(r)).
+      // We need r = atan2(yAxis.x, -yAxis.z) so that up aligns with yAxis.
       state.rotate2D = Math.atan2(yAxis.x, -yAxis.z);
       switchMode('2d');
+      // switchMode may skip fit2DCamera for OSM scenes (no siteBoundaryLine/importedModel),
+      // so call update2DCamera explicitly to guarantee the rotation takes effect.
+      update2DCamera();
     }
   });
 }
