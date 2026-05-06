@@ -84,6 +84,10 @@ export const state = {
   siteCenter:  null,     // {lat, lng, label} — set when Locate Site confirms
   osmGeoJSON:  null,     // WGS84 GeoJSON FeatureCollection from last OSM import
 
+  // ── Design Grid tool ─────────────────────────────────────────────────────
+  designToolState: 'idle',  // 'idle' | 'set_grid' | 'set_north'
+  activeSurfaceId: null,    // surface.id | null — surface currently in grid mode
+
   // ── UI ───────────────────────────────────────────────────────────────────
   feedbackTimer: null,
   alarmTime:     null,

@@ -9,7 +9,7 @@
       setSceneOffset, sceneToWGS84, wgs84ToScene,
     } from './real-world.js';
     import {
-      createInitialGPR, addBoundaryToGPR, openGPR, downloadGPR, getActiveGPRBlob,
+      createInitialGPR, addBoundaryToGPR, openGPR, downloadGPR, getActiveGPRBlob, updateDesignData,
     } from './gpr-file.js';
     import { initProjects, showProjectsModal, saveProject, loadProject, showSaveProjectDialog } from './projects.js';
     // ── DESIGN WORLD (grids, north angle) — never mixes with Real World ────────
@@ -34,6 +34,11 @@
       toggleGizmo3D,
       isGizmo3DVisible,
     } from './north-point-3d.js';
+    import {
+      initDesignGridTool, startSetDesignGrid, startSetDesignNorth,
+      isDesignToolActive, handleDesignToolDblClick, handleDesignToolClick,
+      handleDesignToolMouseMove, cancelDesignTool,
+    } from './design-grid-tool.js';
     import { state } from './state.js';
     import { drawSiteBoundary, buildBoundaryPanel, clearLotBoundary, renderLotBoundary, buildLotBoundaryLayerRow, showSitePin, updateSitePinDOM,
          startBoundaryDraw, handleBoundaryClick, handleBoundaryDblClick, confirmBoundaryDraw, cancelBoundaryDraw,
@@ -427,6 +432,7 @@
 
     state.renderer.domElement.addEventListener('dblclick', e => {
       e.preventDefault();
+      if (handleDesignToolDblClick(e)) return;
       handleBoundaryDblClick();
     });
 
@@ -618,6 +624,7 @@
 
     state.renderer.domElement.addEventListener('pointermove', e => {
       if (state.currentMode !== '3d' || !state.importedModel || state.pan2DActive) return;
+      if (isDesignToolActive()) { handleDesignToolMouseMove(e); return; }
       getPointerNDC(e);
       raycaster.setFromCamera(pointerNDC, camera3D);
       const meshMap = allSurfaceMeshes();
@@ -645,6 +652,8 @@
         return;
       }
       if (placementMode && placementMode !== 'idle') return; // placement engine handles this
+      // Design tool intercept — active in both 2D and 3D
+      if (handleDesignToolClick(e)) return;
       if (state.currentMode !== '3d' || !state.importedModel) return;
       getPointerNDC(e);
       raycaster.setFromCamera(pointerNDC, camera3D);
@@ -1065,6 +1074,7 @@
             design?.grid_spacing_m ?? 100, design?.minor_divisions ?? 0,
             5000, new THREE.Vector3(0, 0, 0)
           );
+          if (design?.surface_grids) state.designGridManager.deserialise(design.surface_grids);
           fit3DCamera(new THREE.Box3().setFromObject(state.cadmapperGroup));
           switchMode('3d');
           document.getElementById('empty-props').style.display  = 'none';
@@ -1394,6 +1404,8 @@
 
     // Enter key to close polygon
     document.addEventListener('keydown', e => {
+      // Design tool: Escape cancels active command
+      if (e.key === 'Escape' && isDesignToolActive()) { cancelDesignTool(); return; }
       if (e.key === 'Enter' && placementMode === 'placing_polygon') {
         if (placingPoly.length >= 3) {
           commitPolygonPlacement(state.selectedSurface, placingSpecies, [...placingPoly]);
@@ -1475,6 +1487,9 @@
         else if (action === 'toggle-axes')         toggleAxes();
         else if (action === 'north-pointer')       { toggleNorthPoint(); toggleGizmo3D(); }
         else if (action === 'north-reset')         resetNorthPos();
+        else if (action === 'set-design-grid')     startSetDesignGrid();
+        else if (action === 'set-design-north')    startSetDesignNorth();
+        else if (action === 'grid-spacing')        showGridSpacingPopup(window.innerWidth / 2, window.innerHeight / 2);
         // Note: toggleNorthPoint / resetNorthPos imported from north-point-2d.js
         else if (action === 'open-project')        showProjectsModal(async (file) => { try { await openGPRFile(file); } catch(e) { showFeedback('Failed to open: ' + e.message); } });
         else if (action === 'new-project')         _newProject();
@@ -1517,6 +1532,7 @@
 
     initSiteSelection({ drawSiteBoundary, onSiteSelected: (lat, lng) => showSitePin(lat, lng) });
     initProjects();
+    initDesignGridTool();
 
     // ── Cesium boundary draw ───────────────────────────────────────────────
     // Called when "Draw Lot Boundary" is clicked in Cesium (OSM) mode.

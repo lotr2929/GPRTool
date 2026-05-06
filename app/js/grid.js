@@ -80,7 +80,7 @@ export function updateSceneHelpers(siteSpan) {
 
 // ── Grid spacing popup ────────────────────────────────────────────────────
 
-export function showGridSpacingPopup(cx, cy) {
+export function showGridSpacingPopup(cx, cy, onApply = null) {
   let pop = document.getElementById('grid-spacing-popup');
   if (pop) { pop.remove(); return; }
   pop = document.createElement('div');
@@ -138,6 +138,12 @@ export function showGridSpacingPopup(cx, cy) {
   majInp.focus(); majInp.select();
 
   const applyAll = (maj, min) => {
+    // If a direct callback was provided (e.g. from design-grid-tool.js), use it
+    if (onApply) {
+      onApply(maj > 0 ? maj : null, min >= 2 ? min : null);
+      pop.remove();
+      return;
+    }
     const hasDN = (getDesignNorthAngle() ?? 0) !== 0;
     if (hasDN && state.designGridManager?.grids?.size) {
       state.dgSpacing          = (maj > 0)  ? maj : null;

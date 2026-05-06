@@ -439,4 +439,84 @@ export class DesignGridManager {
   clear() {
     for (const id of [...this.grids.keys()]) this.removeGrid(id);
   }
+
+  // ── Surface grid API ───────────────────────────────────────────────────────
+
+  /**
+   * Add or replace a Design Grid for a specific surface.
+   * The grid ID is normalised to `surface-${surfaceId}`.
+   */
+  addSurfaceGrid(surfaceId, params) {
+    const id = `surface-${surfaceId}`;
+    if (this.grids.has(id)) this.removeGrid(id);
+    return this.addGrid({ ...params, id, label: `Surface ${surfaceId} Grid` });
+  }
+
+  /** Returns true if a Design Grid has been set for this surface. */
+  hasSurfaceGrid(surfaceId) {
+    return this.grids.has(`surface-${surfaceId}`);
+  }
+
+  /**
+   * Activate the Design Grid for the given surface.
+   * Hides all other grids (including the horizontal model grid).
+   * Returns the DesignGrid object, or null if not found.
+   */
+  activateSurfaceGrid(surfaceId) {
+    const id = `surface-${surfaceId}`;
+    for (const [gid, grid] of this.grids) {
+      grid.setVisible(gid === id);
+    }
+    this._activeId = id;
+    return this.grids.get(id) ?? null;
+  }
+
+  /**
+   * Deactivate the surface grid and restore normal grid visibility.
+   * The horizontal model grid becomes visible again (if it exists).
+   */
+  deactivateSurfaceGrid() {
+    for (const [id, grid] of this.grids) {
+      grid.setVisible(id === HORIZONTAL_ID);
+    }
+    this._activeId = HORIZONTAL_ID;
+  }
+
+  // ── Persistence ────────────────────────────────────────────────────────────
+
+  /** Serialise all grids to a plain JSON-safe object. */
+  serialise() {
+    const out = {};
+    for (const [id, g] of this.grids) {
+      out[id] = {
+        id:             g.id,
+        label:          g.label,
+        origin:         { x: g.origin.x, y: g.origin.y, z: g.origin.z },
+        xAxis:          { x: g.xAxis.x,  y: g.xAxis.y,  z: g.xAxis.z  },
+        normal:         { x: g.normal.x, y: g.normal.y, z: g.normal.z },
+        majorSpacing:   g.majorSpacing,
+        minorDivisions: g.minorDivisions,
+        extent:         g.extent,
+      };
+    }
+    return out;
+  }
+
+  /** Rebuild all grids from a serialised object (e.g. from design.json). */
+  deserialise(data) {
+    if (!data) return;
+    for (const d of Object.values(data)) {
+      const THREE = this.THREE;
+      this.addGrid({
+        id:             d.id,
+        label:          d.label,
+        origin:         new THREE.Vector3(d.origin.x, d.origin.y, d.origin.z),
+        xAxis:          new THREE.Vector3(d.xAxis.x,  d.xAxis.y,  d.xAxis.z),
+        normal:         new THREE.Vector3(d.normal.x, d.normal.y, d.normal.z),
+        majorSpacing:   d.majorSpacing,
+        minorDivisions: d.minorDivisions,
+        extent:         d.extent,
+      });
+    }
+  }
 }

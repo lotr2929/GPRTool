@@ -1,134 +1,60 @@
 /**
- * north-point-2d.js — 2D DOM compass widget
+ * north-point-2d.js — 2D DOM compass widget (entry point)
  *
- * Needs (via getState callback):
- *   currentMode  string       '2d' | '3d'
- *   camera2D     OrthographicCamera
- *   camera3D     PerspectiveCamera
- *   controls3D   OrbitControls   (for .target)
- *   pan2D        { x, z }        2D camera pan offset
+ * Owns: DOM wiring, drag, resize, pointer events, position/size persistence.
+ * Delegates:
+ *   Angle state + rotate mode + SVG rendering → north-state.js
+ *   DN / TN input popups                      → north-input.js
+ *   Angle parsing / formatting                → north-angle.js
  *
- * Exposes:
- *   initNorthPoint2D(getState)   call once after body HTML is in the DOM
- *   updateNorthRotation()        call every animation frame
- *   toggleNorthPoint()           show / hide
- *   resetNorthPos()              move to default corner position
- *   setNorthPoint2DVisible(bool) show or hide without toggling
+ * Re-exports the public angle API so all existing callers remain unchanged:
+ *   import { getDesignNorthAngle, setDesignNorth, ... } from './north-point-2d.js'
  */
 
-import * as THREE from 'three';
+import { formatNorthAngle } from './north-angle.js';
+import {
+  initNorthState, injectDNGroup, setTNNeedleEl, updateCompassDisplay,
+  applyDesignNorth, applyGlobalNorth,
+  getDesignNorthAngle, getGlobalNorthAngle,
+  enterRotateMode, exitRotateMode, isInRotateMode,
+  startRotating, stopRotating, isCurrentlyRotating,
+  setDesignNorth, resetDesignNorth,
+} from './north-state.js';
+import { initNorthInput } from './north-input.js';
 
-// ── Constants ────────────────────────────────────────────────
-const NP_KEY         = 'gprtool-np2d-state'; // { right, bottom, w, visible, dn }
+// Re-exports — all callers import from here, unchanged
+export { getDesignNorthAngle, getGlobalNorthAngle, setDesignNorth, resetDesignNorth };
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+const NP_KEY         = 'gprtool-np2d-state';
 const NP_BASE_W      = 77;
 const NP_BASE_H      = 86;
 const NP_MARGIN      = 16;
 const DRAG_THRESHOLD = 5;
-const MIN_W          = 38;   // 50% of base
-const MAX_W          = 231;  // 300% of base
+const MIN_W          = 38;
+const MAX_W          = 231;
 
-// SVG geometry constants (viewBox 0 0 64 72)
-const SVG_CX = 32;  // circle centre X
-const SVG_CY = 40;  // circle centre Y
-
-// ── Module state ─────────────────────────────────────────────
+// ── Module state ──────────────────────────────────────────────────────────────
 let npEl, npRotEl, npCtxEl, npVP;
-let npW = NP_BASE_W;
+let npW      = NP_BASE_W;
 let getState;
 
-let designNorthAngle = 0;  // grid orientation — changed by "Set Design North"
-let globalNorthAngle = 0;  // TN offset from world -Z — changed by "Rotate N Point"
-let dnGroupEl  = null;  // green DN arrow (injected)
-let dnLabelEl  = null;  // angle label
-let tnNeedleEl = null;  // TN needle group (from SVG)
-
-let isDragging      = false;
-let dragPending     = false;
-let dragStartClient = { x: 0, y: 0 };
-let dragOffset      = { x: 0, y: 0 };
-
-let rotateMode      = false;
-let isRotating      = false;
-let rotateStartAngle = 0;
-let rotateStartDN    = 0;
-let rotateStartGlobalNorth = 0;  // TN captured at drag-start — changed by "Rotate N Point"
+let isDragging       = false;
+let dragPending      = false;
+let dragStartClient  = { x: 0, y: 0 };
+let dragOffset       = { x: 0, y: 0 };
 
 let isResizing   = false;
 let resizeHandle = null;
 let resizeStart  = { w: NP_BASE_W, anchor: { x: 0, y: 0 } };
 
-const _npO = new THREE.Vector3();
-const _npN = new THREE.Vector3();
+// Drag-rotate session state (local only; rotate mode flags live in north-state.js)
+let rotateStartAngle       = 0;
+let rotateStartGlobalNorth = 0;
 
-// ── Angle parsing ─────────────────────────────────────────────
-// Accepts: 7  -7  +7  7W  7E  7.4  7.4W  7°22'  7°22'W  7d22'E
-// Returns decimal degrees (+ve = east/clockwise) or null on error
+// ── Size / position helpers ───────────────────────────────────────────────────
 
-function parseNorthAngle(str) {
-  if (!str) return null;
-  str = str.trim();
-
-  // Determine directional sign from suffix or prefix
-  let sign = 1;
-  let s    = str.toUpperCase();
-
-  if (s.endsWith('W'))      { sign = -1; s = s.slice(0, -1).trim(); }
-  else if (s.endsWith('E')) { sign =  1; s = s.slice(0, -1).trim(); }
-
-  if (s.startsWith('-'))      { sign = -1; s = s.slice(1).trim(); }
-  else if (s.startsWith('+')) { sign =  1; s = s.slice(1).trim(); }
-
-  // deg°min' or deg d min — e.g. "7°22'" or "7d22"
-  const dmMatch = s.match(/^(\d+(?:\.\d+)?)[°d]\s*(\d+(?:\.\d+)?)'?\s*$/);
-  if (dmMatch) {
-    const d = parseFloat(dmMatch[1]);
-    const m = parseFloat(dmMatch[2]);
-    if (!isNaN(d) && !isNaN(m) && m < 60) return sign * (d + m / 60);
-    return null;
-  }
-
-  // Plain number (integer or decimal)
-  const num = parseFloat(s);
-  if (!isNaN(num) && s.match(/^[\d.]+$/)) return sign * num;
-
-  return null;
-}
-
-// ── Angle formatting ─────────────────────────────────────────
-// formatNorthAngle: spaced format for input fields (e.g. "7°22' W")
-// formatNorthAngleCompact: no spaces for the small compass label (e.g. "7°22'W")
-
-function formatNorthAngle(deg) {
-  if (deg === 0 || deg === null) return '0°';
-  const abs      = Math.abs(deg);
-  const dir      = deg > 0 ? 'E' : 'W';
-  const wholeDeg = Math.floor(abs);
-  const minFrac  = (abs - wholeDeg) * 60;
-  const wholeMin = Math.round(minFrac);
-
-  if (wholeMin === 0)  return `${wholeDeg}° ${dir}`;
-  if (wholeMin === 60) return `${wholeDeg + 1}° ${dir}`;
-  return `${wholeDeg}°${wholeMin}' ${dir}`;
-}
-
-function formatNorthAngleCompact(deg) {
-  if (deg === 0 || deg === null) return '0°';
-  const abs      = Math.abs(deg);
-  const dir      = deg > 0 ? 'E' : 'W';
-  const wholeDeg = Math.floor(abs);
-  const minFrac  = (abs - wholeDeg) * 60;
-  const wholeMin = Math.round(minFrac);
-
-  if (wholeMin === 0)  return `${wholeDeg}°${dir}`;
-  if (wholeMin === 60) return `${wholeDeg + 1}°${dir}`;
-  return `${wholeDeg}°${wholeMin}'${dir}`;
-}
-
-// ── Size / position helpers ───────────────────────────────────
-
-function heightFromWidth(w) {
-  return Math.round(w * (NP_BASE_H / NP_BASE_W));
-}
+function heightFromWidth(w) { return Math.round(w * (NP_BASE_H / NP_BASE_W)); }
 
 function applySize(w) {
   npW = Math.max(MIN_W, Math.min(MAX_W, w));
@@ -139,48 +65,13 @@ function applySize(w) {
 function applyPos(right, bottom) {
   const vw = npVP.clientWidth;
   const vh = npVP.clientHeight;
-  right  = Math.max(0, Math.min(vw - npW,               right));
+  right  = Math.max(0, Math.min(vw - npW,                right));
   bottom = Math.max(0, Math.min(vh - heightFromWidth(npW), bottom));
   npEl.style.right  = right  + 'px';
   npEl.style.bottom = bottom + 'px';
   npEl.style.left   = '';
   npEl.style.top    = '';
   saveState();
-}
-
-// ── Persistence ───────────────────────────────────────────────
-
-function saveState() {
-  try {
-    const right   = parseFloat(npEl.style.right)  || NP_MARGIN;
-    const bottom  = parseFloat(npEl.style.bottom) || NP_MARGIN;
-    const visible = npEl.style.display !== 'none';
-    localStorage.setItem(NP_KEY, JSON.stringify({
-      right, bottom, w: npW, visible,
-      dn: designNorthAngle,
-      tn: globalNorthAngle,
-    }));
-  } catch {}
-}
-
-function restoreState() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(NP_KEY));
-    if (saved) {
-      if (saved.w)               applySize(saved.w);
-      if (saved.visible === false) npEl.style.display = 'none';
-      if (saved.right !== undefined) applyPos(saved.right, saved.bottom);
-      else                           resetPosInternal();
-      // Both DN and TN reset to 0 on load — N points up, grid vertical/horizontal
-      // Will be restored from .gpr session file when session save is implemented
-      applyDesignNorth(0);
-      applyGlobalNorth(0);
-    } else {
-      resetPosInternal();
-    }
-  } catch {
-    resetPosInternal();
-  }
 }
 
 function resetPosInternal() {
@@ -191,32 +82,6 @@ function resetPosInternal() {
   saveState();
 }
 
-// ── Design North ──────────────────────────────────────────────
-
-function applyDesignNorth(deg) {
-  designNorthAngle = deg;
-
-  if (dnGroupEl && dnLabelEl) {
-    // Label shows tilt of DN relative to TN
-    dnLabelEl.textContent = formatNorthAngleCompact(designNorthAngle - globalNorthAngle);
-  }
-
-  // Show / hide "Clear Design North" menu item
-  const clearItem = document.getElementById('np-ctx-clear-dn');
-  if (clearItem) clearItem.style.display = deg !== null && designNorthAngle !== 0 ? '' : 'none';
-
-  saveState();
-}
-
-function applyGlobalNorth(deg) {
-  globalNorthAngle = deg ?? 0;
-  // Label shows tilt of DN relative to TN
-  if (dnLabelEl) dnLabelEl.textContent = formatNorthAngleCompact(designNorthAngle - globalNorthAngle);
-  saveState();
-}
-
-// ── Design North input field ──────────────────────────────────
-
 function angleFromNPCenter(clientX, clientY) {
   const rect = npEl.getBoundingClientRect();
   const cx   = rect.left + rect.width  * 0.5;
@@ -224,253 +89,45 @@ function angleFromNPCenter(clientX, clientY) {
   return Math.atan2(clientX - cx, cy - clientY) * 180 / Math.PI;
 }
 
-function enterRotateMode() {
-  rotateMode = true;
-  npEl.style.cursor = 'crosshair';
-  npEl.classList.add('np-rotating');
+// ── Persistence ───────────────────────────────────────────────────────────────
+
+function saveState() {
+  try {
+    localStorage.setItem(NP_KEY, JSON.stringify({
+      right:   parseFloat(npEl.style.right)  || NP_MARGIN,
+      bottom:  parseFloat(npEl.style.bottom) || NP_MARGIN,
+      w:       npW,
+      visible: npEl.style.display !== 'none',
+      dn:      getDesignNorthAngle(),
+      tn:      getGlobalNorthAngle(),
+    }));
+  } catch {}
 }
 
-function exitRotateMode() {
-  rotateMode = false;
-  isRotating = false;
-  npEl.style.cursor = 'grab';
-  npEl.classList.remove('np-rotating');
-}
-
-function showDNInput(autoFocus = true) {
-  // Create on first use
-  let inp = document.getElementById('np-dn-input');
-  if (!inp) {
-    inp = document.createElement('div');
-    inp.id = 'np-dn-input';
-    inp.innerHTML = `
-      <div class="np-dn-title">Design North</div>
-      <input type="text" id="np-dn-field" placeholder="e.g. 7, 7.4, 7°22', 7W" autocomplete="off" spellcheck="false">
-      <div class="np-dn-hint">+ or E = east &nbsp;|&nbsp; - or W = west</div>
-    `;
-    document.body.appendChild(inp);
-
-    document.getElementById('np-dn-field').addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        const val = e.target.value.trim();
-        const deg = parseNorthAngle(val);
-        if (deg !== null) {
-          applyDesignNorth(deg);
-          hideDNInput();
-        } else {
-          // Flash invalid state
-          e.target.classList.add('np-dn-invalid');
-          setTimeout(() => e.target.classList.remove('np-dn-invalid'), 600);
-        }
-        e.preventDefault();
-      }
-      if (e.key === 'Escape') {
-        hideDNInput();
-        e.stopPropagation();
-      }
-    });
-
-    document.getElementById('np-dn-field').addEventListener('input', e => {
-      e.target.classList.remove('np-dn-invalid');
-    });
-  }
-
-  // Position to the left of the NP container
-  const rect = npEl.getBoundingClientRect();
-  inp.style.display = 'block';
-  inp.style.right   = (window.innerWidth  - rect.left + 8) + 'px';
-  inp.style.bottom  = (window.innerHeight - rect.bottom)   + 'px';
-
-  // Pre-fill with current value if already set
-  const field = document.getElementById('np-dn-field');
-  field.value = designNorthAngle !== 0 ? formatNorthAngle(designNorthAngle) : '';
-  field.classList.remove('np-dn-invalid');
-  if (autoFocus) requestAnimationFrame(() => field.focus());
-
-  // Intercept Escape + Enter at capture phase so global handlers don't fire
-  document.removeEventListener('keydown', onDNKeyCapture, true);
-  document.addEventListener('keydown', onDNKeyCapture, true);
-
-  // Close on outside click — remove first to prevent duplicate listeners
-  document.removeEventListener('click', onClickOutsideDNInput);
-  setTimeout(() => {
-    document.addEventListener('click', onClickOutsideDNInput);
-  }, 50);
-}
-
-function hideDNInput() {
-  const inp = document.getElementById('np-dn-input');
-  if (inp) inp.style.display = 'none';
-  document.removeEventListener('click', onClickOutsideDNInput);
-  document.removeEventListener('keydown', onDNKeyCapture, true);
-  exitRotateMode();
-}
-
-function onDNKeyCapture(e) {
-  const inp = document.getElementById('np-dn-input');
-  if (!inp || inp.style.display === 'none') return;
-
-  if (e.key === 'Escape') {
-    e.stopPropagation();
-    e.preventDefault();
-    hideDNInput();
-  }
-
-  if (e.key === 'Enter') {
-    e.stopPropagation();
-    e.preventDefault();
-    const field = document.getElementById('np-dn-field');
-    if (!field) return;
-    const val = field.value.trim();
-    const deg = parseNorthAngle(val);
-    if (deg !== null) {
-      applyDesignNorth(deg);
-      hideDNInput();
+function restoreState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(NP_KEY));
+    if (saved) {
+      if (saved.w)                applySize(saved.w);
+      if (saved.visible === false) npEl.style.display = 'none';
+      if (saved.right !== undefined) applyPos(saved.right, saved.bottom);
+      else                           resetPosInternal();
+      // Angles default to 0; restored from .gpr project file when project opens
+      applyDesignNorth(0);
+      applyGlobalNorth(0);
     } else {
-      field.classList.add('np-dn-invalid');
-      setTimeout(() => field.classList.remove('np-dn-invalid'), 600);
+      resetPosInternal();
     }
+  } catch {
+    resetPosInternal();
   }
 }
 
-function onClickOutsideDNInput(e) {
-  const inp = document.getElementById('np-dn-input');
-  if (inp && !inp.contains(e.target) && !npEl.contains(e.target)) hideDNInput();
-}
-
-// ── True North input field (mirrors showDNInput but targets globalNorthAngle) ────────
-
-function showTNInput(autoFocus = true) {
-  let inp = document.getElementById('np-tn-input');
-  if (!inp) {
-    inp = document.createElement('div');
-    inp.id = 'np-tn-input';
-    inp.innerHTML = `
-      <div class="np-dn-title">True North Offset</div>
-      <input type="text" id="np-tn-field" placeholder="e.g. 7, 7.4, 7\u00b022', 7W" autocomplete="off" spellcheck="false">
-      <div class="np-dn-hint">+ or E = east &nbsp;|&nbsp; - or W = west</div>
-    `;
-    document.body.appendChild(inp);
-
-    document.getElementById('np-tn-field').addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        const val = e.target.value.trim();
-        const deg = parseNorthAngle(val);
-        if (deg !== null) {
-          applyGlobalNorth(deg);
-          hideTNInput();
-        } else {
-          e.target.classList.add('np-dn-invalid');
-          setTimeout(() => e.target.classList.remove('np-dn-invalid'), 600);
-        }
-        e.preventDefault();
-      }
-      if (e.key === 'Escape') { hideTNInput(); e.stopPropagation(); }
-    });
-
-    document.getElementById('np-tn-field').addEventListener('input', e => {
-      e.target.classList.remove('np-dn-invalid');
-    });
-  }
-
-  const rect = npEl.getBoundingClientRect();
-  inp.style.display = 'block';
-  inp.style.right   = (window.innerWidth  - rect.left + 8) + 'px';
-  inp.style.bottom  = (window.innerHeight - rect.bottom)   + 'px';
-
-  const field = document.getElementById('np-tn-field');
-  field.value = globalNorthAngle !== 0 ? formatNorthAngle(globalNorthAngle) : '';
-  field.classList.remove('np-dn-invalid');
-  if (autoFocus) requestAnimationFrame(() => field.focus());
-
-  document.removeEventListener('keydown', onTNKeyCapture, true);
-  document.addEventListener('keydown', onTNKeyCapture, true);
-  document.removeEventListener('click', onClickOutsideTNInput);
-  setTimeout(() => { document.addEventListener('click', onClickOutsideTNInput); }, 50);
-}
-
-function hideTNInput() {
-  const inp = document.getElementById('np-tn-input');
-  if (inp) inp.style.display = 'none';
-  document.removeEventListener('click', onClickOutsideTNInput);
-  document.removeEventListener('keydown', onTNKeyCapture, true);
-  exitRotateMode();
-}
-
-function onTNKeyCapture(e) {
-  const inp = document.getElementById('np-tn-input');
-  if (!inp || inp.style.display === 'none') return;
-  if (e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); hideTNInput(); }
-  if (e.key === 'Enter') {
-    e.stopPropagation(); e.preventDefault();
-    const field = document.getElementById('np-tn-field');
-    if (!field) return;
-    const deg = parseNorthAngle(field.value.trim());
-    if (deg !== null) { applyGlobalNorth(deg); hideTNInput(); }
-    else {
-      field.classList.add('np-dn-invalid');
-      setTimeout(() => field.classList.remove('np-dn-invalid'), 600);
-    }
-  }
-}
-
-function onClickOutsideTNInput(e) {
-  const inp = document.getElementById('np-tn-input');
-  if (inp && !inp.contains(e.target) && !npEl.contains(e.target)) hideTNInput();
-}
-
-// ── SVG injection ─────────────────────────────────────────────
-// Arrow geometry (local coords, pointing straight up before group rotation):
-//   Circle centre: (32, 40), radius 22 — edge at y=18
-//   Arrowhead tip:    y = 21  (just inside circle edge)
-//   Arrowhead base:   y = 28
-//   Shaft:            y = 28 → y = 37 (stops before centre clutter)
-
-function injectDNGroup(svg) {
-  svg.setAttribute('overflow', 'visible');
-
-  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-  g.id = 'np-dn-group';
-  g.style.display = 'none';
-
-  // Shaft — full diameter, top circle edge (y=18) to bottom circle edge (y=62)
-  const shaft = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  shaft.setAttribute('x1', SVG_CX);
-  shaft.setAttribute('y1', '18');
-  shaft.setAttribute('x2', SVG_CX);
-  shaft.setAttribute('y2', '62');
-  shaft.setAttribute('stroke', '#4a8a4a');
-  shaft.setAttribute('stroke-width', '0.75');
-
-  // Dot — centred on circumference (cy=18: circumference line crosses dot middle)
-  const head = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  head.setAttribute('cx', SVG_CX);
-  head.setAttribute('cy', '18');
-  head.setAttribute('r', '3');
-  head.setAttribute('fill', '#4a8a4a');
-
-  // Label — outside circle at arrow tip; position/anchor set in applyDesignNorth()
-  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  label.id = 'np-dn-label';
-  label.setAttribute('font-size', '7');
-  label.setAttribute('font-family', 'Outfit, sans-serif');
-  label.setAttribute('fill', '#4a8a4a');
-
-  g.appendChild(shaft);
-  g.appendChild(head);
-  g.appendChild(label);
-  svg.appendChild(g);
-
-  dnGroupEl = g;
-  dnLabelEl = label;
-}
-
-// ── Public API ────────────────────────────────────────────────
+// ── Public API ────────────────────────────────────────────────────────────────
 
 export function toggleNorthPoint() {
   if (!npEl) return;
-  const hidden = npEl.style.display === 'none';
-  npEl.style.display = hidden ? '' : 'none';
+  npEl.style.display = npEl.style.display === 'none' ? '' : 'none';
   saveState();
 }
 
@@ -484,70 +141,19 @@ export function resetNorthPos() {
   resetPosInternal();
 }
 
+export function setNorthPointMode(mode) {
+  // '3d': hide DOM widget — 3D gizmo takes over; '2d': always visible
+  if (!npEl) return;
+  npEl.style.display = mode === '3d' ? 'none' : '';
+}
+
 export function updateNorthRotation() {
   if (!npRotEl || !npEl || npEl.style.display === 'none') return;
-  const { currentMode, camera2D, camera3D, controls3D, pan2D, rotate2D } = getState();
-
-  // Bug 2 fix: in 2D mode, counter-rotate housing by viewport rotation so it
-  // stays visually aligned with the grid as the user pans/rotates the plan view.
-  // In 3D mode the gizmo (north-point-3d.js) tracks the camera; housing stays fixed to DN.
-  const iconRot = currentMode === '2d'
-    ? designNorthAngle - (rotate2D * 180 / Math.PI)
-    : designNorthAngle;
-  npRotEl.style.transform = `rotate(${iconRot}deg)`;
-
-  // TN needle points True North within housing
-  // needleLocal = globalNorthAngle - designNorthAngle
-  if (tnNeedleEl) {
-    const needleLocal = globalNorthAngle - designNorthAngle;
-    tnNeedleEl.setAttribute('transform', `rotate(${needleLocal}, ${SVG_CX}, ${SVG_CY})`);
-  }
-
-  // Green DN arrow stays fixed at housing top (no extra rotation needed)
-  // Show only when DN ≠ TN
-  if (dnGroupEl && dnLabelEl) {
-    dnGroupEl.setAttribute('transform', `rotate(0, ${SVG_CX}, ${SVG_CY})`);
-    dnGroupEl.style.display = designNorthAngle !== globalNorthAngle ? '' : 'none';
-
-    // Shift label sideways if TN arrow is near compass top (where D label sits)
-    const LABEL_Y   = 13;  // nudged closer and higher
-    const CLASH_DEG = 35;
-    const SIDE_X    = -4;   // small offset keeps text inside compass bounds at font-size 6
-
-    // Clash is between TN needle and DN label (at top) — use needle local angle
-    const needleLocalForClash = globalNorthAngle - designNorthAngle;
-    let normTN = ((needleLocalForClash % 360) + 360) % 360;
-    if (normTN > 180) normTN -= 360;
-
-    if (Math.abs(normTN) < CLASH_DEG) {
-      if (normTN >= 0) {
-        dnLabelEl.setAttribute('x', SVG_CX - SIDE_X);
-        dnLabelEl.setAttribute('text-anchor', 'end');
-      } else {
-        dnLabelEl.setAttribute('x', SVG_CX + SIDE_X);
-        dnLabelEl.setAttribute('text-anchor', 'start');
-      }
-    } else {
-      dnLabelEl.setAttribute('x', SVG_CX);
-      dnLabelEl.setAttribute('text-anchor', 'middle');
-    }
-    dnLabelEl.setAttribute('y', LABEL_Y);
-  }
+  const { currentMode, rotate2D } = getState();
+  updateCompassDisplay(npRotEl, currentMode, rotate2D);
 }
 
-export function getDesignNorthAngle() { return designNorthAngle; }
-export function getGlobalNorthAngle() { return globalNorthAngle; }
-export function resetDesignNorth() { applyDesignNorth(0); }
-
-export function setNorthPointMode(mode) {
-  // '3d': hide DOM widget — gizmo takes over; '2d': always show in 2D
-  if (!npEl) return;
-  if (mode === '3d') {
-    npEl.style.display = 'none';
-  } else {
-    npEl.style.display = '';
-  }
-}
+// ── Init ──────────────────────────────────────────────────────────────────────
 
 export function initNorthPoint2D(getStateCallback) {
   getState = getStateCallback;
@@ -561,15 +167,23 @@ export function initNorthPoint2D(getStateCallback) {
     return;
   }
 
-  // Grab TN needle group and inject DN arrow group
+  // Initialise angle state module (pass npEl for cursor/class changes + save callback)
+  initNorthState(npEl, saveState);
+
+  // Inject green DN arrow and grab TN needle from the static SVG
   const svg = npRotEl.querySelector('svg');
-  tnNeedleEl = svg ? svg.getElementById('np-tn-needle') : null;
-  if (svg) injectDNGroup(svg);
+  if (svg) {
+    setTNNeedleEl(svg.getElementById('np-tn-needle'));
+    injectDNGroup(svg);
+  }
+
+  // Initialise input popups (pass getter so they can position themselves)
+  initNorthInput(() => npEl);
 
   applySize(NP_BASE_W);
   restoreState();
 
-  // Selection (shows resize handles)
+  // Click toggles resize-handle selection ring
   npEl.addEventListener('click', e => {
     if (e.target.classList.contains('resize-handle')) return;
     npEl.classList.toggle('np-selected');
@@ -578,24 +192,19 @@ export function initNorthPoint2D(getStateCallback) {
     if (!npEl.contains(e.target)) npEl.classList.remove('np-selected');
   });
 
-  // Resize handles
   npEl.querySelectorAll('.resize-handle').forEach(h =>
     h.addEventListener('pointerdown', onResizeDown));
 
-  // Drag
   npEl.addEventListener('pointerdown', onDragDown);
-
-  // Global pointer handlers
   document.addEventListener('pointermove', onPointerMove);
   document.addEventListener('pointerup',   onPointerUp);
 
   // Context menu
   npEl.addEventListener('contextmenu', e => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault(); e.stopPropagation();
     if (npCtxEl) {
-      npCtxEl.style.left    = e.clientX + 'px';
-      npCtxEl.style.top     = e.clientY + 'px';
+      npCtxEl.style.left = e.clientX + 'px';
+      npCtxEl.style.top  = e.clientY + 'px';
       npCtxEl.style.display = 'block';
     }
   });
@@ -611,42 +220,31 @@ export function initNorthPoint2D(getStateCallback) {
     toggleNorthPoint();
     if (npCtxEl) npCtxEl.style.display = 'none';
   });
-  document.getElementById('np-ctx-rotate-np')?.addEventListener('click', () => {
-    if (npCtxEl) npCtxEl.style.display = 'none';
-    enterRotateMode();
-    showTNInput(true);  // Bug 1 fix: set TN, not DN
-  });
-
+  // np-ctx-rotate-np removed — "Rotate N Point" deprecated; use Set Design North command
 }
 
-// ── Resize ────────────────────────────────────────────────────
+// ── Resize ────────────────────────────────────────────────────────────────────
 
 function onResizeDown(e) {
-  e.preventDefault();
-  e.stopPropagation();
+  e.preventDefault(); e.stopPropagation();
   isResizing   = true;
   resizeHandle = e.target.dataset.handle;
   resizeStart.w = npW;
 
-  const L = npEl.offsetLeft;
-  const T = npEl.offsetTop;
-  const R = L + npW;
-  const B = T + heightFromWidth(npW);
-
+  const L = npEl.offsetLeft, T = npEl.offsetTop;
+  const R = L + npW,         B = T + heightFromWidth(npW);
   switch (resizeHandle) {
     case 'se': resizeStart.anchor = { x: L, y: T }; break;
     case 'nw': resizeStart.anchor = { x: R, y: B }; break;
     case 'ne': resizeStart.anchor = { x: L, y: B }; break;
     case 'sw': resizeStart.anchor = { x: R, y: T }; break;
   }
-
   npEl.classList.add('np-resizing');
   npEl.setPointerCapture(e.pointerId);
 }
 
 function handleResize(e) {
   if (!isResizing) return;
-
   const vpRect = npVP.getBoundingClientRect();
   const mouseX = e.clientX - vpRect.left;
   const mouseY = e.clientY - vpRect.top;
@@ -659,47 +257,40 @@ function handleResize(e) {
     case 'ne': dW = mouseX - ax; dH = ay - mouseY; break;
     case 'sw': dW = ax - mouseX; dH = mouseY - ay; break;
   }
-
-  const newW = Math.round((dW + dH * (NP_BASE_W / NP_BASE_H)) / 2);
-  applySize(newW);
+  applySize(Math.round((dW + dH * (NP_BASE_W / NP_BASE_H)) / 2));
 
   const newH = heightFromWidth(npW);
   let newLeft, newTop;
   switch (resizeHandle) {
-    case 'se': newLeft = ax;        newTop = ay;        break;
-    case 'nw': newLeft = ax - npW;  newTop = ay - newH; break;
-    case 'ne': newLeft = ax;        newTop = ay - newH; break;
-    case 'sw': newLeft = ax - npW;  newTop = ay;        break;
+    case 'se': newLeft = ax;       newTop = ay;        break;
+    case 'nw': newLeft = ax - npW; newTop = ay - newH; break;
+    case 'ne': newLeft = ax;       newTop = ay - newH; break;
+    case 'sw': newLeft = ax - npW; newTop = ay;        break;
   }
-  npEl.style.left   = newLeft + 'px';
-  npEl.style.top    = newTop  + 'px';
-  npEl.style.right  = '';
-  npEl.style.bottom = '';
+  npEl.style.left = newLeft + 'px'; npEl.style.top = newTop + 'px';
+  npEl.style.right = ''; npEl.style.bottom = '';
 }
 
 function stopResize() {
   if (!isResizing) return;
-  isResizing   = false;
-  resizeHandle = null;
+  isResizing = false; resizeHandle = null;
   npEl.classList.remove('np-resizing');
-  const vw     = npVP.clientWidth;
-  const vh     = npVP.clientHeight;
-  const right  = vw - npEl.offsetLeft - npW;
-  const bottom = vh - npEl.offsetTop  - heightFromWidth(npW);
-  applyPos(right, bottom);
+  applyPos(
+    npVP.clientWidth  - npEl.offsetLeft - npW,
+    npVP.clientHeight - npEl.offsetTop  - heightFromWidth(npW),
+  );
 }
 
-// ── Drag ──────────────────────────────────────────────────────
+// ── Drag ──────────────────────────────────────────────────────────────────────
 
 function onDragDown(e) {
   if (e.target.classList.contains('resize-handle') || isResizing) return;
   if (e.button !== 0) return;
 
-  if (rotateMode) {
-    // In rotate mode: drag rotates TN (globalNorthAngle) instead of moving compass
-    isRotating       = true;
-    rotateStartAngle = angleFromNPCenter(e.clientX, e.clientY);
-    rotateStartGlobalNorth = globalNorthAngle;  // Bug 1 fix: capture TN, not DN
+  if (isInRotateMode()) {
+    startRotating();
+    rotateStartAngle       = angleFromNPCenter(e.clientX, e.clientY);
+    rotateStartGlobalNorth = getGlobalNorthAngle();
     npEl.setPointerCapture(e.pointerId);
     e.stopPropagation();
     return;
@@ -707,24 +298,18 @@ function onDragDown(e) {
 
   dragPending     = true;
   dragStartClient = { x: e.clientX, y: e.clientY };
-
-  const vr     = npVP.getBoundingClientRect();
-  const mouseX = e.clientX - vr.left;
-  const mouseY = e.clientY - vr.top;
+  const vr = npVP.getBoundingClientRect();
   dragOffset = {
-    x: (npEl.offsetLeft + npW)                  - mouseX,
-    y: (npEl.offsetTop  + heightFromWidth(npW)) - mouseY,
+    x: (npEl.offsetLeft + npW)                  - (e.clientX - vr.left),
+    y: (npEl.offsetTop  + heightFromWidth(npW)) - (e.clientY - vr.top),
   };
-
   npEl.setPointerCapture(e.pointerId);
   e.stopPropagation();
 }
 
 function handleDrag(e) {
-  if (isRotating) {
-    const cur   = angleFromNPCenter(e.clientX, e.clientY);
-    // Bug 1 fix: drag sets TN (globalNorthAngle), not DN
-    const newGN = rotateStartGlobalNorth + (cur - rotateStartAngle);  // + so needle follows drag direction
+  if (isCurrentlyRotating()) {
+    const newGN = rotateStartGlobalNorth + (angleFromNPCenter(e.clientX, e.clientY) - rotateStartAngle);
     applyGlobalNorth(newGN);
     const field = document.getElementById('np-tn-field');
     if (field) field.value = formatNorthAngle(newGN);
@@ -732,38 +317,26 @@ function handleDrag(e) {
   }
   if (!dragPending && !isDragging) return;
   if (!isDragging) {
-    const dist = Math.hypot(e.clientX - dragStartClient.x, e.clientY - dragStartClient.y);
-    if (dist < DRAG_THRESHOLD) return;
-    isDragging        = true;
+    if (Math.hypot(e.clientX - dragStartClient.x, e.clientY - dragStartClient.y) < DRAG_THRESHOLD) return;
+    isDragging = true;
     npEl.style.cursor = 'grabbing';
   }
-  const vr     = npVP.getBoundingClientRect();
-  const vw     = npVP.clientWidth;
-  const vh     = npVP.clientHeight;
-  const mouseX = e.clientX - vr.left;
-  const mouseY = e.clientY - vr.top;
-  applyPos(vw - (mouseX + dragOffset.x), vh - (mouseY + dragOffset.y));
+  const vr = npVP.getBoundingClientRect();
+  applyPos(
+    npVP.clientWidth  - (e.clientX - vr.left + dragOffset.x),
+    npVP.clientHeight - (e.clientY - vr.top  + dragOffset.y),
+  );
 }
 
 function stopDrag() {
-  if (isRotating) {
-    isRotating = false;
-    return;
-  }
+  if (isCurrentlyRotating()) { stopRotating(); return; }
   dragPending = false;
   if (!isDragging) return;
-  isDragging        = false;
-  npEl.style.cursor = rotateMode ? 'crosshair' : 'grab';
+  isDragging = false;
+  npEl.style.cursor = isInRotateMode() ? 'crosshair' : 'grab';
 }
 
-// ── Combined pointer handlers ─────────────────────────────────
+// ── Combined pointer handlers ─────────────────────────────────────────────────
 
-function onPointerMove(e) {
-  handleResize(e);
-  handleDrag(e);
-}
-
-function onPointerUp() {
-  stopResize();
-  stopDrag();
-}
+function onPointerMove(e) { handleResize(e); handleDrag(e); }
+function onPointerUp()    { stopResize();    stopDrag();    }

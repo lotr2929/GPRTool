@@ -214,6 +214,7 @@ export function detectSurfaces(modelGroup) {
       elevation:   parseFloat(centre.y.toFixed(2)),
       normalAngle,
       normal:      normal.clone(),
+      worldNormal: normal.clone(),   // alias — viewport.js and plants.js use this name
       centre:      centre.clone(),
       originalMaterial: mat,
       plants: [],

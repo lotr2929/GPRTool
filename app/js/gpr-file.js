@@ -233,6 +233,28 @@ export async function addRawFileToGPR(zipPath, content, sectionName = null) {
   return blob;
 }
 
+// ── Update design.json in the active project ─────────────────────────────
+
+/**
+ * Merge `updates` into the active project's design.json and re-persist.
+ * Safe to call any time a Design Grid or Design North changes.
+ *
+ * @param {Object} updates  e.g. { surface_grids: { ... }, design_north_angle: 7 }
+ */
+export async function updateDesignData(updates) {
+  if (!_activeZip || !_activeProjectId) return;
+  try {
+    const str  = await _activeZip.file('design.json').async('string');
+    const data = Object.assign(JSON.parse(str), updates);
+    _activeZip.file('design.json', JSON.stringify(data, null, 2));
+    const blob = await _activeZip.generateAsync({ type: 'blob', compression: 'DEFLATE',
+      compressionOptions: { level: 6 } });
+    await idbPut(_activeProjectId, blob);
+  } catch (e) {
+    console.warn('[GPR] updateDesignData failed:', e.message);
+  }
+}
+
 // ── Open a .gpr file ──────────────────────────────────────────────────────
 
 /**

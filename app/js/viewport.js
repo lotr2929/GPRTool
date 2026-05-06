@@ -311,3 +311,63 @@ export function setGridVisible(v) {
     updateGridVisibility();
   }
 }
+
+// ── Animated camera transition to a Design Grid face-on view ─────────────────
+// Animates camera3D to look straight along the grid's -normal direction
+// (+yAxis points "up" on screen). Calls onComplete() when done; the caller
+// is responsible for switching to 2D mode and activating any surface state.
+
+export function animateCameraToGrid(grid, onComplete) {
+  const DURATION = 420; // ms — perceptible but snappy
+
+  const normal  = grid.normal.clone().normalize();
+  const origin  = grid.origin.clone();
+  const yAxis   = grid.yAxis.clone().normalize();
+  const extent  = grid.extent ?? 5000;
+  const dist    = Math.max(extent * 0.2, 80);
+
+  // Target: camera sits at origin + normal * dist, looking at origin
+  const endPos    = origin.clone().addScaledVector(normal, dist);
+  const endTarget = origin.clone();
+  const endUp     = yAxis.clone();
+
+  // Ensure camera3D has a sane starting position if we were in 2D
+  if (state.currentMode === '2d') {
+    const startDist = dist * 2.5;
+    state.camera3D.position.copy(origin.clone().addScaledVector(normal, startDist));
+    state.camera3D.up.copy(endUp);
+    state.camera3D.lookAt(origin);
+    state.controls3D.target.copy(origin);
+    state.controls3D.update();
+  }
+
+  const startPos    = state.camera3D.position.clone();
+  const startTarget = state.controls3D.target.clone();
+  const startUp     = state.camera3D.up.clone();
+
+  // Briefly run in 3D mode so the animation is visible
+  state.currentMode = '3d';
+  state.camera   = state.camera3D;
+  state.controls = state.controls3D;
+
+  const t0 = performance.now();
+
+  function step(now) {
+    const raw  = Math.min((now - t0) / DURATION, 1);
+    const ease = raw < 0.5 ? 2 * raw * raw : -1 + (4 - 2 * raw) * raw; // easeInOut
+
+    state.camera3D.position.lerpVectors(startPos, endPos, ease);
+    state.controls3D.target.lerpVectors(startTarget, endTarget, ease);
+    state.camera3D.up.lerpVectors(startUp, endUp, ease).normalize();
+    state.camera3D.lookAt(state.controls3D.target);
+    state.controls3D.update();
+
+    if (raw < 1) {
+      requestAnimationFrame(step);
+    } else {
+      onComplete?.();
+    }
+  }
+
+  requestAnimationFrame(step);
+}
