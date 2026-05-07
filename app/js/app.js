@@ -1558,6 +1558,42 @@
     initProjects();
     initDesignGridTool();
 
+    // ── Startup: show banner if no project folder set ─────────────────────
+    // getProjectFolder() = silent IDB lookup (no picker, safe outside gesture)
+    // Banner button = user gesture → safe to call pickProjectFolder()
+    import('./local-folder.js').then(async ({ getProjectFolder, pickProjectFolder }) => {
+      const folder = await getProjectFolder().catch(() => null);
+      if (folder) return;
+      const banner = document.createElement('div');
+      banner.id = 'folder-banner';
+      banner.style.cssText = `
+        position:fixed; bottom:36px; left:50%; transform:translateX(-50%);
+        z-index:800; background:var(--chrome-dark,#1e3d1e); color:#fff;
+        font-family:var(--font,'Outfit',sans-serif); font-size:12px;
+        border-radius:6px; padding:9px 14px;
+        display:flex; align-items:center; gap:10px;
+        box-shadow:0 4px 16px rgba(0,0,0,0.35); white-space:nowrap;`;
+      banner.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"
+          stroke="var(--accent-light,#7fc47f)" stroke-width="1.4" style="flex-shrink:0;">
+          <path d="M2 3.5h4l1.5 2H14V13H2V3.5z"/>
+        </svg>
+        <span style="opacity:0.85;">No project folder — saving disabled until you choose one</span>
+        <button id="folder-banner-btn" style="background:var(--accent-light,#7fc47f);
+          color:#1e3d1e; border:none; border-radius:4px;
+          font-size:11px; font-weight:600; padding:4px 10px; cursor:pointer;">
+          Choose Folder…</button>
+        <button id="folder-banner-x" style="background:none; border:none;
+          color:rgba(255,255,255,0.4); cursor:pointer; font-size:16px;
+          line-height:1; padding:0 4px;">&#x2715;</button>`;
+      document.body.appendChild(banner);
+      document.getElementById('folder-banner-btn').addEventListener('click', async () => {
+        const h = await pickProjectFolder().catch(() => null);
+        if (h) banner.remove();
+      });
+      document.getElementById('folder-banner-x').addEventListener('click', () => banner.remove());
+    });
+
     // ── Cesium boundary draw ───────────────────────────────────────────────
     // Called when "Draw Lot Boundary" is clicked in Cesium (OSM) mode.
     // Uses cesium-viewer.js startBoundaryPick() — user clicks on 3D tile surface.

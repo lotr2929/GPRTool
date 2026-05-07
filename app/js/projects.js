@@ -15,7 +15,7 @@ import { getActiveGPRBlob, saveViewState } from './gpr-file.js';
 import { setPipelineStatus, showFeedback }  from './ui.js';
 import {
   isLocalFolderSupported,
-  ensureProjectFolder,
+  getProjectFolder,
   listGPRFiles,
   getAutosaveHandle,
   inspectGPRContents,
@@ -267,11 +267,40 @@ function _appendFileRow(listEl, f) {
 export function showSaveProjectDialog({ defaultName = 'Untitled Site', onSaved } = {}) {
   return new Promise(async (resolve) => {
 
-    // Ensure folder exists before showing dialog
-    const folder = await ensureProjectFolder();
+    // Try to get the folder — do NOT call pickProjectFolder() here (may not be in user gesture)
+    const folder = await getProjectFolder().catch(() => null);
     if (!folder) {
-      showFeedback('No project folder set — save cancelled.');
-      return resolve(null);
+      // Show a simple inline prompt instead of silently failing
+      const msg = document.createElement('div');
+      msg.style.cssText = `position:fixed;inset:0;z-index:1400;background:rgba(0,0,0,0.45);
+        display:flex;align-items:center;justify-content:center;`;
+      msg.innerHTML = `<div style="background:var(--chrome-panel);border:1px solid var(--chrome-border);
+        border-radius:6px;padding:24px 28px;max-width:380px;text-align:center;
+        font-family:var(--font,'Outfit',sans-serif);font-size:13px;color:var(--text-primary);
+        box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+        <div style="font-size:15px;font-weight:600;margin-bottom:10px;">No Project Folder Set</div>
+        <div style="color:var(--text-secondary);font-size:12px;margin-bottom:16px;">
+          Choose a folder on your computer to store .gpr project files.</div>
+        <button id="spd-pick" style="background:var(--accent-dark,#1e3d1e);color:var(--accent-light,#7fc47f);
+          border:none;border-radius:4px;font-size:12px;font-weight:600;
+          padding:8px 20px;cursor:pointer;margin-right:8px;">Choose Folder…</button>
+        <button id="spd-skip2" style="background:var(--chrome-panel-alt,#e8e8e4);
+          border:1px solid var(--chrome-border);border-radius:4px;font-size:12px;
+          padding:8px 14px;cursor:pointer;color:var(--text-primary);">Cancel</button>
+      </div>`;
+      document.body.appendChild(msg);
+      msg.querySelector('#spd-skip2').addEventListener('click', () => {
+        document.body.removeChild(msg); resolve(null);
+      });
+      msg.querySelector('#spd-pick').addEventListener('click', async () => {
+        const { pickProjectFolder } = await import('./local-folder.js');
+        const h = await pickProjectFolder().catch(() => null);
+        document.body.removeChild(msg);
+        if (!h) { resolve(null); return; }
+        // Folder now set — re-open Save As
+        resolve(await showSaveProjectDialog({ defaultName, onSaved }));
+      });
+      return;
     }
 
     const overlay = document.createElement('div');
