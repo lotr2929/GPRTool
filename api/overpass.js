@@ -28,7 +28,7 @@ function hashQuery(q) {
   return h.toString(36);
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
   const { query } = req.body || {};

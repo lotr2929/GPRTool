@@ -3,7 +3,7 @@
  * Used by the OSM import site picker (Google Maps click-to-locate).
  * GET /api/maps-key → { key: string }
  */
-export default function handler(req, res) {
+module.exports = function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   const key = process.env.GOOGLE_MAPS_API_KEY;
   if (!key) return res.status(500).json({ error: 'GOOGLE_MAPS_API_KEY not configured' });
