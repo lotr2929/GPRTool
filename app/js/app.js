@@ -1034,7 +1034,7 @@
 
     // ── Named function so both the modal callback and any future callers can use it ──
     async function openGPRFile(file) {
-      const { manifest, reference, design, boundary, terrain, osmContext, hasDXF, zip } = await openGPR(file);
+      const { manifest, reference, design, boundary, terrain, osmContext, view, hasDXF, zip } = await openGPR(file);
 
       // ── REAL WORLD: restore anchor and scene offset from reference.json ──
       setRealWorldAnchor(reference.utm_zone, reference.utm_easting, reference.utm_northing);
@@ -1084,9 +1084,10 @@
             if (state.axesYLine)  state.axesYLine.position.set(o.x, 0.1, o.z);
           }
           // Restore last saved view — if absent, fall back to fit3DCamera
-          if (data.view) {
-            restoreViewState(data.view);
+          if (view) {
+            showThreeJSView(); restoreViewState(view);
           } else {
+            showThreeJSView();
             fit3DCamera(new THREE.Box3().setFromObject(state.cadmapperGroup));
             switchMode('3d');
           }
@@ -1119,9 +1120,10 @@
             design?.grid_spacing_m ?? 100, design?.minor_divisions ?? 0,
             5000, new THREE.Vector3(0, 0, 0)
           );
-          if (data.view) {
-            restoreViewState(data.view);
+          if (view) {
+            showThreeJSView(); restoreViewState(view);
           } else {
+            showThreeJSView();
             fit3DCamera(new THREE.Box3().setFromObject(state.cadmapperGroup));
             switchMode('3d');
           }

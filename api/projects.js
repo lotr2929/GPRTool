@@ -24,12 +24,18 @@ function sbHeaders() {
 }
 
 async function sbFetch(path, opts = {}) {
-  const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
-    ...opts,
-    headers: { ...sbHeaders(), ...(opts.headers || {}) },
-  });
-  const text = await res.text();
-  return { ok: res.ok, status: res.status, data: text ? JSON.parse(text) : null };
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/${path}`, {
+      ...opts,
+      headers: { ...sbHeaders(), ...(opts.headers || {}) },
+    });
+    const text = await res.text();
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch { data = { raw: text }; }
+    return { ok: res.ok, status: res.status, data };
+  } catch (err) {
+    return { ok: false, status: 502, data: { error: err.message } };
+  }
 }
 
 // ── Extract file list from base64 .gpr (ZIP) ─────────────────────────────
