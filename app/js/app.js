@@ -12,7 +12,8 @@
       createInitialGPR, addBoundaryToGPR, openGPR, downloadGPR, getActiveGPRBlob,
       updateDesignData, saveViewState,
     } from './gpr-file.js';
-    import { initProjects, showProjectsModal, saveProject, loadProject, showSaveProjectDialog } from './projects.js';
+    import { initProjects, showProjectsModal, showSaveProjectDialog } from './projects.js';
+    import { writeProjectFile, deleteProjectFile, writeBlobToHandle } from './local-folder.js';
     // ── DESIGN WORLD (grids, north angle) — never mixes with Real World ────────
     import { initSiteSelection }    from './site-selection.js';
     import { initCADMapperImport, buildLayerPanel, parseCadmapperDXF } from './cadmapper-import.js';
@@ -1033,14 +1034,29 @@
     // openGPRFile() is a named function used by the modal callback below
 
     // ── Named function so both the modal callback and any future callers can use it ──
-    async function openGPRFile(file) {
+    async function openGPRFile(file, meta = {}) {
+      // ── Clear existing scene first ────────────────────────────────────
+      document.getElementById('clearSiteBtn')?.click();
+
+      // ── Set project identity from meta ────────────────────────────────
+      state._activeFileName  = meta.fileName ?? null;
+      state.activeFileHandle = meta.handle   ?? null;
+      state._isDirty         = false;
+
       const { manifest, reference, design, boundary, terrain, osmContext, view, hasDXF, zip } = await openGPR(file);
 
-      // ── REAL WORLD: restore anchor and scene offset from reference.json ──
+      // ── REAL WORLD: restore anchor and scene offset ───────────────────
       setRealWorldAnchor(reference.utm_zone, reference.utm_easting, reference.utm_northing);
       setSceneOffset(reference.scene_offset_x ?? 0, reference.scene_offset_z ?? 0);
 
-      // ── Re-parse embedded DXF if present ──────────────────────────────
+      // ── Restore site area (GPR denominator) ───────────────────────────
+      if (reference.site_area_m2) {
+        state.siteAreaM2 = reference.site_area_m2;
+      } else if (reference.site_span_m) {
+        state.siteAreaM2 = reference.site_span_m * reference.site_span_m;
+      }
+
+      // ── Re-parse embedded DXF if present ─────────────────────────────
       if (hasDXF) {
         const dxfEntry = zip.file('context/cadmapper.dxf');
         const dxfBytes = await dxfEntry.async('arraybuffer');
@@ -1051,11 +1067,6 @@
         ]);
         const layerGroups = parseCadmapperDXF(dxfText, allLayers, THREE);
         if (layerGroups && Object.keys(layerGroups).length) {
-          if (state.cadmapperGroup) {
-            scene.remove(state.cadmapperGroup);
-            state.cadmapperGroup.traverse(c => { c.geometry?.dispose(); c.material?.dispose(); });
-            state.cadmapperGroup = null;
-          }
           state.cadmapperGroup = new THREE.Group();
           state.cadmapperGroup.name = 'cadmapper-context';
           Object.values(layerGroups).forEach(g => state.cadmapperGroup.add(g));
@@ -1076,42 +1087,27 @@
             5000, new THREE.Vector3(0, 0, 0)
           );
           if (design?.surface_grids) state.designGridManager.deserialise(design.surface_grids);
-          // Restore axes position to saved Design Origin
           if (design?.design_origin) {
             const o = design.design_origin;
             state.designOrigin = new THREE.Vector3(o.x, 0, o.z);
             if (state.axesHelper) state.axesHelper.position.set(o.x, 0.1, o.z);
             if (state.axesYLine)  state.axesYLine.position.set(o.x, 0.1, o.z);
           }
-          // Restore last saved view — if absent, fall back to fit3DCamera
-          if (view) {
-            showThreeJSView(); restoreViewState(view);
-          } else {
-            showThreeJSView();
-            fit3DCamera(new THREE.Box3().setFromObject(state.cadmapperGroup));
-            switchMode('3d');
-          }
-          document.getElementById('empty-props').style.display  = 'none';
-          document.getElementById('clearSiteBtn').style.display = 'block';
-          document.getElementById('left-panel').classList.add('site-imported');
+          showThreeJSView();
+          if (view) { restoreViewState(view); }
+          else { fit3DCamera(new THREE.Box3().setFromObject(state.cadmapperGroup)); switchMode('3d'); }
           buildLayerPanel(layerGroups);
         }
       }
 
-      // ── OSM context restore (no DXF — rebuild scene from saved context.geojson) ──
+      // ── OSM context restore ───────────────────────────────────────────
       if (!hasDXF && osmContext) {
         const { buildLayerGroupsFromGeoJSON } = await import('./osm-import.js');
         const layerGroups = buildLayerGroupsFromGeoJSON(osmContext, THREE);
         if (layerGroups && Object.keys(layerGroups).length) {
-          if (state.cadmapperGroup) {
-            scene.remove(state.cadmapperGroup);
-            state.cadmapperGroup.traverse(c => { c.geometry?.dispose(); c.material?.dispose(); });
-            state.cadmapperGroup = null;
-          }
           state.cadmapperGroup = new THREE.Group();
           state.cadmapperGroup.name = 'cadmapper-context';
           Object.values(layerGroups).forEach(g => state.cadmapperGroup.add(g));
-          // OSM geometry is already in scene space via wgs84ToScene — no offset shift, no floor drop.
           scene.add(state.cadmapperGroup);
           const size = new THREE.Vector3();
           new THREE.Box3().setFromObject(state.cadmapperGroup).getSize(size);
@@ -1120,33 +1116,42 @@
             design?.grid_spacing_m ?? 100, design?.minor_divisions ?? 0,
             5000, new THREE.Vector3(0, 0, 0)
           );
-          if (view) {
-            showThreeJSView(); restoreViewState(view);
-          } else {
-            showThreeJSView();
-            fit3DCamera(new THREE.Box3().setFromObject(state.cadmapperGroup));
-            switchMode('3d');
-          }
-          document.getElementById('empty-props').style.display  = 'none';
-          document.getElementById('clearSiteBtn').style.display = 'block';
-          document.getElementById('left-panel').classList.add('site-imported');
+          showThreeJSView();
+          if (view) { restoreViewState(view); }
+          else { fit3DCamera(new THREE.Box3().setFromObject(state.cadmapperGroup)); switchMode('3d'); }
           buildLayerPanel(layerGroups);
         }
       }
 
       if (boundary) renderLotBoundary(boundary);
 
-      // ── Restore terrain from saved payload (if present) ─────────────
+      // ── Restore terrain ───────────────────────────────────────────────
       if (terrain && state.cadmapperGroup) {
         const { rebuildTerrainFromPayload } = await import('./osm-import.js');
         rebuildTerrainFromPayload(terrain);
       }
 
-      const wgs84Bounds = hasRealWorldAnchor() ? {
-        sw: sceneToWGS84(-reference.site_span_m / 2, -reference.site_span_m / 2),
-        ne: sceneToWGS84( reference.site_span_m / 2,  reference.site_span_m / 2),
+      // ── Panel + pipeline state ────────────────────────────────────────
+      document.getElementById('empty-props').style.display  = 'none';
+      document.getElementById('clearSiteBtn').style.display = 'block';
+      document.getElementById('left-panel').classList.add('site-imported');
+      setStage('locate',  'done',    `✓ ${manifest.site_name ?? file.name}`);
+      setStage('import',  'done',    '✓ Opened');
+      setStage('extract', 'pending', 'Draw rectangle to extract');
+
+      // ── Boundary panel ────────────────────────────────────────────────
+      const span         = reference.site_span_m;
+      const wgs84Bounds  = hasRealWorldAnchor() && span ? {
+        sw: sceneToWGS84(-span / 2, -span / 2),
+        ne: sceneToWGS84( span / 2,  span / 2),
       } : null;
       buildBoundaryPanel(wgs84Bounds, !!boundary);
+
+      // ── Delete autosave now that the project is properly open ─────────
+      if (meta.fromAutosave && meta.fileName) {
+        await deleteProjectFile(meta.fileName, true).catch(() => {});
+      }
+
       showFeedback(`Opened: ${manifest.site_name ?? file.name}`);
     }
 
@@ -1510,7 +1515,7 @@
         else if (action === 'set-design-north')    startSetDesignNorth();
         else if (action === 'grid-spacing')        showGridSpacingPopup(window.innerWidth / 2, window.innerHeight / 2);
         // Note: toggleNorthPoint / resetNorthPos imported from north-point-2d.js
-        else if (action === 'open-project')        showProjectsModal(async (file) => { try { await openGPRFile(file); } catch(e) { showFeedback('Failed to open: ' + e.message); } });
+        else if (action === 'open-project')        showProjectsModal(async (file, meta) => { try { await openGPRFile(file, meta); } catch(e) { showFeedback('Failed to open: ' + e.message); } });
         else if (action === 'new-project')         _newProject();
         else if (action === 'save')                _saveCurrentProject();
         else if (action === 'save-as')             _saveAsProject();
@@ -1572,22 +1577,14 @@
             geometry: { type: 'Polygon', coordinates: [coords] },
           };
           showLotBoundary(geojson); // orange polyline on 3D tiles
-          showFeedback('Lot boundary drawn \u2014 saving\u2026', 0);
+          showFeedback('Lot boundary drawn — saving…', 0);
           try {
             await addBoundaryToGPR(geojson);
-            const anchor = getRealWorldAnchor();
-            const blob   = await getActiveGPRBlob();
-            if (blob && anchor) {
-              saveProject(blob, {
-                site_name: state._activeProjectName ?? 'GPR Project',
-                has_boundary: true,
-                wgs84_lat: anchor.lat,
-                wgs84_lng: anchor.lng,
-              }).catch(e => console.warn('[GPR] boundary save:', e));
-            }
+            state._isDirty = true;
+            await _autosave();
             const btn = document.getElementById('draw-boundary-btn');
             if (btn) {
-              btn.textContent = '\u2713 Lot Boundary \u2014 Re-draw\u2026';
+              btn.textContent = '✓ Lot Boundary — Re-draw…';
               btn.style.background = 'var(--accent-dark,#2d6b2d)';
             }
             showFeedback('Lot boundary saved');
@@ -1703,7 +1700,7 @@
           }, 500);
         }
 
-        // ── Create .gpr eagerly in background (non-blocking) ─────────────
+        // ── Create .gpr in memory immediately ────────────────────────────
         if (hasRealWorldAnchor()) {
           const anchor   = getRealWorldAnchor();
           const siteName = dxfFile
@@ -1711,50 +1708,45 @@
             : osmAddress
               ? `OSM — ${osmAddress}`
               : 'Untitled Site';
-          state._activeProjectName = siteName;
-          // Store init params so a late Save can create the GPR even if user skipped the dialog
-          state._gprInitParams = {
-            siteName, anchor, cellSize, dxfFile, osmGeoJSON: state.osmGeoJSON, centre, siteSpan,
-          };
-          setPipelineStatus('Ready to save', 'idle');
 
-          // ── Show save dialog — skip if user already chose a file via showSaveFilePicker ──
-          if (!state.activeFileHandle) {
-            showSaveProjectDialog({
-            blobGetter: async () => {
-              await createInitialGPR({
-                siteName,
-                reference: {
-                  utm_zone:       anchor.zone,
-                  utm_easting:    anchor.easting,
-                  utm_northing:   anchor.northing,
-                  utm_hemisphere: anchor.hemisphere,
-                  wgs84_lat:      anchor.lat,
-                  wgs84_lng:      anchor.lng,
-                  scene_offset_x: centre.x,
-                  scene_offset_z: centre.z,
-                  site_span_m:    siteSpan,
-                },
-                design: {
-                  design_north_angle: 0,
-                  grid_spacing_m:     cellSize,
-                  minor_divisions:    10,
-                },
-                dxfFile,
-                osmGeoJSON,
-              });
-              return getActiveGPRBlob();
+          await createInitialGPR({
+            siteName,
+            reference: {
+              utm_zone:       anchor.zone,
+              utm_easting:    anchor.easting,
+              utm_northing:   anchor.northing,
+              utm_hemisphere: anchor.hemisphere,
+              wgs84_lat:      anchor.lat,
+              wgs84_lng:      anchor.lng,
+              scene_offset_x: centre.x,
+              scene_offset_z: centre.z,
+              site_span_m:    siteSpan,
+              site_area_m2:   state.siteAreaM2 || siteSpan * siteSpan,
             },
-            defaultName: siteName,
-            lat: anchor.lat,
-            lng: anchor.lng,
-            dxfFilename: dxfFile?.name ?? null,
-          }).then(saved => {
-            // Dialog now manages its own pipeline-status during background save.
-            // Only handle the "skipped/cancelled" case here.
-            if (!saved) setPipelineStatus('Ready', 'idle');
-          }).catch(() => {});
-          } // end if (!state.activeFileHandle)
+            design: {
+              design_north_angle: 0,
+              grid_spacing_m:     cellSize,
+              minor_divisions:    10,
+            },
+            dxfFile,
+            osmGeoJSON: state.osmGeoJSON ?? osmGeoJSON,
+          });
+
+          state._isDirty = true;
+
+          // Wire terrain-ready event to autosave
+          const _onTerrainReady = async (e) => {
+            if (e.detail?.status !== 'ready') return;
+            state._isDirty = true;
+            await _autosave();
+            window.removeEventListener('terrain:status', _onTerrainReady);
+          };
+          window.addEventListener('terrain:status', _onTerrainReady);
+
+          // Show Save As dialog if no file is open yet
+          if (!state.activeFileHandle) {
+            showSaveProjectDialog({ defaultName: siteName });
+          }
 
           buildBoundaryPanel(wgs84Bounds, false, !dxfFile ? _startCesiumBoundaryDraw : null);
 
@@ -1770,53 +1762,73 @@
 
     // ── Project actions wired from File menu ──────────────────────────────
     async function _newProject() {
-      if (state.cadmapperGroup || state.importedModel) {
-        if (!confirm('Save current project before starting a new one?')) {
-          document.getElementById('clearSiteBtn')?.click();
-          return;
+      // Prompt to save if unsaved changes exist
+      if (state._isDirty) {
+        const answer = confirm('Save project before starting a new one?');
+        if (answer) {
+          await _saveCurrentProject();
+          // If still dirty after save attempt, user may have cancelled Save As
+          if (state._isDirty) return; // abort new project
         }
-        await _saveCurrentProject();
       }
       document.getElementById('clearSiteBtn')?.click();
+      state._activeFileName  = null;
+      state.activeFileHandle = null;
+      state._isDirty         = false;
     }
 
     async function _saveCurrentProject() {
       const blob = await getActiveGPRBlob().catch(() => null);
-      // No active project yet (first save after import) — treat as Save As
       if (!blob) { await _saveAsProject(); return; }
-      const anchor = getRealWorldAnchor();
+
+      if (!state.activeFileHandle) {
+        // No file open yet — do Save As
+        await _saveAsProject();
+        return;
+      }
+
+      // Silent overwrite
       try {
-        await saveProject(blob, {
-          id:           state._activeProjectId ?? undefined,
-          site_name:    state._activeProjectName ?? 'Untitled Site',
-          has_boundary: !!state.siteBoundaryLine,
-          wgs84_lat:    anchor?.lat,
-          wgs84_lng:    anchor?.lng,
-        });
-        // Save view state so the project re-opens at exactly the current view
         await saveViewState(captureViewState()).catch(() => {});
-        showFeedback('Project saved.');
+        const freshBlob = await getActiveGPRBlob();
+        await writeBlobToHandle(state.activeFileHandle, freshBlob);
+        // Delete autosave now that we have a proper save
+        if (state._activeFileName) {
+          await deleteProjectFile(state._activeFileName, true).catch(() => {});
+        }
+        state._isDirty = false;
+        showFeedback('Saved.');
       } catch (e) { showFeedback('Save failed: ' + e.message); }
     }
 
     async function _saveAsProject() {
-      const blob = await getActiveGPRBlob().catch(() => null);
-      if (!blob) { showFeedback('Nothing to save — import a site first.'); return; }
-      const anchor = getRealWorldAnchor();
-      await showSaveProjectDialog({
-        blob,
-        defaultName: state._activeProjectName ?? 'Untitled Site',
-        lat: anchor?.lat,
-        lng: anchor?.lng,
-        dxfFilename: null,
-        onSaved: async () => {
-          await saveViewState(captureViewState()).catch(() => {});
-        },
-      });
+      const defaultName = state._activeFileName ?? 'Untitled Site';
+      await showSaveProjectDialog({ defaultName });
     }
 
     initCADMapperImport({ THREE, onLayersLoaded });
     initOSMImport({ THREE, onLayersLoaded, getRealWorldAnchor });
+
+    // Expose captureViewState to projects.js (avoids circular import)
+    state._captureViewState = captureViewState;
+
+    // ── Autosave ──────────────────────────────────────────────────────────
+    async function _autosave() {
+      if (!state._isDirty || !state._activeFileName) return;
+      const blob = await getActiveGPRBlob().catch(() => null);
+      if (!blob) return;
+      try {
+        await saveViewState(captureViewState()).catch(() => {});
+        const freshBlob = await getActiveGPRBlob();
+        await writeProjectFile(state._activeFileName, freshBlob, true); // true = autosave
+        console.log('[GPR] Autosaved:', state._activeFileName);
+      } catch (e) {
+        console.warn('[GPR] Autosave failed:', e.message);
+      }
+    }
+
+    // Autosave every 2 minutes
+    setInterval(_autosave, 2 * 60 * 1000);
 
     showFeedback('GPRTool ready', 2000);
   

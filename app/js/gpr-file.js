@@ -1,15 +1,18 @@
 /*
  * gpr-file.js — .gpr project file writer and reader for GPRTool
  *
- * A .gpr file is a ZIP archive (renamed to .gpr) containing:
+ * A .gpr file is a ZIP archive containing:
  *   manifest.json       — identity, format version, sections present
  *   reference.json      — UTM anchor + WGS84 + scene offset  [REAL WORLD]
  *   design.json         — designNorthAngle, grid settings     [DESIGN WORLD]
- *   boundary.geojson    — lot boundary polygon (added after picker)
- *   context/
- *     cadmapper.dxf     — original DXF file (embedded for re-import)
+ *   boundary.geojson    — lot boundary polygon (optional)
+ *   context.geojson     — OSM GeoJSON FeatureCollection (OSM projects)
+ *   context/cadmapper.dxf — original DXF (CADMapper projects)
+ *   terrain.json        — terrain elevation payload (optional)
+ *   view.json           — last camera position (optional)
  *
- * Storage: IndexedDB ('gprtool_projects' DB, 'projects' store).
+ * Storage: in-memory JSZip object (_activeZip). No IndexedDB.
+ * Persistence to disk is handled by local-folder.js.
  * Requires: window.JSZip (loaded via CDN <script> tag before this module).
  *
  * ── REAL WORLD RULE ───────────────────────────────────────────────────────
@@ -18,85 +21,55 @@
  * They are NEVER mixed.
  */
 
+import { state } from './state.js';
+
 const FORMAT_VERSION = 1;
 const TOOL_VERSION   = '0.1.0';
-const DB_NAME        = 'gprtool_projects';
-const DB_VERSION     = 1;
-const STORE          = 'projects';
-
-// ── IndexedDB helpers ─────────────────────────────────────────────────────
-
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = e => {
-      e.target.result.createObjectStore(STORE, { keyPath: 'id' });
-    };
-    req.onsuccess  = e => resolve(e.target.result);
-    req.onerror    = e => reject(e.target.error);
-  });
-}
-
-async function idbPut(id, blob) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE, 'readwrite');
-    tx.objectStore(STORE).put({ id, blob, updated: Date.now() });
-    tx.oncomplete = resolve;
-    tx.onerror    = e => reject(e.target.error);
-  });
-}
-
-async function idbGet(id) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const req = db.transaction(STORE).objectStore(STORE).get(id);
-    req.onsuccess = e => resolve(e.target.result?.blob ?? null);
-    req.onerror   = e => reject(e.target.error);
-  });
-}
 
 // ── Active project state ──────────────────────────────────────────────────
-// The current open project — kept in memory so we can update it incrementally
-// without re-reading the IndexedDB blob each time.
 
-let _activeProjectId  = null;
-let _activeZip        = null;   // JSZip instance of the open project
+let _activeZip = null;   // JSZip instance of the open project
 
-export function getActiveProjectId() { return _activeProjectId; }
+function _markDirty() {
+  state._isDirty = true;
+}
+
+export function getActiveProjectId() {
+  // Returns null — local file identity is in state._activeFileName
+  return null;
+}
 
 /**
- * Get the current active .gpr as a Blob (for uploading to project repository).
+ * Get the current active .gpr as a Blob.
  * Returns null if no active project.
  */
 export async function getActiveGPRBlob() {
   if (!_activeZip) return null;
-  return _activeZip.generateAsync({ type: 'blob', compression: 'DEFLATE',
-    compressionOptions: { level: 6 } });
+  return _activeZip.generateAsync({
+    type: 'blob',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 6 },
+  });
 }
 
-// ── Create a new .gpr from a CADMapper import ─────────────────────────────
+// ── Create a new .gpr from a CADMapper or OSM import ─────────────────────
 
 /**
- * Create an initial .gpr file from a CADMapper import.
- * Saves to IndexedDB. Sets the active project.
+ * Create an initial .gpr file in memory from an import.
+ * Sets the active ZIP. Call getActiveGPRBlob() to write to disk.
  *
  * @param {Object} params
- * @param {string}       params.siteName     - Display name (from DXF filename)
- * @param {Object}       params.reference    - { utm_zone, utm_easting, utm_northing,
- *                                              utm_hemisphere, wgs84_lat, wgs84_lng,
- *                                              scene_offset_x, scene_offset_z, site_span_m }
- * @param {Object}       params.design       - { design_north_angle, grid_spacing_m, minor_divisions }
- * @param {File|null}    params.dxfFile      - Original DXF File object (embedded for re-import)
- * @returns {Promise<string>} projectId
+ * @param {string}       params.siteName
+ * @param {Object}       params.reference  — UTM + WGS84 + scene offset + site_span_m
+ * @param {Object}       params.design     — design_north_angle, grid_spacing_m, minor_divisions
+ * @param {File|null}    params.dxfFile
+ * @param {Object|null}  params.osmGeoJSON
  */
 export async function createInitialGPR({ siteName, reference, design, dxfFile = null, osmGeoJSON = null }) {
   if (!window.JSZip) throw new Error('JSZip not loaded');
 
   const now    = new Date().toISOString();
-  const id     = 'gpr-' + Date.now();
   const source = dxfFile ? 'cadmapper' : osmGeoJSON ? 'osm' : 'unknown';
-
   const sections = ['manifest', 'reference', 'design'];
   if (dxfFile)    sections.push('context/cadmapper.dxf');
   if (osmGeoJSON) sections.push('context.geojson');
@@ -124,51 +97,32 @@ export async function createInitialGPR({ siteName, reference, design, dxfFile = 
     zip.file('context.geojson', JSON.stringify(osmGeoJSON, null, 2));
   }
 
-  const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE',
-    compressionOptions: { level: 6 } });
-
-  await idbPut(id, blob);
-
-  _activeProjectId = id;
-  _activeZip       = zip;
-
-  console.log(`[GPR] Project created: ${id} (${(blob.size / 1024).toFixed(0)} KB)`);
-  return id;
+  _activeZip = zip;
+  _markDirty();
+  console.log(`[GPR] Project created in memory: ${siteName}`);
 }
 
-// ── Add or replace boundary.geojson in the active project ─────────────────
+// ── Add or replace boundary.geojson ──────────────────────────────────────
 
-/**
- * Add or update the lot boundary in the active project.
- * @param {Object} geojson - GeoJSON Polygon feature (WGS84)
- */
 export async function addBoundaryToGPR(geojson) {
-  if (!_activeZip || !_activeProjectId) throw new Error('No active project');
+  if (!_activeZip) throw new Error('No active project');
 
   _activeZip.file('boundary.geojson', JSON.stringify(geojson, null, 2));
 
-  // Update manifest sections list
   const manifestStr = await _activeZip.file('manifest.json').async('string');
   const manifest = JSON.parse(manifestStr);
   if (!manifest.sections.includes('boundary')) manifest.sections.push('boundary');
   manifest.modified = new Date().toISOString();
   _activeZip.file('manifest.json', JSON.stringify(manifest, null, 2));
 
-  const blob = await _activeZip.generateAsync({ type: 'blob', compression: 'DEFLATE',
-    compressionOptions: { level: 6 } });
-  await idbPut(_activeProjectId, blob);
-
-  console.log(`[GPR] Boundary added to ${_activeProjectId}`);
+  _markDirty();
+  console.log('[GPR] Boundary added');
 }
 
-// ── Add or replace terrain.json in the active project ─────────────────────
+// ── Add or replace terrain.json ───────────────────────────────────────────
 
-/**
- * Add or update the terrain payload in the active project.
- * @param {Object} payload - { source, zoom, intervalM, anchorX, anchorY, points, contourSegments }
- */
 export async function addTerrainToGPR(payload) {
-  if (!_activeZip || !_activeProjectId) throw new Error('No active project');
+  if (!_activeZip) throw new Error('No active project');
 
   _activeZip.file('terrain.json', JSON.stringify(payload));
 
@@ -178,18 +132,12 @@ export async function addTerrainToGPR(payload) {
   manifest.modified = new Date().toISOString();
   _activeZip.file('manifest.json', JSON.stringify(manifest, null, 2));
 
-  const blob = await _activeZip.generateAsync({ type: 'blob', compression: 'DEFLATE',
-    compressionOptions: { level: 6 } });
-  await idbPut(_activeProjectId, blob);
-
+  _markDirty();
   const ptCount  = payload.points?.length ?? 0;
   const segCount = (payload.contourSegments?.length ?? 0) / 6;
-  console.log(`[GPR] Terrain added to ${_activeProjectId} (${ptCount} pts, ${segCount} contour segs)`);
+  console.log(`[GPR] Terrain added (${ptCount} pts, ${segCount} contour segs)`);
 }
 
-/**
- * Read terrain.json from the active project, returns parsed payload or null.
- */
 export async function getTerrainFromGPR() {
   if (!_activeZip) return null;
   const entry = _activeZip.file('terrain.json');
@@ -202,18 +150,10 @@ export async function getTerrainFromGPR() {
   }
 }
 
-// ── Add any raw file to the active project ────────────────────────────────
+// ── Add any raw file ──────────────────────────────────────────────────────
 
-/**
- * Write a raw file into the active .gpr ZIP and persist to IndexedDB.
- * Used by dxf-writer.js and other modules that produce non-JSON artefacts.
- *
- * @param {string} zipPath    Path inside the ZIP, e.g. 'context/site.dxf'
- * @param {string|Uint8Array} content
- * @param {string|null} sectionName  If set, added to manifest.sections
- */
 export async function addRawFileToGPR(zipPath, content, sectionName = null) {
-  if (!_activeZip || !_activeProjectId) throw new Error('No active project');
+  if (!_activeZip) throw new Error('No active project');
 
   _activeZip.file(zipPath, content);
 
@@ -225,62 +165,44 @@ export async function addRawFileToGPR(zipPath, content, sectionName = null) {
     _activeZip.file('manifest.json', JSON.stringify(manifest, null, 2));
   }
 
-  const blob = await _activeZip.generateAsync({ type: 'blob', compression: 'DEFLATE',
-    compressionOptions: { level: 6 } });
-  await idbPut(_activeProjectId, blob);
-
-  console.log(`[GPR] ${zipPath} saved (${(blob.size / 1024).toFixed(1)} KB)`);
-  return blob;
+  _markDirty();
+  console.log(`[GPR] ${zipPath} added`);
 }
 
-// ── Update design.json in the active project ─────────────────────────────
+// ── Update design.json ────────────────────────────────────────────────────
 
-/**
- * Merge `updates` into the active project's design.json and re-persist.
- * Safe to call any time a Design Grid or Design North changes.
- *
- * @param {Object} updates  e.g. { surface_grids: { ... }, design_north_angle: 7 }
- */
 export async function updateDesignData(updates) {
-  if (!_activeZip || !_activeProjectId) return;
+  if (!_activeZip) return;
   try {
     const str  = await _activeZip.file('design.json').async('string');
     const data = Object.assign(JSON.parse(str), updates);
     _activeZip.file('design.json', JSON.stringify(data, null, 2));
-    const blob = await _activeZip.generateAsync({ type: 'blob', compression: 'DEFLATE',
-      compressionOptions: { level: 6 } });
-    await idbPut(_activeProjectId, blob);
+    _markDirty();
   } catch (e) {
     console.warn('[GPR] updateDesignData failed:', e.message);
   }
 }
 
-// ── View state persistence ────────────────────────────────────────────────
+// ── View state ────────────────────────────────────────────────────────────
 
-/**
- * Save the current viewport state into the active project's view.json.
- * @param {Object} viewState — plain object from captureViewState() in viewport.js
- */
 export async function saveViewState(viewState) {
-  if (!_activeZip || !_activeProjectId) return;
+  if (!_activeZip) return;
   try {
     _activeZip.file('view.json', JSON.stringify(viewState, null, 2));
-    const blob = await _activeZip.generateAsync({ type: 'blob', compression: 'DEFLATE',
-      compressionOptions: { level: 6 } });
-    await idbPut(_activeProjectId, blob);
+    // view state save does not mark dirty — it's cosmetic
   } catch (e) {
     console.warn('[GPR] saveViewState failed:', e.message);
   }
 }
 
-// ── Open a .gpr file ──────────────────────────────────────────────────────
+// ── Open a .gpr File object ───────────────────────────────────────────────
 
 /**
- * Open a .gpr File object. Returns parsed contents.
- * Sets the active project.
+ * Parse a .gpr File object. Sets the active ZIP.
+ * Returns parsed contents.
  *
  * @param {File} file
- * @returns {Promise<{ manifest, reference, design, boundary|null, terrain|null, osmContext|null, hasDXF, zip }>}
+ * @returns {Promise<{ manifest, reference, design, boundary, terrain, osmContext, view, hasDXF, zip }>}
  */
 export async function openGPR(file) {
   if (!window.JSZip) throw new Error('JSZip not loaded');
@@ -291,39 +213,27 @@ export async function openGPR(file) {
   const reference = JSON.parse(await zip.file('reference.json').async('string'));
   const design    = JSON.parse(await zip.file('design.json').async('string'));
 
-  const boundaryFile = zip.file('boundary.geojson');
-  const boundary = boundaryFile
-    ? JSON.parse(await boundaryFile.async('string'))
-    : null;
+  const boundaryFile  = zip.file('boundary.geojson');
+  const boundary      = boundaryFile ? JSON.parse(await boundaryFile.async('string')) : null;
 
-  const terrainFile = zip.file('terrain.json');
-  const terrain = terrainFile
-    ? JSON.parse(await terrainFile.async('string'))
-    : null;
+  const terrainFile   = zip.file('terrain.json');
+  const terrain       = terrainFile ? JSON.parse(await terrainFile.async('string')) : null;
 
   const osmContextFile = zip.file('context.geojson');
-  const osmContext = osmContextFile
-    ? JSON.parse(await osmContextFile.async('string'))
-    : null;
+  const osmContext     = osmContextFile ? JSON.parse(await osmContextFile.async('string')) : null;
 
   const viewFile = zip.file('view.json');
-  const view = viewFile
-    ? JSON.parse(await viewFile.async('string'))
-    : null;
+  const view     = viewFile ? JSON.parse(await viewFile.async('string')) : null;
 
   const hasDXF = !!zip.file('context/cadmapper.dxf');
 
-  // Store as active project
-  const id = 'gpr-opened-' + Date.now();
-  const blob = await zip.generateAsync({ type: 'blob' });
-  await idbPut(id, blob);
-  _activeProjectId = id;
-  _activeZip       = zip;
+  _activeZip = zip;
+  state._isDirty = false;  // just opened — nothing unsaved yet
 
   return { manifest, reference, design, boundary, terrain, osmContext, view, hasDXF, zip };
 }
 
-// ── Get DXF bytes from active project (for re-import) ────────────────────
+// ── Get DXF bytes from active project ────────────────────────────────────
 
 export async function getDXFFromGPR() {
   if (!_activeZip) return null;
@@ -337,10 +247,9 @@ export async function getDXFFromGPR() {
 
 export async function downloadGPR(filename) {
   if (!_activeZip) throw new Error('No active project');
-
-  const blob = await _activeZip.generateAsync({ type: 'blob', compression: 'DEFLATE',
-    compressionOptions: { level: 6 } });
-
+  const blob = await _activeZip.generateAsync({
+    type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 },
+  });
   const url = URL.createObjectURL(blob);
   const a   = document.createElement('a');
   a.href     = url;

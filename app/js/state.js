@@ -91,6 +91,12 @@ export const state = {
   designGridAngle:  0,        // degrees — Y-axis bearing of Design Grid (independent of Design North)
   _gprInitParams:   null,     // stored after import so late Save can create the GPR
 
+  // ── Project identity ─────────────────────────────────────────────────────
+  _activeFileName:    null,   // string — base name without .gpr (e.g. '30 Beaufort Street')
+  _isDirty:           false,  // true = unsaved changes exist since last Save / Save As
+  _activeProjectId:   null,   // legacy Supabase ID — no longer used, kept for compat
+  _activeProjectName: null,   // legacy — use _activeFileName instead
+
   // ── UI ───────────────────────────────────────────────────────────────────
   feedbackTimer: null,
   alarmTime:     null,

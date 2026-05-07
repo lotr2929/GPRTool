@@ -1,38 +1,60 @@
-Stack: HTML/CSS/JS, Three.js r160, Vercel/GitHub. No npm, no frameworks.
-Two coordinate systems: Global (Three.js, -Z=True North) and Design (user-set via designNorthAngle).
-Two viewports: 2D plan and 3D perspective. North point compass shared between both.
-LAI database (LAI_categorised.csv) is core IP -- never expose or send to external APIs.
-Use Microsoft Edge for development -- Chrome has rendering issues.
-App root for Vercel deployment: app/ only. lai/, projects/, _dev/ are never deployed.
+Stack: HTML/CSS/ES-module JS, Three.js r160, Cesium, Vercel static + serverless. No npm, no build.
+Two coordinate systems: Global (Three.js, East=+X, Up=+Y, North=−Z) and Design (user-set via designNorthAngle).
+Two viewports: Cesium globe (startup) → Three.js 2D/3D (after OSM/CAD import).
+API layer: api/*.js — Vercel serverless, CJS only (module.exports =, never export default).
+Supabase: gpr_projects table, sfvwhbzxkzlscfsnyrwq project. Key = sb_publishable_ format.
+LAI database (LAI_categorised.csv) is core IP — never expose to external APIs.
+App Vercel root: app/ only. api/ = serverless. lai/, _dev/, _context/ never deployed.
 
 ---
-# GPRTool -- file index
-app/body.html  --  Main Content Area
-app/header.html  --  Undo / Redo arrows — far left, always visible
-app/index.html
-app/plants_free.json
-app/styles.css
-app/js/north-point-2d.js
-app/js/north-point-3d.js
-app/js/OrbitControls.js  --  Simplified, stable OrbitControls
-app/js/three.module.js
-app/textures/plywood.webp
-_dev/_design.md  --  GPRTool — Design & Development Guide
-_dev/_dev_guide.md  --  GPRTool — Developer Guide
-_dev/_journal.md  --  GPRTool Development Journal
-_dev/_map.md  --  GPRTool — Repository Map
-_dev/_session.md  --  GPRTool — Session Status
-lai/LAI_categorised.csv
-lai/LAI_DATABASE_STRATEGY.md  --  GPRTool LAI Database Strategy
-lai/GreenPlotRatio_LAI Values.csv
-lai/LAI_combined_clean.csv
-lai/LAI_tropical_subset.csv
-lai/lai_categorise.py
-lai/lai_explorer.py
-lai/merge_singapore_lai.py
-projects/30_beaufort_street_parcel.geojson
-projects/README.md  --  GPRTool Test Data
-CLAUDE.md  --  CLAUDE.md -- GPRTool
-deploy.bat
-poll_vercel.ps1  --  poll_vercel.ps1 - called by deploy.bat after git push
-start.bat
+# GPRTool -- file index (updated 2026-05-07)
+app/body.html           ← left panel, viewport, right panel markup
+app/header.html         ← menu bar (File/Edit/Design/Navigation/View/Help)
+app/index.html          ← app shell
+app/plants_free.json    ← 56-species plant library
+app/styles.css          ← all styles
+app/js/app.js           ← main controller, menu wiring, animation loop (~1822 lines)
+app/js/state.js         ← shared mutable state
+app/js/ui.js            ← showFeedback, clock, section collapse
+app/js/viewport.js      ← camera modes, fit, restoreViewState/captureViewState
+app/js/real-world.js    ← WGS84↔scene coords, UTM anchor, wgs84ToScene
+app/js/geo.js           ← polygon area/perimeter, lat/lon utils
+app/js/site.js          ← site boundary rendering, boundary panel
+app/js/site-selection.js ← OSM geocode modal, Cesium locate
+app/js/osm-import.js    ← Overpass fetch, Three.js layer build, buildLayerGroupsFromGeoJSON
+app/js/cadmapper-import.js ← CADMapper DXF parser
+app/js/cesium-viewer.js ← Cesium globe, Google 3D Tiles, fly-to, rect/boundary picker
+app/js/terrain.js       ← AWS Terrarium terrain, Three.js mesh, BVH
+app/js/terrain-worker.js ← web worker for terrain tiles
+app/js/extract-site.js  ← rectangle clip of OSM context, contour generation
+app/js/model.js         ← OBJ/GLTF/GLB load, surface detection, IFC stub
+app/js/surfaces.js      ← surface detection from mesh, surface panel UI
+app/js/plants.js        ← plant library modal, plant CRUD, placement engine
+app/js/gpr-file.js      ← .gpr ZIP format, IndexedDB, openGPR/createInitialGPR
+app/js/projects.js      ← GPR Projects modal, save/load/delete via API
+app/js/grid.js          ← CAD grid + Design Grid rendering
+app/js/design-grid.js   ← DesignGridManager, surface grids, serialise/deserialise
+app/js/design-grid-tool.js ← interactive Set Design Grid tool
+app/js/north-point-2d.js ← 2D DOM compass (drag/resize/rotate) — DO NOT MODIFY
+app/js/north-point-3d.js ← 3D HUD compass gizmo — DO NOT MODIFY
+app/js/north-angle.js   ← angle parse/format utils
+app/js/north-state.js   ← DN + GN angle state, SVG injection
+app/js/north-input.js   ← DN and TN floating input popups
+app/js/local-folder.js  ← File System Access API (Chromium only)
+app/js/OrbitControls.js ← Three.js orbit controls — DO NOT EDIT
+app/js/three.module.js  ← Three.js r160 — DO NOT EDIT
+api/projects.js         ← /api/projects CRUD (Supabase gpr_projects)
+api/geocode.js          ← /api/geocode Google Maps proxy
+api/overpass.js         ← /api/overpass Overpass proxy
+api/maps-key.js         ← /api/maps-key serve Google Maps key
+_dev/CLAUDE.md          ← session rules (read first every session)
+_dev/_journal.md        ← development journal (read latest entry only)
+_dev/_map.md            ← repository map (THIS FILE's parent)
+_dev/AUDIT.md           ← feature audit: what works, what's broken, priorities
+_dev/SESSION_START.md   ← session start prompt to copy-paste
+_dev/domains/api.md     ← API layer documentation
+_dev/domains/compass.md ← Compass subsystem documentation
+_dev/_dev_guide.md      ← coding standards and architecture rules
+_dev/_architecture.md   ← architecture decisions
+deploy.bat              ← git commit + push + Vercel poll
+_assist.mjs             ← health/status/audit/refresh commands
