@@ -9,16 +9,17 @@
  *   cancelRect2D()
  *
  * onComplete called with { north, south, east, west } in decimal degrees.
+ * Sets state._rectPickActive = true while active (suppresses 2D pan in app.js).
  */
 
 import * as THREE from 'three';
-import { state }         from './state.js';
+import { state }               from './state.js';
 import { sceneToWGS84, hasRealWorldAnchor } from './real-world.js';
 
 // ── Module state ──────────────────────────────────────────────────────────────
 let _active      = false;
 let _overlay     = null;
-let _startScreen = null;
+let _startClient = null;   // { x, y } in clientX/clientY (viewport coords)
 let _onComplete  = null;
 let _onCancel    = null;
 
@@ -48,40 +49,41 @@ export function cancelRect2D() {
 function _onDown(e) {
   if (e.button !== 0) return;
   e.preventDefault();
-  const canvas = state.renderer.domElement;
-  const rect   = canvas.getBoundingClientRect();
-  _startScreen = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  canvas.addEventListener('pointermove', _onMove);
-  canvas.addEventListener('pointerup',   _onUp);
-  canvas.setPointerCapture(e.pointerId);
+  e.stopPropagation();
+  _startClient = { x: e.clientX, y: e.clientY };
+  // Listen on document so pointer capture issues don't matter
+  document.addEventListener('pointermove', _onMove);
+  document.addEventListener('pointerup',   _onUp);
 }
 
 function _onMove(e) {
-  if (!_startScreen) return;
-  const canvas = state.renderer.domElement;
-  const rect   = canvas.getBoundingClientRect();
-  _drawRect(rect, _startScreen, { x: e.clientX - rect.left, y: e.clientY - rect.top });
+  if (!_startClient) return;
+  _drawRect(_startClient, { x: e.clientX, y: e.clientY });
 }
 
 function _onUp(e) {
-  const canvas = state.renderer.domElement;
-  canvas.removeEventListener('pointermove', _onMove);
-  canvas.removeEventListener('pointerup',   _onUp);
-  if (!_startScreen || !hasRealWorldAnchor()) { _cleanup(); _onCancel?.(); return; }
-  const rect = canvas.getBoundingClientRect();
-  const endScreen = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-  if (Math.abs(endScreen.x - _startScreen.x) < 20 ||
-      Math.abs(endScreen.y - _startScreen.y) < 20) {
-    _cleanup(); _onCancel?.(); return;
-  }
-  const ss = _screenToScene(_startScreen, rect);
-  const es = _screenToScene(endScreen, rect);
-  const sw = sceneToWGS84(ss.x, ss.z);
-  const ew = sceneToWGS84(es.x, es.z);
+  document.removeEventListener('pointermove', _onMove);
+  document.removeEventListener('pointerup',   _onUp);
+  if (!_startClient || !hasRealWorldAnchor()) { _cleanup(); _onCancel?.(); return; }
+
+  const endClient = { x: e.clientX, y: e.clientY };
+  const dist = Math.hypot(endClient.x - _startClient.x, endClient.y - _startClient.y);
+  if (dist < 15) { _cleanup(); _onCancel?.(); return; }
+
+  const canvas = state.renderer?.domElement;
+  if (!canvas || !state.camera2D) { _cleanup(); _onCancel?.(); return; }
+
+  const startScene = _clientToScene(_startClient);
+  const endScene   = _clientToScene(endClient);
+  if (!startScene || !endScene) { _cleanup(); _onCancel?.(); return; }
+
+  const sw = sceneToWGS84(startScene.x, startScene.z);
+  const ew = sceneToWGS84(endScene.x,   endScene.z);
   const bbox = {
     north: Math.max(sw.lat, ew.lat), south: Math.min(sw.lat, ew.lat),
     east:  Math.max(sw.lng, ew.lng), west:  Math.min(sw.lng, ew.lng),
   };
+
   const cb = _onComplete;
   _cleanup();
   cb?.(bbox);
@@ -89,12 +91,14 @@ function _onUp(e) {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function _screenToScene(screen, canvasRect) {
-  // Force matrix update so unproject uses current camera state
+function _clientToScene(client) {
+  const canvas = state.renderer?.domElement;
+  if (!canvas || !state.camera2D) return null;
+  const rect = canvas.getBoundingClientRect();
   state.camera2D.updateMatrixWorld(true);
   const ndc = new THREE.Vector3(
-    (screen.x / canvasRect.width)  *  2 - 1,
-    -(screen.y / canvasRect.height) *  2 + 1,
+    ((client.x - rect.left) / rect.width)  *  2 - 1,
+    -((client.y - rect.top)  / rect.height) *  2 + 1,
     0
   );
   ndc.unproject(state.camera2D);
@@ -104,29 +108,44 @@ function _screenToScene(screen, canvasRect) {
 function _createOverlay() {
   if (_overlay) _overlay.remove();
   _overlay = document.createElement('div');
-  _overlay.style.cssText = 'position:fixed;pointer-events:none;z-index:900;' +
-    'border:2px dashed var(--accent-mid,#4a8a4a);background:rgba(74,138,74,0.08);display:none;';
+  _overlay.id = 'rect-pick-overlay';
+  _overlay.style.cssText = [
+    'position:fixed',
+    'pointer-events:none',
+    'z-index:9999',
+    'border:2px dashed var(--accent-mid,#4a8a4a)',
+    'background:rgba(74,138,74,0.08)',
+    'display:none',
+    'box-sizing:border-box',
+  ].join(';');
   document.body.appendChild(_overlay);
 }
 
-function _drawRect(canvasRect, start, cur) {
+function _drawRect(start, cur) {
   if (!_overlay) return;
-  const l = canvasRect.left + Math.min(start.x, cur.x);
-  const t = canvasRect.top  + Math.min(start.y, cur.y);
+  const l = Math.min(start.x, cur.x);
+  const t = Math.min(start.y, cur.y);
   const w = Math.abs(cur.x - start.x);
   const h = Math.abs(cur.y - start.y);
-  Object.assign(_overlay.style, { display:'block', left:l+'px', top:t+'px', width:w+'px', height:h+'px' });
+  _overlay.style.display = 'block';
+  _overlay.style.left    = l + 'px';
+  _overlay.style.top     = t + 'px';
+  _overlay.style.width   = w + 'px';
+  _overlay.style.height  = h + 'px';
 }
 
 function _cleanup() {
-  _active = false; _startScreen = null; _onComplete = null; _onCancel = null;
+  _active      = false;
+  _startClient = null;
+  _onComplete  = null;
+  _onCancel    = null;
   state._rectPickActive = false;
+  document.removeEventListener('pointermove', _onMove);
+  document.removeEventListener('pointerup',   _onUp);
   const canvas = state.renderer?.domElement;
   if (canvas) {
     canvas.style.cursor = '';
     canvas.removeEventListener('pointerdown', _onDown);
-    canvas.removeEventListener('pointermove', _onMove);
-    canvas.removeEventListener('pointerup',   _onUp);
   }
   if (_overlay) { _overlay.remove(); _overlay = null; }
 }

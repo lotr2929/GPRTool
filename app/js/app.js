@@ -55,7 +55,7 @@
     import { initGeo, latlonToMetres, extractCoordinates, computeBBox, computePolygonArea, computePolygonPerimeter, loadMapTiles, clearMapTiles } from './geo.js';
     import { initUI, showFeedback, setPipelineStatus, setStage } from './ui.js';
     import { initCesiumViewer, getCesiumViewer, flyToSite, showLotBoundary, clearLotBoundary as cesiumClearLotBoundary, isCesiumReady, showCesiumView, showThreeJSView, startBoundaryPick, stopLocationPick, setCesium2D, setCesium3D, setCesiumViewMode, isCesiumActive, setCesiumStreetLevel, getCameraPosition, resetCesiumView, startRectPick, cancelRectPick } from './cesium-viewer.js';
-    import { extractSite } from './extract-site.js';
+    import { extractSite, detectAndShowSiteBoundary } from './extract-site.js';
 import { startRect2D, cancelRect2D } from './rect-pick-2d.js';
 
     /* ============================================================
@@ -751,6 +751,17 @@ import { startRect2D, cancelRect2D } from './rect-pick-2d.js';
     /* ============================================================
        FILE PICKER
     ============================================================ */
+    document.getElementById('detectSiteBoundaryBtn')?.addEventListener('click', () => {
+      showThreeJSView();
+      switchMode('2d');
+      const boundary = detectAndShowSiteBoundary();
+      if (boundary) {
+        showFeedback('Site boundary detected from road edges — shown in green');
+      } else {
+        showFeedback('No road geometry found. Set Design Origin first (Design → Set Design Grid), then retry.');
+      }
+    });
+
     document.getElementById('import3DModelBtn').addEventListener('click', () =>
       document.getElementById('modelFileInput').click());
 
@@ -1555,43 +1566,6 @@ import { startRect2D, cancelRect2D } from './rect-pick-2d.js';
     initSiteSelection({ drawSiteBoundary, onSiteSelected: (lat, lng) => showSitePin(lat, lng) });
     initProjects();
     initDesignGridTool();
-
-    // ── Startup: show banner if no project folder set ─────────────────────
-    // getProjectFolder() = silent IDB lookup (no picker, safe outside gesture)
-    // Banner button = user gesture → safe to call pickProjectFolder()
-    import('./local-folder.js').then(async ({ getProjectFolder, pickProjectFolder }) => {
-      const folder = await getProjectFolder().catch(() => null);
-      if (folder) return;
-      const banner = document.createElement('div');
-      banner.id = 'folder-banner';
-      banner.style.cssText = `
-        position:fixed; bottom:36px; left:50%; transform:translateX(-50%);
-        z-index:800; background:var(--chrome-dark,#1e3d1e); color:#fff;
-        font-family:var(--font,'Outfit',sans-serif); font-size:12px;
-        border-radius:6px; padding:9px 14px;
-        display:flex; align-items:center; gap:10px;
-        box-shadow:0 4px 16px rgba(0,0,0,0.35); white-space:nowrap;`;
-      banner.innerHTML = `
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"
-          stroke="var(--accent-light,#7fc47f)" stroke-width="1.4" style="flex-shrink:0;">
-          <path d="M2 3.5h4l1.5 2H14V13H2V3.5z"/>
-        </svg>
-        <span style="opacity:0.85;">No project folder — saving disabled until you choose one</span>
-        <button id="folder-banner-btn" style="background:var(--accent-light,#7fc47f);
-          color:#1e3d1e; border:none; border-radius:4px;
-          font-size:11px; font-weight:600; padding:4px 10px; cursor:pointer;">
-          Choose Folder…</button>
-        <button id="folder-banner-x" style="background:none; border:none;
-          color:rgba(255,255,255,0.4); cursor:pointer; font-size:16px;
-          line-height:1; padding:0 4px;">&#x2715;</button>`;
-      document.body.appendChild(banner);
-      window.addEventListener('gprtool:folderSet', () => banner.remove(), { once: true });
-      document.getElementById('folder-banner-btn').addEventListener('click', async () => {
-        const h = await pickProjectFolder().catch(() => null);
-        if (h) banner.remove();
-      });
-      document.getElementById('folder-banner-x').addEventListener('click', () => banner.remove());
-    });
 
     // ── Cesium boundary draw ───────────────────────────────────────────────
     // Called when "Draw Lot Boundary" is clicked in Cesium (OSM) mode.

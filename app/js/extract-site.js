@@ -15,6 +15,31 @@ import { state } from './state.js';
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
+/**
+ * Run road boundary detection on the current scene using the design origin
+ * (or scene centre as fallback). Adds the boundary group to the scene.
+ * Returns the boundary group or null.
+ */
+export function detectAndShowSiteBoundary() {
+  if (!state.cadmapperGroup) return null;
+  const T = state.THREE ?? THREE;
+
+  // Use design origin or scene centre
+  const origin = state.designOrigin ?? new T.Vector3(0, 0, 0);
+
+  // Use full cadmapper extent as bbox
+  const box = new T.Box3().setFromObject(state.cadmapperGroup);
+  const boundary = _buildRoadBoundary(T, origin, box.min.x, box.max.x, box.min.z, box.max.z);
+
+  if (boundary) {
+    // Remove previous boundary if any
+    const prev = state.cadmapperGroup.getObjectByName('site-boundary-group');
+    if (prev) state.cadmapperGroup.remove(prev);
+    state.cadmapperGroup.add(boundary);
+  }
+  return boundary;
+}
+
 export async function extractSite(bbox, _THREE) {
     const T = _THREE ?? THREE;
 

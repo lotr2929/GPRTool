@@ -312,13 +312,14 @@ function _findSnapPoint(e, surface) {
   const sy = e.clientY - rect.top;
   const cam = state.camera;
 
-  // Use the pre-built cache (built at tool activation) or fall back to live collect
+  // Use the pre-built cache or fall back to live collect
   const meshes = surface ? [surface.mesh] : (_snapMeshCache ?? _collectSnapMeshes());
 
   const v    = new THREE.Vector3();
   const proj = new THREE.Vector3();
   let best = null, bestD = Infinity;
 
+  // ── Snap to nearest VERTEX ─────────────────────────────────────────────
   for (const mesh of meshes) {
     const pos = mesh.geometry?.attributes?.position;
     if (!pos) continue;
@@ -332,6 +333,42 @@ function _findSnapPoint(e, surface) {
       if (d < SNAP_RADIUS_PX && d < bestD) { bestD = d; best = v.clone(); }
     }
   }
+
+  // ── Snap to nearest point ON A LINE/EDGE (only if no vertex snap found) ─
+  if (!best) {
+    const a = new THREE.Vector3(), b = new THREE.Vector3();
+    const pa = new THREE.Vector3(), pb = new THREE.Vector3();
+    for (const mesh of meshes) {
+      if (!mesh.isLine && !mesh.isLineSegments) continue;
+      const pos = mesh.geometry?.attributes?.position;
+      if (!pos) continue;
+      const step = mesh.isLineSegments ? 2 : 1;
+      for (let i = 0; i + 1 < pos.count; i += step) {
+        a.fromBufferAttribute(pos, i    ).applyMatrix4(mesh.matrixWorld);
+        b.fromBufferAttribute(pos, i + 1).applyMatrix4(mesh.matrixWorld);
+        pa.copy(a).project(cam);
+        pb.copy(b).project(cam);
+        if (pa.z > 1 && pb.z > 1) continue;
+        const pax = ( pa.x * 0.5 + 0.5) * canvas.clientWidth;
+        const pay = (-pa.y * 0.5 + 0.5) * canvas.clientHeight;
+        const pbx = ( pb.x * 0.5 + 0.5) * canvas.clientWidth;
+        const pby = (-pb.y * 0.5 + 0.5) * canvas.clientHeight;
+        // Project cursor onto screen-space segment AB → parameter t ∈ [0,1]
+        const abx = pbx - pax, aby = pby - pay;
+        const len2 = abx * abx + aby * aby;
+        if (len2 < 1e-6) continue;
+        const t = Math.max(0, Math.min(1, ((sx - pax) * abx + (sy - pay) * aby) / len2));
+        const cx = pax + t * abx, cy = pay + t * aby;
+        const d  = Math.hypot(sx - cx, sy - cy);
+        if (d < SNAP_RADIUS_PX && d < bestD) {
+          bestD = d;
+          // Interpolate in world space using same t
+          best = a.clone().lerp(b, t);
+        }
+      }
+    }
+  }
+
   return best;
 }
 
