@@ -124,25 +124,37 @@ import { startRect2D, cancelRect2D } from './rect-pick-2d.js';
           if (prev) state.scene.remove(prev);
           state.scene.add(rectLine);
 
-          const { buildingCount, contourLevelCount, contourGroup, boundaryGroup } =
-            await extractSite(bounds, state.THREE);
+          const { buildingCount, contourLevelCount, contourGroup, dxfContent } =
+            await extractSite({ corners, bounds }, state.THREE);
 
-          // Add contours and site boundary to scene
-          if (contourGroup && state.cadmapperGroup)   state.cadmapperGroup.add(contourGroup);
-          if (boundaryGroup && state.cadmapperGroup)  state.cadmapperGroup.add(boundaryGroup);
+          // Add contours to scene
+          if (contourGroup && state.cadmapperGroup) state.cadmapperGroup.add(contourGroup);
 
           // Collapse Site section, expand Building section
           document.getElementById('section-site')?.classList.add('collapsed');
           document.getElementById('section-building')?.classList.remove('collapsed');
 
-          const hasDXF = !!state._activeFileName;
-          const summary = `\u2713 ${buildingCount} bldg${buildingCount !== 1 ? 's' : ''}, ${contourLevelCount} contour levels${hasDXF ? ' \u2014 DXF saved' : ''}`;
+          const summary = `\u2713 ${buildingCount} bldg${buildingCount !== 1 ? 's' : ''}, ${contourLevelCount} contour levels`;
           setStage('extract', 'done', summary);
           setPipelineStatus('', 'idle');
-          showFeedback(hasDXF
-            ? `Site extracted \u2014 ${summary.slice(2)}`
-            : `Site extracted \u2014 save project first to export DXF`
-          );
+          showFeedback(`Site extracted \u2014 ${summary.slice(2)}`, 3000);
+
+          // Prompt user to save DXF to disk
+          if (dxfContent) {
+            const suggested = (state._activeFileName?.replace(/\.gpr$/i, '') || 'site') + '_site.dxf';
+            try {
+              const fh = await showSaveFilePicker({
+                suggestedName: suggested,
+                types: [{ description: 'DXF file', accept: { 'application/dxf': ['.dxf'] } }],
+              });
+              const writable = await fh.createWritable();
+              await writable.write(dxfContent);
+              await writable.close();
+              showFeedback('DXF saved \u2713');
+            } catch (e) {
+              if (e.name !== 'AbortError') showFeedback('DXF save failed: ' + e.message, 4000);
+            }
+          }
         } catch (e) {
           console.error('[Extract Site]', e);
           setStage('extract', 'pending', 'Draw rectangle to extract');

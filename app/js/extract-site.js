@@ -42,8 +42,9 @@ export function detectAndShowSiteBoundary() {
   return boundary;
 }
 
-export async function extractSite(bounds, _THREE) {
-    // bounds = { xMin, xMax, zMin, zMax } in scene space (metres)
+export async function extractSite({ corners, bounds }, _THREE) {
+    // corners = [{x,z}×4] grid-aligned polygon from screen drag
+    // bounds  = { xMin, xMax, zMin, zMax } True North AABB (used for contours/DXF)
     const T = _THREE ?? THREE;
 
     if (!hasRealWorldAnchor()) {
@@ -52,7 +53,7 @@ export async function extractSite(bounds, _THREE) {
 
     const { xMin, xMax, zMin, zMax } = bounds;
 
-    // 1. Count buildings whose centre falls inside the bounds
+    // 1. Count buildings whose centre falls inside the polygon
     let buildingCount = 0;
     const buildingsLayer = state.cadmapperGroup?.children.find(
         c => c.name === 'buildings'
@@ -64,25 +65,18 @@ export async function extractSite(bounds, _THREE) {
             box3.setFromObject(child);
             const cx = (box3.min.x + box3.max.x) * 0.5;
             const cz = (box3.min.z + box3.max.z) * 0.5;
-            if (cx >= xMin && cx <= xMax && cz >= zMin && cz <= zMax) {
-                buildingCount++;
-            }
+            if (_ptInPoly(cx, cz, corners)) buildingCount++;
         });
     }
 
-    // 3. Generate 1-metre contour lines from the terrain elevation model
+    // 2. Generate 1-metre contour lines from the terrain elevation model
     const { group: contourGroup, levelCount: contourLevelCount } =
         _buildContours(T, xMin, xMax, zMin, zMax);
 
-    // 4. Detect road-enclosed site boundary around the design origin
-    const origin = state.designOrigin ?? new T.Vector3(
-        (xMin + xMax) * 0.5, 0, (zMin + zMax) * 0.5
-    );
-    const boundaryGroup = _buildRoadBoundary(T, origin, xMin, xMax, zMin, zMax);
-
-    // 5. Build DXF and save to .gpr
+    // 3. Build DXF and save to .gpr (before clipping so all geometry is captured)
+    let dxfContent = null;
     try {
-        const dxfContent = buildExtractDXF(
+        dxfContent = buildExtractDXF(
             state.cadmapperGroup, contourGroup, xMin, xMax, zMin, zMax
         );
         await addRawFileToGPR('extract/site.dxf', dxfContent, 'extract/site.dxf');
@@ -91,7 +85,10 @@ export async function extractSite(bounds, _THREE) {
         console.warn('[Extract] DXF save failed:', e.message);
     }
 
-    return { buildingCount, contourLevelCount, contourGroup, boundaryGroup };
+    // 4. Clip viewport — hide everything in cadmapperGroup outside the polygon
+    _clipToPolygon(T, corners);
+
+    return { buildingCount, contourLevelCount, contourGroup, dxfContent };
 }
 
 // ── Contour generation ────────────────────────────────────────────────────────
@@ -239,95 +236,34 @@ function _marchingSquares(elev, N, xMin, zMin, dx, dz, level) {
     return pts;
 }
 
-// ── Road boundary detection ───────────────────────────────────────────────────
-// Casts rays from the design origin in 4 cardinal directions to find the first
-// road segment in each direction. Builds a boundary polyline from the 4 hit
-// points. Falls back to the bbox boundary if no roads are found.
-//
-// Roads are identified by traversing state.cadmapperGroup layers with
-// highway-like names: 'roads', 'paths', 'highways', 'major roads', 'minor roads'.
+// ── Polygon clip ──────────────────────────────────────────────────────────────
 
-const ROAD_LAYER_NAMES = ['roads', 'paths', 'highways', 'major roads', 'minor roads',
-                          'major_roads', 'minor_roads'];
+/** Ray-casting point-in-polygon test on the XZ plane. */
+function _ptInPoly(px, pz, corners) {
+    let inside = false;
+    for (let i = 0, j = corners.length - 1; i < corners.length; j = i++) {
+        const xi = corners[i].x, zi = corners[i].z;
+        const xj = corners[j].x, zj = corners[j].z;
+        if ((zi > pz) !== (zj > pz) &&
+            px < (xj - xi) * (pz - zi) / (zj - zi) + xi) {
+            inside = !inside;
+        }
+    }
+    return inside;
+}
 
-let _matBoundary = null;
-function _boundaryMat() {
-    if (!_matBoundary) _matBoundary = new THREE.LineBasicMaterial({
-        color: 0xcc44cc, linewidth: 2, depthTest: false,  // magenta — distinct from red extract rect
+/**
+ * Hide every mesh and line in cadmapperGroup whose bounding-box centre
+ * falls outside the 4-corner polygon. Leaves everything inside visible.
+ */
+function _clipToPolygon(T, corners) {
+    if (!state.cadmapperGroup) return;
+    const box3 = new T.Box3();
+    state.cadmapperGroup.traverse(obj => {
+        if (!obj.isMesh && !obj.isLine && !obj.isLineSegments) return;
+        box3.setFromObject(obj);
+        const cx = (box3.min.x + box3.max.x) * 0.5;
+        const cz = (box3.min.z + box3.max.z) * 0.5;
+        obj.visible = _ptInPoly(cx, cz, corners);
     });
-    return _matBoundary;
-}
-
-function _buildRoadBoundary(T, origin, xMin, xMax, zMin, zMax) {
-    // Collect all road mesh edges within bbox
-    const segs = _collectRoadSegments(xMin, xMax, zMin, zMax);
-
-    // Cast rays from origin in ±X and ±Z to find enclosing boundary
-    const N = _rayHit(origin, 0, -1, segs) ?? { x: (xMin + xMax) * 0.5, z: zMin };
-    const S = _rayHit(origin, 0,  1, segs) ?? { x: (xMin + xMax) * 0.5, z: zMax };
-    const E = _rayHit(origin,  1, 0, segs) ?? { x: xMax, z: (zMin + zMax) * 0.5 };
-    const W = _rayHit(origin, -1, 0, segs) ?? { x: xMin, z: (zMin + zMax) * 0.5 };
-
-    // Build closed polygon: NW → NE → SE → SW → NW
-    const pts = [
-        new T.Vector3(W.x, 0.15, N.z),
-        new T.Vector3(E.x, 0.15, N.z),
-        new T.Vector3(E.x, 0.15, S.z),
-        new T.Vector3(W.x, 0.15, S.z),
-        new T.Vector3(W.x, 0.15, N.z),   // close
-    ];
-
-    const geom = new T.BufferGeometry().setFromPoints(pts);
-    const line = new T.Line(geom, _boundaryMat());
-    line.name        = 'site-boundary';
-    line.renderOrder = 995;
-
-    const group = new T.Group();
-    group.name = 'site-boundary-group';
-    group.add(line);
-    return group;
-}
-
-function _collectRoadSegments(xMin, xMax, zMin, zMax) {
-    const segs = [];
-    if (!state.cadmapperGroup) return segs;
-    for (const layer of state.cadmapperGroup.children) {
-        const name = (layer.name ?? '').toLowerCase();
-        if (!ROAD_LAYER_NAMES.some(n => name.includes(n))) continue;
-        layer.traverse(obj => {
-            if (!obj.isLine && !obj.isLineSegments) return;
-            const pos = obj.geometry?.attributes?.position;
-            if (!pos) return;
-            for (let i = 0; i < pos.count - 1; i++) {
-                const ax = pos.getX(i), az = pos.getZ(i);
-                const bx = pos.getX(i + 1), bz = pos.getZ(i + 1);
-                // Only keep segments within or near the bbox
-                if (Math.min(ax, bx) > xMax || Math.max(ax, bx) < xMin) continue;
-                if (Math.min(az, bz) > zMax || Math.max(az, bz) < zMin) continue;
-                segs.push({ ax, az, bx, bz });
-            }
-        });
-    }
-    return segs;
-}
-
-/** Cast a ray from origin in direction (dx, dz). Returns first intersection. */
-function _rayHit(origin, dx, dz, segs) {
-    const ox = origin.x, oz = origin.z;
-    let best = null, bestDist = Infinity;
-
-    for (const { ax, az, bx, bz } of segs) {
-        // Ray: P = origin + t*(dx,dz)
-        // Segment: Q = A + s*(B-A)
-        const rx = bx - ax, rz = bz - az;
-        const denom = dx * rz - dz * rx;
-        if (Math.abs(denom) < 1e-9) continue;   // parallel
-
-        const t = ((ax - ox) * rz - (az - oz) * rx) / denom;
-        const s = ((ax - ox) * dz - (az - oz) * dx) / denom;
-
-        if (t < 0.5 || s < 0 || s > 1) continue;  // t<0.5 = behind / too close
-        if (t < bestDist) { bestDist = t; best = { x: ox + t * dx, z: oz + t * dz }; }
-    }
-    return best;
 }
