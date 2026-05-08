@@ -27,6 +27,7 @@ let _onCancel    = null;
 export function startRect2D(onComplete, onCancel) {
   if (_active) cancelRect2D();
   _active     = true;
+  state._rectPickActive = true;
   _onComplete = onComplete;
   _onCancel   = onCancel ?? null;
   _createOverlay();
@@ -89,6 +90,8 @@ function _onUp(e) {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function _screenToScene(screen, canvasRect) {
+  // Force matrix update so unproject uses current camera state
+  state.camera2D.updateMatrixWorld(true);
   const ndc = new THREE.Vector3(
     (screen.x / canvasRect.width)  *  2 - 1,
     -(screen.y / canvasRect.height) *  2 + 1,
@@ -117,6 +120,7 @@ function _drawRect(canvasRect, start, cur) {
 
 function _cleanup() {
   _active = false; _startScreen = null; _onComplete = null; _onCancel = null;
+  state._rectPickActive = false;
   const canvas = state.renderer?.domElement;
   if (canvas) {
     canvas.style.cursor = '';

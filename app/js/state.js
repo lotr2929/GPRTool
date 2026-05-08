@@ -102,4 +102,5 @@ export const state = {
   alarmTime:     null,
   alarmInterval: null,
   isRinging:     false,
+  _rectPickActive: false,   // true while rect-pick-2d.js is active — suppresses pan
 };

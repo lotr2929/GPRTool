@@ -316,7 +316,8 @@ import { startRect2D, cancelRect2D } from './rect-pick-2d.js';
         state.rotate2DLast   = { x: e.clientX, y: e.clientY };
         state.renderer.domElement.setPointerCapture(e.pointerId);
       } else if (e.button === 0) {
-        // Left mouse — pan
+        // Left mouse — pan (suppressed while rect picker is active)
+        if (state._rectPickActive) return;
         state.pan2DActive = true;
         state.pan2DLast   = { x: e.clientX, y: e.clientY };
         state.renderer.domElement.setPointerCapture(e.pointerId);
@@ -1148,6 +1149,8 @@ import { startRect2D, cancelRect2D } from './rect-pick-2d.js';
       }
 
       showFeedback(`Opened: ${manifest.site_name ?? file.name}`);
+      // Dismiss the "No project folder" banner — project is open, user can set folder when saving
+      window.dispatchEvent(new CustomEvent('gprtool:folderSet'));
     }
 
     /* ============================================================

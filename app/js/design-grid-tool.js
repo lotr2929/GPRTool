@@ -19,20 +19,21 @@ import { updateDesignData }    from './gpr-file.js';
 
 const SNAP_RADIUS_PX = 20;
 
-// ── Tool state ────────────────────────────────────────────────────────────────
+// ── Module state ──────────────────────────────────────────────────────────────
 let _setNorthMode = false;   // true = Set Design North; false = Set Design Grid
 
 // Click state machine
-//   idle            — no command active
-//   await_origin    — waiting for first click (origin)
-//   await_direction — origin set; waiting for second click (direction)
 let _toolState = 'idle';
 
-let _surface   = null;   // captured surface (null = ground plane / north mode)
-let _origin    = null;   // THREE.Vector3 — first click
-let _snapPoint = null;   // THREE.Vector3 — nearest vertex within snap radius
-let _snapMarker = null;  // THREE.Mesh — green dot at snap position
-let _prevLine   = null;  // THREE.Line — direction preview
+let _surface   = null;
+let _origin    = null;
+let _snapPoint = null;
+let _snapMarker = null;
+let _prevLine   = null;
+
+// Snap mesh cache — built once when tool activates, cleared on reset.
+// Avoids traversing 1000+ building meshes every pointermove frame.
+let _snapMeshCache = null;
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
@@ -41,6 +42,7 @@ export function initDesignGridTool() {}  // reserved for future one-time setup
 export function startSetDesignGrid() {
   _setNorthMode = false;
   _reset();
+  _snapMeshCache = _collectSnapMeshes();
   _toolState = 'await_origin';
   showFeedback('Double-click a surface for a surface grid, or click to set Design Origin', 0);
   state.renderer.domElement.style.cursor = 'crosshair';
@@ -49,6 +51,7 @@ export function startSetDesignGrid() {
 export function startSetDesignNorth() {
   _setNorthMode = true;
   _reset();
+  _snapMeshCache = _collectSnapMeshes();
   _toolState = 'await_origin';
   showFeedback('Click to set the Design North origin', 0);
   state.renderer.domElement.style.cursor = 'crosshair';
@@ -255,6 +258,7 @@ function _reset() {
   _surface   = null;
   _origin    = null;
   _snapPoint = null;
+  _snapMeshCache = null;
   _clearSnapMarker();
   _clearPrevLine();
   if (state.renderer) state.renderer.domElement.style.cursor = '';
@@ -308,7 +312,8 @@ function _findSnapPoint(e, surface) {
   const sy = e.clientY - rect.top;
   const cam = state.camera;
 
-  const meshes = surface ? [surface.mesh] : _collectSnapMeshes();
+  // Use the pre-built cache (built at tool activation) or fall back to live collect
+  const meshes = surface ? [surface.mesh] : (_snapMeshCache ?? _collectSnapMeshes());
 
   const v    = new THREE.Vector3();
   const proj = new THREE.Vector3();
