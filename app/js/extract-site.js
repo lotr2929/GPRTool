@@ -12,6 +12,8 @@ import * as THREE from 'three';
 import { wgs84ToScene, hasRealWorldAnchor, sceneToWGS84 } from './real-world.js';
 import { getSiteTerrainElevation } from './terrain.js';
 import { state } from './state.js';
+import { buildExtractDXF } from './dxf-writer.js';
+import { addRawFileToGPR } from './gpr-file.js';
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
@@ -85,6 +87,17 @@ export async function extractSite(bbox, _THREE) {
         (xMin + xMax) * 0.5, 0, (zMin + zMax) * 0.5
     );
     const boundaryGroup = _buildRoadBoundary(T, origin, xMin, xMax, zMin, zMax);
+
+    // 5. Build DXF and save to .gpr
+    try {
+        const dxfContent = buildExtractDXF(
+            state.cadmapperGroup, contourGroup, xMin, xMax, zMin, zMax
+        );
+        await addRawFileToGPR('extract/site.dxf', dxfContent, 'extract/site.dxf');
+        console.log('[Extract] DXF saved to .gpr');
+    } catch (e) {
+        console.warn('[Extract] DXF save failed:', e.message);
+    }
 
     return { buildingCount, contourLevelCount, contourGroup, boundaryGroup };
 }

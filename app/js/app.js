@@ -123,7 +123,7 @@ import { startRect2D, cancelRect2D } from './rect-pick-2d.js';
           const summary = `\u2713 ${buildingCount} bldg${buildingCount !== 1 ? 's' : ''}, ${contourLevelCount} contour levels`;
           setStage('extract', 'done', summary);
           setPipelineStatus('', 'idle');
-          showFeedback(`Site extracted \u2014 ${summary.slice(2)}`);
+          showFeedback(`Site extracted \u2014 ${summary.slice(2)} \u2014 DXF saved in .gpr`);
         } catch (e) {
           console.error('[Extract Site]', e);
           setStage('extract', 'pending', 'Draw rectangle to extract');
