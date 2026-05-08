@@ -1,5 +1,5 @@
 /*
- * plants.js — Plant library, GPR calculation, placement engine
+ * plants.js â€” Plant library, GPR calculation, placement engine
  */
 import * as THREE from 'three';
 import { state } from './state.js';
@@ -243,10 +243,10 @@ export function refreshModalStatus() {
     const subMm    = state.selectedSurface.substrate_mm;
     const minSub   = selectedPlant.size?.min_substrate_mm;
     const subWarn  = subMm && minSub && subMm < minSub
-      ? ` ⚠ Needs ≥${minSub}mm substrate (surface has ${subMm}mm)`
+      ? ` âš  Needs â‰¥${minSub}mm substrate (surface has ${subMm}mm)`
       : '';
     const limits   = radiusLimits(selectedPlant, state.selectedSurface);
-    const capWarn  = limits.capLabel && !subWarn ? ` — capped at ${limits.max}m radius` : '';
+    const capWarn  = limits.capLabel && !subWarn ? ` â€” capped at ${limits.max}m radius` : '';
 
     statusEl.textContent = compatible
       ? `Add ${selectedPlant.common} (LAI ${selectedPlant.lai}) to ${surfType}${subWarn || capWarn}`
@@ -254,7 +254,7 @@ export function refreshModalStatus() {
     statusEl.style.color = subWarn ? '#e8a040' : '';
     if (assignBtn) assignBtn.disabled = !compatible;
   } else {
-    statusEl.textContent = `${surfType} surface — select a species above`;
+    statusEl.textContent = `${surfType} surface â€” select a species above`;
     statusEl.style.color = '';
     if (assignBtn) assignBtn.disabled = true;
   }
@@ -360,7 +360,7 @@ export function worldToSurfaceUV(worldPt, surface) {
   if (isH) {
     return { u: worldPt.x - c.x, v: worldPt.z - c.z };
   } else {
-    // Wall — use surface tangent axes
+    // Wall â€” use surface tangent axes
     const up    = new THREE.Vector3(0, 1, 0);
     const right = new THREE.Vector3().crossVectors(up, n).normalize();
     return {
@@ -408,7 +408,7 @@ export function startPlacement(species) {
   const hint = pType === 'circle'
     ? 'Click to set centre, drag or click again to set radius'
     : 'Click to add vertices, double-click or Enter to close polygon';
-  showFeedback(`Placing ${species.common} — ${hint}`, 0);
+  showFeedback(`Placing ${species.common} â€” ${hint}`, 0);
   state.renderer.domElement.style.cursor = 'crosshair';
 }
 
@@ -514,7 +514,7 @@ export function commitPolygonPlacement(surface, species, polyPts) {
   updateSurfaceListTag(surface);
   renderSurfacePlantSchedule(surface);
   recalcGPR();
-  showFeedback(`Placed ${species.common} — canopy ${inst.canopyArea} m²`);
+  showFeedback(`Placed ${species.common} â€” canopy ${inst.canopyArea} mÂ²`);
   return inst;
 }
 
@@ -566,7 +566,7 @@ export function buildCircleProxy(inst, surface, species) {
     sphere.position.set(0, radius * 0.6, 0);
     group.add(sphere);
   } else {
-    // Bamboo / palm — cylinder clump
+    // Bamboo / palm â€” cylinder clump
     const cyl = new THREE.Mesh(
       new THREE.CylinderGeometry(radius * 0.5, radius * 0.7, radius * 3, 6),
       PROXY_MAT.bamboo.clone()
@@ -589,7 +589,7 @@ export function buildCircleProxy(inst, surface, species) {
 
   group.position.copy(worldCentre);
   group.renderOrder = 3;
-  plantProxyGroup.add(group);
+  state.plantProxyGroup.add(group);
   return group;
 }
 
@@ -625,7 +625,7 @@ export function buildPolygonProxy(inst, surface, species) {
   if (isH) {
     geom.rotateX(-Math.PI / 2);
   } else {
-    // Orient in wall plane — translate back to world position
+    // Orient in wall plane â€” translate back to world position
     const c     = getSurfaceCentre(surface);
     const up    = new THREE.Vector3(0, 1, 0);
     const right = new THREE.Vector3().crossVectors(up, n).normalize();
@@ -649,7 +649,7 @@ export function buildPolygonProxy(inst, surface, species) {
   }
 
   mesh.renderOrder = 3;
-  plantProxyGroup.add(mesh);
+  state.plantProxyGroup.add(mesh);
 
   // Also draw outline
   const outlineGeom = new THREE.BufferGeometry().setFromPoints([...worldPts, worldPts[0]]);
@@ -664,7 +664,7 @@ export function buildPolygonProxy(inst, surface, species) {
 export function removeProxyForInstance(inst) {
   if (!inst.placement) return;
   if (inst.placement.mesh) {
-    plantProxyGroup.remove(inst.placement.mesh);
+    state.plantProxyGroup.remove(inst.placement.mesh);
     inst.placement.mesh.traverse(c => c.geometry?.dispose());
   }
   if (inst.placement._footprintLine) {
@@ -681,9 +681,9 @@ export function clearAllProxies() {
   state.surfaces.forEach(s => {
     (s.plants || []).forEach(inst => removeProxyForInstance(inst));
   });
-  while (plantProxyGroup.children.length) {
-    const c = plantProxyGroup.children[0];
+  while (state.plantProxyGroup.children.length) {
+    const c = state.plantProxyGroup.children[0];
     c.geometry?.dispose();
-    plantProxyGroup.remove(c);
+    state.plantProxyGroup.remove(c);
   }
 }

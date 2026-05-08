@@ -4,12 +4,12 @@
 //
 // Called from app.js:
 //   const { buildingCount, contourLevelCount, contourGroup, boundaryGroup } =
-//       await extractSite(bbox, state.THREE);
+//       await extractSite(bounds, state.THREE);
 //
-// bbox : { north, south, east, west }  — decimal degrees
+// bounds : { xMin, xMax, zMin, zMax }  — scene space metres
 
 import * as THREE from 'three';
-import { wgs84ToScene, hasRealWorldAnchor, sceneToWGS84 } from './real-world.js';
+import { hasRealWorldAnchor } from './real-world.js';
 import { getSiteTerrainElevation } from './terrain.js';
 import { state } from './state.js';
 import { buildExtractDXF } from './dxf-writer.js';
@@ -42,25 +42,17 @@ export function detectAndShowSiteBoundary() {
   return boundary;
 }
 
-export async function extractSite(bbox, _THREE) {
+export async function extractSite(bounds, _THREE) {
+    // bounds = { xMin, xMax, zMin, zMax } in scene space (metres)
     const T = _THREE ?? THREE;
 
     if (!hasRealWorldAnchor()) {
         return { buildingCount: 0, contourLevelCount: 0, contourGroup: null };
     }
 
-    // 1. Convert WGS-84 bbox corners to scene space (metres)
-    const nw = wgs84ToScene(bbox.north, bbox.west);
-    const ne = wgs84ToScene(bbox.north, bbox.east);
-    const sw = wgs84ToScene(bbox.south, bbox.west);
-    const se = wgs84ToScene(bbox.south, bbox.east);
+    const { xMin, xMax, zMin, zMax } = bounds;
 
-    const xMin = Math.min(nw.x, ne.x, sw.x, se.x);
-    const xMax = Math.max(nw.x, ne.x, sw.x, se.x);
-    const zMin = Math.min(nw.z, ne.z, sw.z, se.z);
-    const zMax = Math.max(nw.z, ne.z, sw.z, se.z);
-
-    // 2. Count buildings whose centre falls inside the bbox
+    // 1. Count buildings whose centre falls inside the bounds
     let buildingCount = 0;
     const buildingsLayer = state.cadmapperGroup?.children.find(
         c => c.name === 'buildings'

@@ -104,17 +104,20 @@ import { startRect2D, cancelRect2D } from './rect-pick-2d.js';
       };
       window.addEventListener('keydown', onEsc);
 
-      startRect2D(async (bbox) => {
+      startRect2D(async (bounds) => {
         window.removeEventListener('keydown', onEsc);
         setStage('extract', 'active', 'Extracting\u2026');
         setPipelineStatus('Extracting site\u2026', 'busy');
         try {
           // Draw the user's rectangle as a RED outline in the scene
-          const nw = wgs84ToScene(bbox.north, bbox.west);
-          const ne = wgs84ToScene(bbox.north, bbox.east);
-          const se = wgs84ToScene(bbox.south, bbox.east);
-          const sw = wgs84ToScene(bbox.south, bbox.west);
-          const rectPts = [nw, ne, se, sw, nw].map(p => new THREE.Vector3(p.x, 0.2, p.z));
+          const { xMin, xMax, zMin, zMax } = bounds;
+          const rectPts = [
+            new THREE.Vector3(xMin, 0.2, zMin),
+            new THREE.Vector3(xMax, 0.2, zMin),
+            new THREE.Vector3(xMax, 0.2, zMax),
+            new THREE.Vector3(xMin, 0.2, zMax),
+            new THREE.Vector3(xMin, 0.2, zMin),
+          ];
           const rectGeom = new THREE.BufferGeometry().setFromPoints(rectPts);
           const rectLine = new THREE.Line(rectGeom, new THREE.LineBasicMaterial({
             color: 0xff2222, depthTest: false, transparent: true, opacity: 0.9,
@@ -127,7 +130,7 @@ import { startRect2D, cancelRect2D } from './rect-pick-2d.js';
           state.scene.add(rectLine);
 
           const { buildingCount, contourLevelCount, contourGroup, boundaryGroup } =
-            await extractSite(bbox, state.THREE);
+            await extractSite(bounds, state.THREE);
 
           // Add contours and site boundary to scene
           if (contourGroup && state.cadmapperGroup)   state.cadmapperGroup.add(contourGroup);
@@ -1346,9 +1349,9 @@ import { startRect2D, cancelRect2D } from './rect-pick-2d.js';
     let editingInstance  = null;   // { surface, inst } — selected for edit
 
     // ── Proxy mesh group ───────────────────────────────────────
-    const plantProxyGroup = new THREE.Group();
-    plantProxyGroup.renderOrder = 2;
-    scene.add(plantProxyGroup);
+    state.plantProxyGroup = new THREE.Group();
+    state.plantProxyGroup.renderOrder = 2;
+    scene.add(state.plantProxyGroup);
 
     // ── Materials ──────────────────────────────────────────────
     const PROXY_MAT = {

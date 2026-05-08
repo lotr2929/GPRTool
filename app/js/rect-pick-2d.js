@@ -2,19 +2,19 @@
  * rect-pick-2d.js — Rectangle picker for the Three.js 2D orthographic view
  *
  * Lets the user drag a rectangle on the Three.js canvas (not Cesium).
- * Converts screen coordinates → scene → WGS84 bbox for extractSite().
+ * Converts screen coordinates → scene space (metres) for extractSite().
  *
  * Usage:
  *   startRect2D(onComplete, onCancel)
  *   cancelRect2D()
  *
- * onComplete called with { north, south, east, west } in decimal degrees.
+ * onComplete called with { xMin, xMax, zMin, zMax } in scene space (metres).
  * Sets state._rectPickActive = true while active (suppresses 2D pan in app.js).
  */
 
 import * as THREE from 'three';
 import { state }               from './state.js';
-import { sceneToWGS84, hasRealWorldAnchor } from './real-world.js';
+import { hasRealWorldAnchor } from './real-world.js';
 
 // ── Module state ──────────────────────────────────────────────────────────────
 let _active      = false;
@@ -77,16 +77,16 @@ function _onUp(e) {
   const endScene   = _clientToScene(endClient);
   if (!startScene || !endScene) { _cleanup(); _onCancel?.(); return; }
 
-  const sw = sceneToWGS84(startScene.x, startScene.z);
-  const ew = sceneToWGS84(endScene.x,   endScene.z);
-  const bbox = {
-    north: Math.max(sw.lat, ew.lat), south: Math.min(sw.lat, ew.lat),
-    east:  Math.max(sw.lng, ew.lng), west:  Math.min(sw.lng, ew.lng),
+  const bounds = {
+    xMin: Math.min(startScene.x, endScene.x),
+    xMax: Math.max(startScene.x, endScene.x),
+    zMin: Math.min(startScene.z, endScene.z),
+    zMax: Math.max(startScene.z, endScene.z),
   };
 
   const cb = _onComplete;
   _cleanup();
-  cb?.(bbox);
+  cb?.(bounds);
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
