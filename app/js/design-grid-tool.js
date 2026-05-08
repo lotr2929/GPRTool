@@ -137,7 +137,7 @@ export function handleDesignToolClick(e) {
     const angle  = _vectorToNorthAngle(yAxis);
 
     if (_setNorthMode) {
-      // Set Design North — update compass and rotate 2D view to align with direction
+      // Set Design North — update compass, rotate 2D view, then offer grid spacing
       setDesignNorth(angle);
       state.rotate2D = Math.atan2(yAxis.x, -yAxis.z);
       if (_origin) state.pan2D = { x: _origin.x, z: _origin.z };
@@ -147,7 +147,17 @@ export function handleDesignToolClick(e) {
       showFeedback(`Design North set — ${label} from True North`);
       if (state.northPointEl) state.northPointEl.style.display = '';
       updateDesignData({ design_north_angle: angle }).catch(() => {});
+      // Ensure horizontal grid exists, then show spacing popup
+      if (state.designGridManager && !state.designGridManager.grids.has('design-grid-horizontal')) {
+        state.designGridManager.initHorizontal(
+          state.manualGridSpacing ?? 100,
+          state.manualMinorDivisions ?? 0,
+          5000,
+          _origin ?? new THREE.Vector3(0, 0, 0)
+        );
+      }
       _reset();
+      showGridSpacingPopup(e.clientX, e.clientY);
     } else {
       // Set Design Grid — capture then reset before popup opens
       const o = _origin.clone();
@@ -298,8 +308,7 @@ function _findSnapPoint(e, surface) {
   const sy = e.clientY - rect.top;
   const cam = state.camera;
 
-  const meshes = surface ? [surface.mesh]
-                         : state.surfaces?.map(s => s.mesh).filter(Boolean) ?? [];
+  const meshes = surface ? [surface.mesh] : _collectSnapMeshes();
 
   const v    = new THREE.Vector3();
   const proj = new THREE.Vector3();
@@ -319,6 +328,21 @@ function _findSnapPoint(e, surface) {
     }
   }
   return best;
+}
+
+/** Collect all meshes eligible for snapping when no surface is explicitly selected.
+ *  Includes coplanar patch surfaces (DXF/OBJ) and OSM/CADMapper building meshes. */
+function _collectSnapMeshes() {
+  const result = [];
+  if (state.surfaces?.length) {
+    state.surfaces.forEach(s => { if (s.mesh) result.push(s.mesh); });
+  }
+  if (state.cadmapperGroup) {
+    state.cadmapperGroup.traverse(obj => {
+      if (obj.isMesh) result.push(obj);
+    });
+  }
+  return result;
 }
 
 function _computeAxisDir(origin, target, surface) {
