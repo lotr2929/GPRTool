@@ -6,8 +6,7 @@ import { state } from './state.js';
 import { showFeedback } from './ui.js';
 import { latlonToMetres, computeBBox, computePolygonArea, computePolygonPerimeter, loadMapTiles } from './geo.js';
 import { getRealWorldAnchor, sceneToWGS84, wgs84ToScene } from './real-world.js';
-import { addBoundaryToGPR, getActiveGPRBlob } from './gpr-file.js';
-import { saveProject } from './projects.js';
+import { addBoundaryToGPR } from './gpr-file.js';
 import { buildSiteTerrain } from './terrain.js';
 import { updateSceneHelpers } from './grid.js';
 import { fit2DCamera, update2DCamera, switchMode } from './viewport.js';
@@ -160,13 +159,7 @@ export async function confirmBoundaryDraw() {
 
   try {
     await addBoundaryToGPR(geojson);
-    const anchor = getRealWorldAnchor();
-    const blob   = await getActiveGPRBlob();
-    if (blob && anchor) {
-      saveProject(blob, { site_name: document.title || 'GPR Project',
-        has_boundary: true, wgs84_lat: anchor.lat, wgs84_lng: anchor.lng })
-        .catch(e => console.warn('[GPR] Supabase boundary update failed:', e));
-    }
+
     const btn = document.getElementById('draw-boundary-btn');
     if (btn) { btn.textContent = '\u2713 Lot Boundary \u2014 Re-draw\u2026'; btn.style.background = 'var(--accent-dark,#2d6b2d)'; }
     showFeedback('Lot boundary saved');
