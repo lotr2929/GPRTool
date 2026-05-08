@@ -154,7 +154,7 @@ export function handleDesignToolClick(e) {
       if (state.designGridManager && !state.designGridManager.grids.has('design-grid-horizontal')) {
         state.designGridManager.initHorizontal(
           state.manualGridSpacing ?? 100,
-          state.manualMinorDivisions ?? 0,
+          state.manualMinorDivisions ?? 10,
           5000,
           _origin ?? new THREE.Vector3(0, 0, 0)
         );
@@ -169,7 +169,7 @@ export function handleDesignToolClick(e) {
       const s = _surface;
       _reset();
       showGridSpacingPopup(e.clientX, e.clientY, (maj, min) => {
-        _commitDesignGrid(o, x, yAxis, n, s, maj ?? 100, min ?? 0, angle);
+        _commitDesignGrid(o, x, yAxis, n, s, maj ?? 100, min ?? 10, angle);
       });
     }
     return true;
@@ -372,8 +372,7 @@ function _findSnapPoint(e, surface) {
   return best;
 }
 
-/** Collect all meshes eligible for snapping when no surface is explicitly selected.
- *  Includes coplanar patch surfaces (DXF/OBJ) and OSM/CADMapper building meshes. */
+/** Collect all meshes/lines eligible for snapping when no surface is explicitly selected. */
 function _collectSnapMeshes() {
   const result = [];
   if (state.surfaces?.length) {
@@ -381,7 +380,8 @@ function _collectSnapMeshes() {
   }
   if (state.cadmapperGroup) {
     state.cadmapperGroup.traverse(obj => {
-      if (obj.isMesh) result.push(obj);
+      // Include meshes (buildings) AND line objects (road edges, paths)
+      if (obj.isMesh || obj.isLine || obj.isLineSegments) result.push(obj);
     });
   }
   return result;

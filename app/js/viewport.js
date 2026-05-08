@@ -295,7 +295,8 @@ export function updateGridVisibility(forceMode) {
   const mode    = forceMode ?? state.currentMode;
   const noTiles = !state.mapTileGroup;
   const hasDN   = (getDesignNorthAngle() ?? 0) !== 0;
-  const showDG  = (mode === '2d') && noTiles && hasDN && !!state.designGridManager?.grids?.size;
+  const hasGrid = (state.designGridAngle  ?? 0) !== 0;
+  const showDG  = (mode === '2d') && noTiles && (hasDN || hasGrid) && !!state.designGridManager?.grids?.size;
   const showCAD = noTiles && !showDG;
   if (state.gridHelper)      state.gridHelper.visible      = showCAD;
   if (state.gridHelperMinor) state.gridHelperMinor.visible = showCAD;

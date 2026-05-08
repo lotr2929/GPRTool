@@ -124,7 +124,7 @@ export function showGridSpacingPopup(cx, cy, onApply = null) {
   const minInp = document.getElementById('gs-minor');
   const hint   = document.getElementById('gs-hint');
   majInp.value = state.manualGridSpacing    ?? '';
-  minInp.value = state.manualMinorDivisions ?? '';
+  minInp.value = state.manualMinorDivisions ?? 10;
 
   const updateHint = () => {
     const n    = parseInt(minInp.value, 10);

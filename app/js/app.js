@@ -109,6 +109,23 @@ import { startRect2D, cancelRect2D } from './rect-pick-2d.js';
         setStage('extract', 'active', 'Extracting\u2026');
         setPipelineStatus('Extracting site\u2026', 'busy');
         try {
+          // Draw the user's rectangle as a RED outline in the scene
+          const nw = wgs84ToScene(bbox.north, bbox.west);
+          const ne = wgs84ToScene(bbox.north, bbox.east);
+          const se = wgs84ToScene(bbox.south, bbox.east);
+          const sw = wgs84ToScene(bbox.south, bbox.west);
+          const rectPts = [nw, ne, se, sw, nw].map(p => new THREE.Vector3(p.x, 0.2, p.z));
+          const rectGeom = new THREE.BufferGeometry().setFromPoints(rectPts);
+          const rectLine = new THREE.Line(rectGeom, new THREE.LineBasicMaterial({
+            color: 0xff2222, depthTest: false, transparent: true, opacity: 0.9,
+          }));
+          rectLine.name = 'extract-rect';
+          rectLine.renderOrder = 996;
+          // Remove any previous extract rectangle
+          const prev = state.scene.getObjectByName('extract-rect');
+          if (prev) state.scene.remove(prev);
+          state.scene.add(rectLine);
+
           const { buildingCount, contourLevelCount, contourGroup, boundaryGroup } =
             await extractSite(bbox, state.THREE);
 
@@ -120,10 +137,14 @@ import { startRect2D, cancelRect2D } from './rect-pick-2d.js';
           document.getElementById('section-site')?.classList.add('collapsed');
           document.getElementById('section-building')?.classList.remove('collapsed');
 
-          const summary = `\u2713 ${buildingCount} bldg${buildingCount !== 1 ? 's' : ''}, ${contourLevelCount} contour levels`;
+          const hasDXF = !!state._activeFileName;
+          const summary = `\u2713 ${buildingCount} bldg${buildingCount !== 1 ? 's' : ''}, ${contourLevelCount} contour levels${hasDXF ? ' \u2014 DXF saved' : ''}`;
           setStage('extract', 'done', summary);
           setPipelineStatus('', 'idle');
-          showFeedback(`Site extracted \u2014 ${summary.slice(2)} \u2014 DXF saved in .gpr`);
+          showFeedback(hasDXF
+            ? `Site extracted \u2014 ${summary.slice(2)}`
+            : `Site extracted \u2014 save project first to export DXF`
+          );
         } catch (e) {
           console.error('[Extract Site]', e);
           setStage('extract', 'pending', 'Draw rectangle to extract');

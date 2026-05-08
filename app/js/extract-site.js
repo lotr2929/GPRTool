@@ -261,7 +261,7 @@ const ROAD_LAYER_NAMES = ['roads', 'paths', 'highways', 'major roads', 'minor ro
 let _matBoundary = null;
 function _boundaryMat() {
     if (!_matBoundary) _matBoundary = new THREE.LineBasicMaterial({
-        color: 0x1a6b1a, linewidth: 2, depthTest: false,
+        color: 0xcc44cc, linewidth: 2, depthTest: false,  // magenta — distinct from red extract rect
     });
     return _matBoundary;
 }
