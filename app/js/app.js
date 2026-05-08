@@ -1587,6 +1587,7 @@
           color:rgba(255,255,255,0.4); cursor:pointer; font-size:16px;
           line-height:1; padding:0 4px;">&#x2715;</button>`;
       document.body.appendChild(banner);
+      window.addEventListener('gprtool:folderSet', () => banner.remove(), { once: true });
       document.getElementById('folder-banner-btn').addEventListener('click', async () => {
         const h = await pickProjectFolder().catch(() => null);
         if (h) banner.remove();

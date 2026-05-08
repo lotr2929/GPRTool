@@ -114,9 +114,11 @@ const DESIGN_GRID_MINOR_COLOUR  = 0x5d9450; // lighter green
 const DESIGN_GRID_MINOR_OPACITY = 0.35;
 
 // Maximum number of lines per direction before the minor grid is suppressed.
-// At typical viewport widths, more than ~200 lines per direction produces a
-// solid-fill appearance rather than a readable grid.
-const MAX_MINOR_LINES_PER_DIR = 200;
+// Raised to 10000 — typical cases (5000m extent, 100m major, 10 divisions = 1000
+// lines) are well below this. The GPU handles batched LineSegments at this count
+// without issue. Only truly degenerate inputs (sub-metre spacing at full extent)
+// would exceed this.
+const MAX_MINOR_LINES_PER_DIR = 10000;
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  DesignGrid — a single Design Grid instance

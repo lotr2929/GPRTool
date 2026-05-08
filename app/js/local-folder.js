@@ -79,6 +79,7 @@ export async function pickProjectFolder() {
     throw e;
   }
   await _idbPut(KEY_FOLDER, handle);
+  window.dispatchEvent(new CustomEvent('gprtool:folderSet'));
   return handle;
 }
 

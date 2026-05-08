@@ -137,11 +137,14 @@ export function handleDesignToolClick(e) {
     const angle  = _vectorToNorthAngle(yAxis);
 
     if (_setNorthMode) {
-      // Set Design North only — compass updated, grid unchanged
+      // Set Design North — update compass and rotate 2D view to align with direction
       setDesignNorth(angle);
+      state.rotate2D = Math.atan2(yAxis.x, -yAxis.z);
+      if (_origin) state.pan2D = { x: _origin.x, z: _origin.z };
+      switchMode('2d');
+      update2DCamera();
       const label = _formatAngle(angle);
       showFeedback(`Design North set — ${label} from True North`);
-      // Make the compass visible if hidden
       if (state.northPointEl) state.northPointEl.style.display = '';
       updateDesignData({ design_north_angle: angle }).catch(() => {});
       _reset();
