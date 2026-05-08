@@ -56,6 +56,7 @@
     import { initUI, showFeedback, setPipelineStatus, setStage } from './ui.js';
     import { initCesiumViewer, getCesiumViewer, flyToSite, showLotBoundary, clearLotBoundary as cesiumClearLotBoundary, isCesiumReady, showCesiumView, showThreeJSView, startBoundaryPick, stopLocationPick, setCesium2D, setCesium3D, setCesiumViewMode, isCesiumActive, setCesiumStreetLevel, getCameraPosition, resetCesiumView, startRectPick, cancelRectPick } from './cesium-viewer.js';
     import { extractSite } from './extract-site.js';
+import { startRect2D, cancelRect2D } from './rect-pick-2d.js';
 
     /* ============================================================
        LOAD HEADER + BODY
@@ -88,47 +89,36 @@
 
     // ── Extract Site Segment — Stage 3 ────────────────────────────────────
     document.getElementById('extractSiteBtn')?.addEventListener('click', () => {
-      // Keep Cesium visible — rect picker draws on the Cesium canvas
-      setCesium2D();
+      // Ensure we are in Three.js 2D view so the rect picker is on the right canvas
+      showThreeJSView();
+      switchMode('2d');
       setStage('extract', 'active', 'Drag a rectangle on the map');
       setPipelineStatus('Draw site rectangle\u2026', 'busy');
-      showFeedback('Drag to draw site rectangle \u2014 release to confirm. Esc = cancel', 0);
+      showFeedback('Drag to draw site rectangle on the 2D map \u2014 release to confirm. Esc = cancel', 0);
 
       // Escape cancels
-      let cancelled = false;
       const onEsc = (e) => {
         if (e.key !== 'Escape') return;
-        cancelled = true;
-        cancelRectPick();
-        setStage('extract', 'pending', 'Draw rectangle to extract');
-        setPipelineStatus('', 'idle');
-        showFeedback('Extraction cancelled', 2000);
+        cancelRect2D();
         window.removeEventListener('keydown', onEsc);
       };
       window.addEventListener('keydown', onEsc);
 
-      startRectPick(async (bbox) => {
+      startRect2D(async (bbox) => {
         window.removeEventListener('keydown', onEsc);
-        if (cancelled) return;
         setStage('extract', 'active', 'Extracting\u2026');
         setPipelineStatus('Extracting site\u2026', 'busy');
         try {
-          const { buildingCount, contourLevelCount, contourGroup } =
+          const { buildingCount, contourLevelCount, contourGroup, boundaryGroup } =
             await extractSite(bbox, state.THREE);
 
-          // Add 1m contour group to scene if terrain was available
-          if (contourGroup && state.cadmapperGroup) {
-            state.cadmapperGroup.add(contourGroup);
-          }
-
-          // Switch to Three.js 2D to show the extracted result
-          showThreeJSView();
-          switchMode('2d');
+          // Add contours and site boundary to scene
+          if (contourGroup && state.cadmapperGroup)   state.cadmapperGroup.add(contourGroup);
+          if (boundaryGroup && state.cadmapperGroup)  state.cadmapperGroup.add(boundaryGroup);
 
           // Collapse Site section, expand Building section
           document.getElementById('section-site')?.classList.add('collapsed');
-          const buildSection = document.getElementById('section-building');
-          buildSection?.classList.remove('collapsed');
+          document.getElementById('section-building')?.classList.remove('collapsed');
 
           const summary = `\u2713 ${buildingCount} bldg${buildingCount !== 1 ? 's' : ''}, ${contourLevelCount} contour levels`;
           setStage('extract', 'done', summary);
@@ -140,6 +130,11 @@
           setPipelineStatus('', 'idle');
           showFeedback('Extract failed: ' + e.message, 4000);
         }
+      }, () => {
+        window.removeEventListener('keydown', onEsc);
+        setStage('extract', 'pending', 'Draw rectangle to extract');
+        setPipelineStatus('', 'idle');
+        showFeedback('Extraction cancelled', 2000);
       });
     });
 
