@@ -15,6 +15,17 @@ if exist ".tmp.driveupload\*" (
     exit /b 1
 )
 
+REM -- Validate imports (blocks deploy on stale/broken named imports)
+echo Validating imports...
+node "%~dp0_assist.mjs" validate
+if %errorlevel% neq 0 (
+    echo.
+    echo VALIDATION FAILED - deployment blocked. Fix the errors above first.
+    echo.
+    pause
+    exit /b 1
+)
+
 REM -- Load deploy.env
 if not exist deploy.env (
     echo deploy.env missing.

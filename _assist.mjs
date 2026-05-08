@@ -264,20 +264,96 @@ async function cmdRefresh() {
   console.log('');
 }
 
+// ── VALIDATE ─────────────────────────────────────────────────────────────
+
+async function cmdValidate() {
+  console.log(bold('\n── Validating named imports ────────────────────────────────'));
+
+  const LIB = path.join(APP, 'lib');
+  const IMPORT_RE = /import\s*\{([^}]+)\}\s*from\s*['"](\.[^'"]+)['"]/g;
+  const EXPORT_RE = /export\s+(?:async\s+)?(?:function\*?\s+|class\s+|const\s+|let\s+|var\s+)([A-Za-z_$][0-9A-Za-z_$]*)|export\s*\{([^}]+)\}/g;
+
+  // Collect all .js files recursively, skip lib/
+  function walkJS(dir) {
+    const out = [];
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory() && full !== LIB) { out.push(...walkJS(full)); continue; }
+      if (e.isFile() && e.name.endsWith('.js')) out.push(full);
+    }
+    return out;
+  }
+
+  // Extract all named exports from a file
+  function getExports(filePath) {
+    const src = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
+    const names = new Set();
+    let m;
+    EXPORT_RE.lastIndex = 0;
+    while ((m = EXPORT_RE.exec(src)) !== null) {
+      if (m[1]) { names.add(m[1]); continue; }
+      if (m[2]) m[2].split(',').forEach(s => {
+        const parts = s.trim().split(/\s+as\s+/);
+        if (parts[0]) names.add(parts[0].trim());
+      });
+    }
+    return names;
+  }
+
+  const files = walkJS(APP);
+  const exportCache = new Map();
+  let fails = 0, checked = 0;
+
+  for (const file of files) {
+    const src = fs.readFileSync(file, 'utf8');
+    let m;
+    IMPORT_RE.lastIndex = 0;
+    while ((m = IMPORT_RE.exec(src)) !== null) {
+      const names  = m[1].split(',')
+        .map(s => s.trim().split(/\s+as\s+/)[0].trim())
+        .filter(s => /^[A-Za-z_$][0-9A-Za-z_$]*$/.test(s));  // skip ellipsis/comments
+      const relMod = m[2].endsWith('.js') ? m[2] : m[2] + '.js';
+      const modPath = path.resolve(path.dirname(file), relMod);
+      if (!exportCache.has(modPath)) exportCache.set(modPath, getExports(modPath));
+      const exports = exportCache.get(modPath);
+      const rel = p => path.relative(ROOT, p).replace(/\\/g, '/');
+      if (!fs.existsSync(modPath)) {
+        console.log(red(`  FAIL  ${rel(file)} — module not found: ${relMod}`)); fails++; continue;
+      }
+      for (const name of names) {
+        checked++;
+        if (!exports.has(name)) {
+          console.log(red(`  FAIL  ${rel(file)} — '${name}' not exported by ${rel(modPath)}`));
+          fails++;
+        }
+      }
+    }
+  }
+
+  if (fails === 0) {
+    console.log(green(`  ✓ ${checked} named imports validated — all clean\n`));
+  } else {
+    console.log(red(`\n  ✗ ${fails} failure(s) found — fix before deploying\n`));
+    process.exit(1);
+  }
+}
+
 // ── DISPATCH ─────────────────────────────────────────────────────────────
 
 const cmd = process.argv[2] ?? 'help';
-if      (cmd === 'health')  await cmdHealth();
-else if (cmd === 'status')  cmdStatus();
-else if (cmd === 'audit')   cmdAudit();
-else if (cmd === 'refresh') cmdRefresh();
+if      (cmd === 'health')   await cmdHealth();
+else if (cmd === 'status')   cmdStatus();
+else if (cmd === 'audit')    cmdAudit();
+else if (cmd === 'refresh')  cmdRefresh();
+else if (cmd === 'validate') await cmdValidate();
 else {
   console.log(`
 GPRTool _Assist — session tool
 
-  node _assist.mjs health    check Supabase, env vars, Vercel, API files
-  node _assist.mjs status    show current status from journal
-  node _assist.mjs audit     scan codebase for unimplemented features
-  node _assist.mjs refresh   regenerate _map.md (stub)
+  node _assist.mjs health     check Supabase, env vars, Vercel, API files
+  node _assist.mjs status     show current status from journal
+  node _assist.mjs audit      scan codebase for unimplemented features
+  node _assist.mjs refresh    regenerate _map.md (stub)
+  node _assist.mjs validate   verify all named imports exist as exports in source modules
 `);
 }
