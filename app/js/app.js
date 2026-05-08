@@ -104,20 +104,15 @@ import { startRect2D, cancelRect2D } from './rect-pick-2d.js';
       };
       window.addEventListener('keydown', onEsc);
 
-      startRect2D(async (bounds) => {
+      startRect2D(async ({ corners, bounds }) => {
         window.removeEventListener('keydown', onEsc);
         setStage('extract', 'active', 'Extracting\u2026');
         setPipelineStatus('Extracting site\u2026', 'busy');
         try {
-          // Draw the user's rectangle as a RED outline in the scene
-          const { xMin, xMax, zMin, zMax } = bounds;
-          const rectPts = [
-            new THREE.Vector3(xMin, 0.2, zMin),
-            new THREE.Vector3(xMax, 0.2, zMin),
-            new THREE.Vector3(xMax, 0.2, zMax),
-            new THREE.Vector3(xMin, 0.2, zMax),
-            new THREE.Vector3(xMin, 0.2, zMin),
-          ];
+          // Draw the user's rectangle as a RED outline using the 4 projected
+          // screen corners — preserves Design Grid rotation in the scene.
+          const rectPts = [...corners, corners[0]]
+            .map(c => new THREE.Vector3(c.x, 0.2, c.z));
           const rectGeom = new THREE.BufferGeometry().setFromPoints(rectPts);
           const rectLine = new THREE.Line(rectGeom, new THREE.LineBasicMaterial({
             color: 0xff2222, depthTest: false, transparent: true, opacity: 0.9,

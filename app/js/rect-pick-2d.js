@@ -8,7 +8,9 @@
  *   startRect2D(onComplete, onCancel)
  *   cancelRect2D()
  *
- * onComplete called with { xMin, xMax, zMin, zMax } in scene space (metres).
+ * onComplete called with { corners: [{x,z}×4], bounds: {xMin,xMax,zMin,zMax} }.
+ * corners = 4 world-space points of the screen rectangle (grid-aligned).
+ * bounds  = True North AABB of corners (used by extractSite for clipping).
  * Sets state._rectPickActive = true while active (suppresses 2D pan in app.js).
  */
 
@@ -77,16 +79,27 @@ function _onUp(e) {
   const endScene   = _clientToScene(endClient);
   if (!startScene || !endScene) { _cleanup(); _onCancel?.(); return; }
 
+  // Project all 4 screen corners to world space so the rectangle
+  // follows the Design Grid rotation rather than True North axes.
+  const corners = [
+    _clientToScene({ x: _startClient.x, y: _startClient.y }), // TL
+    _clientToScene({ x: endClient.x,    y: _startClient.y }), // TR
+    _clientToScene({ x: endClient.x,    y: endClient.y    }), // BR
+    _clientToScene({ x: _startClient.x, y: endClient.y    }), // BL
+  ];
+  if (corners.some(c => !c)) { _cleanup(); _onCancel?.(); return; }
+
+  // AABB of all 4 corners — used by extractSite for building/contour clipping
   const bounds = {
-    xMin: Math.min(startScene.x, endScene.x),
-    xMax: Math.max(startScene.x, endScene.x),
-    zMin: Math.min(startScene.z, endScene.z),
-    zMax: Math.max(startScene.z, endScene.z),
+    xMin: Math.min(...corners.map(c => c.x)),
+    xMax: Math.max(...corners.map(c => c.x)),
+    zMin: Math.min(...corners.map(c => c.z)),
+    zMax: Math.max(...corners.map(c => c.z)),
   };
 
   const cb = _onComplete;
   _cleanup();
-  cb?.(bounds);
+  cb?.({ corners, bounds });
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
