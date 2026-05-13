@@ -146,7 +146,7 @@ function _toggleIdentify() {
     });
   } else stopIdentifyPick();
 }
-async _resetIdentify() { _identifyActive = false; const btn = document.getElementById('osm-identify-btn'); if (btn) btn.style.borderColor = 'rgba(255,255,255,0.3)'; stopIdentifyPick(); }
+function _resetIdentify() { _identifyActive = false; const btn = document.getElementById('osm-identify-btn'); if (btn) btn.style.borderColor = 'rgba(255,255,255,0.3)'; stopIdentifyPick(); }
 
 function _startHoverTooltip() {
   const hintB = document.getElementById('osm-pick-hint-b');
