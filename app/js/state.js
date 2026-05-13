@@ -97,6 +97,56 @@ export const state = {
   _activeProjectId:   null,   // legacy Supabase ID — no longer used, kept for compat
   _activeProjectName: null,   // legacy — use _activeFileName instead
 
+  // ── Scene objects (not set during init, populated later) ──────────────────
+  cadGridHelper:      null,
+  cadGridHelperMinor: null,
+  gridHelper:         null,
+  gridHelperMinor:    null,
+
+  // ── Materials ─────────────────────────────────────────────────────────────
+  MAT:              null,
+
+  // ── Edge overlay ──────────────────────────────────────────────────────────
+  edgeGroup:        null,
+  edgeLines:        null,
+
+  // ── Raycaster ─────────────────────────────────────────────────────────────
+  raycaster:        null,
+  pointerNDC:       null,
+
+  // ── Context menu ──────────────────────────────────────────────────────────
+  _vpCtx:           null,
+  _vpCtxX:          0,
+  _vpCtxY:          0,
+
+  // ── Grid settings ─────────────────────────────────────────────────────────
+  manualGridSpacing:    null,
+  manualMinorDivisions: null,
+  _lastSiteSpan:        1000,
+
+  // ── Surface canvas outline ────────────────────────────────────────────────
+  surfaceCanvasOutline: null,
+
+  // ── Resize ────────────────────────────────────────────────────────────────
+  suppressResize: false,
+  resizeRAF:      null,
+
+  // ── Plant engine state ────────────────────────────────────────────────────
+  plantDb:           [],
+  plantModalOpen:    false,
+  selectedPlant:     null,
+  _instanceCounter:  0,
+  _substrateCapTable: null,
+  placementMode:     'idle',
+  placingSpecies:    null,
+  placingCircle:     null,
+  placingPoly:       [],
+  previewMesh:       null,
+  editingInstance:   null,
+  circlePhase:       'none',
+  circleCentre:      null,
+  PROXY_MAT:         null,
+
   // ── UI ───────────────────────────────────────────────────────────────────
   feedbackTimer: null,
   alarmTime:     null,
